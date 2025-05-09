@@ -229,3 +229,105 @@ BEGIN
   ON CONFLICT (id) DO UPDATE SET is_admin = EXCLUDED.is_admin;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Table for storing FCM tokens
+CREATE TABLE IF NOT EXISTS public.user_fcm_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    fcm_token TEXT NOT NULL,
+    device_info TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, fcm_token)
+);
+
+-- Enable RLS on the fcm_tokens table
+ALTER TABLE public.user_fcm_tokens ENABLE ROW LEVEL SECURITY;
+
+-- Policies for the fcm_tokens table
+CREATE POLICY "Users can insert their own FCM tokens" ON public.user_fcm_tokens
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own FCM tokens" ON public.user_fcm_tokens
+    FOR UPDATE TO authenticated
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can read their own FCM tokens" ON public.user_fcm_tokens
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Faculty can view all FCM tokens" ON public.user_fcm_tokens
+    FOR SELECT TO authenticated
+    USING (EXISTS (
+        SELECT 1 FROM public.users
+        WHERE users.id = auth.uid() AND users.role = 'faculty'
+    ));
+
+-- Add a function to count FCM tokens (useful for analytics)
+CREATE OR REPLACE FUNCTION public.count_fcm_tokens()
+RETURNS TABLE (
+    total_tokens BIGINT,
+    unique_users BIGINT
+) LANGUAGE SQL SECURITY DEFINER AS $$
+    SELECT 
+        COUNT(*)::BIGINT AS total_tokens,
+        COUNT(DISTINCT user_id)::BIGINT AS unique_users
+    FROM public.user_fcm_tokens;
+$$;
+
+-- Only allow faculty to execute the count_fcm_tokens function
+REVOKE ALL ON FUNCTION public.count_fcm_tokens() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.count_fcm_tokens() TO authenticated;
+
+-- Announcements table
+CREATE TABLE IF NOT EXISTS public.announcements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    priority TEXT NOT NULL DEFAULT 'medium',
+    is_emergency BOOLEAN NOT NULL DEFAULT false,
+    created_by UUID NOT NULL REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on the announcements table
+ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
+
+-- Policies for the announcements table
+CREATE POLICY "Users can read all announcements" ON public.announcements
+    FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Faculty can insert announcements" ON public.announcements
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.users
+            WHERE users.id = auth.uid() AND users.role = 'faculty'
+        )
+    );
+
+CREATE POLICY "Faculty can update own announcements" ON public.announcements
+    FOR UPDATE TO authenticated
+    USING (
+        created_by = auth.uid() AND
+        EXISTS (
+            SELECT 1 FROM public.users
+            WHERE users.id = auth.uid() AND users.role = 'faculty'
+        )
+    );
+
+-- Function to update timestamps
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a trigger for the updated_at column
+CREATE TRIGGER set_updated_at
+BEFORE UPDATE ON public.announcements
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_updated_at();

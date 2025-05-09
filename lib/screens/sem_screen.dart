@@ -78,34 +78,31 @@ class _SemScreenState extends State<SemScreen> with SingleTickerProviderStateMix
       
       // Add a small delay to show the loading indicator
       Future.delayed(const Duration(milliseconds: 300), () {
-        // Use Future.microtask to avoid navigation during build
-        Future.microtask(() {
-          // Navigate to student home screen
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(
-                department: selectedDepartment!,
-                semester: selectedSemester!,
-                userName: widget.userName,
-              ),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                var begin = const Offset(0.0, 0.1);
-                var end = Offset.zero;
-                var curve = Curves.easeOutQuint;
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                return SlideTransition(
-                  position: animation.drive(tween),
-                  child: FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                );
-              },
-              transitionDuration: const Duration(milliseconds: 400),
+        // Navigate to student home screen
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(
+              department: selectedDepartment!,
+              semester: selectedSemester!,
+              userName: widget.userName,
             ),
-          );
-        });
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              var begin = const Offset(0.0, 0.1);
+              var end = Offset.zero;
+              var curve = Curves.easeOutQuint;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(
+                position: animation.drive(tween),
+                child: FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 450),
+          ),
+        );
       });
     } else {
       setState(() {

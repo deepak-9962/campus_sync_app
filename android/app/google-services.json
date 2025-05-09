@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "277782996196",
+    "project_id": "campus-sync-appp",
+    "storage_bucket": "campus-sync-appp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277782996196:android:4f1df1c878b21ca4dff8f1",
+        "android_client_info": {
+          "package_name": "com.example.campus_sync_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6rkPiQHZbVrFDZiZ8-8B6uE-beiq80Cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

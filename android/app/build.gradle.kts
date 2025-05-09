@@ -3,6 +3,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -45,12 +46,27 @@ android {
     configurations.all {
         resolutionStrategy {
             force("com.aboutyou.dart_packages:sign_in_with_apple:0.0.0")
+            // Force kotlin stdlib and metadata to match our kotlin version
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.0.0")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.0")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.0")
+            force("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
+            // Force a specific version of the Kotlin metadata that matches 2.0.0
+            force("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0")
+            
+            // Exclude problematic modules
+            exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jre7")
+            exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jre8")
         }
     }
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Use an older version of Firebase BOM
+    implementation(platform("com.google.firebase:firebase-bom:31.5.0"))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }
 
 flutter {

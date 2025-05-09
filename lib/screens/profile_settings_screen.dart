@@ -50,7 +50,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 children: [
                   const CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/profile_icon.png'), // Placeholder image
+                    backgroundImage: AssetImage(
+                      'assets/profile_icon.png',
+                    ), // Placeholder image
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -72,10 +74,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveProfile,
-              child: const Text('Save'),
-            ),
+            ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
           ],
         ),
       ),

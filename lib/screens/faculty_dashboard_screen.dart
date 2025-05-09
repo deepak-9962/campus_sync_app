@@ -7,6 +7,7 @@ import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FacultyDashboardScreen extends StatefulWidget {
   final String userName;
@@ -27,14 +28,14 @@ class FacultyDashboardScreen extends StatefulWidget {
 class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  
+
   // Colors for gradient
   final List<Color> _gradientColors = [
     Color(0xFF1A237E), // Deep blue
     Color(0xFF512DA8), // Deep purple
     Color(0xFF303F9F), // Indigo
   ];
-  
+
   final List<List<Color>> _cardGradients = [
     [const Color(0xFF1976D2), const Color(0xFF42A5F5)], // Blue
     [const Color(0xFF7B1FA2), const Color(0xFFAB47BC)], // Purple
@@ -231,9 +232,9 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                 ],
                               ),
                             ),
-                            
+
                             SizedBox(width: 16),
-                            
+
                             // Semester info
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,10 +434,11 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => TimetableScreen(
-                                  department: widget.department,
-                                  semester: widget.semester,
-                                ),
+                                builder:
+                                    (context) => TimetableScreen(
+                                      department: widget.department,
+                                      semester: widget.semester,
+                                    ),
                               ),
                             );
                           },
@@ -449,10 +451,11 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ResourceHubScreen(
-                                  department: widget.department,
-                                  semester: widget.semester,
-                                ),
+                                builder:
+                                    (context) => ResourceHubScreen(
+                                      department: widget.department,
+                                      semester: widget.semester,
+                                    ),
                               ),
                             );
                           },
@@ -465,10 +468,11 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ExamsScreen(
-                                  department: widget.department,
-                                  semester: widget.semester,
-                                ),
+                                builder:
+                                    (context) => ExamsScreen(
+                                      department: widget.department,
+                                      semester: widget.semester,
+                                    ),
                               ),
                             );
                           },
@@ -501,10 +505,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                _gradientColors[0],
-                _gradientColors[1],
-              ],
+              colors: [_gradientColors[0], _gradientColors[1]],
             ),
           ),
           child: ListView(
@@ -553,13 +554,9 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   ],
                 ),
               ),
-              _buildDrawerTile(
-                'Dashboard',
-                Icons.dashboard_outlined,
-                () {
-                  Navigator.pop(context);
-                },
-              ),
+              _buildDrawerTile('Dashboard', Icons.dashboard_outlined, () {
+                Navigator.pop(context);
+              }),
               _buildDrawerTile(
                 'Class Schedule',
                 Icons.calendar_today_outlined,
@@ -568,10 +565,11 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => TimetableScreen(
-                        department: widget.department,
-                        semester: widget.semester,
-                      ),
+                      builder:
+                          (context) => TimetableScreen(
+                            department: widget.department,
+                            semester: widget.semester,
+                          ),
                     ),
                   );
                 },
@@ -584,30 +582,28 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ResourceHubScreen(
-                        department: widget.department,
-                        semester: widget.semester,
-                      ),
+                      builder:
+                          (context) => ResourceHubScreen(
+                            department: widget.department,
+                            semester: widget.semester,
+                          ),
                     ),
                   );
                 },
               ),
-              _buildDrawerTile(
-                'Manage Exams',
-                Icons.quiz_outlined,
-                () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ExamsScreen(
-                        department: widget.department,
-                        semester: widget.semester,
-                      ),
-                    ),
-                  );
-                },
-              ),
+              _buildDrawerTile('Manage Exams', Icons.quiz_outlined, () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ExamsScreen(
+                          department: widget.department,
+                          semester: widget.semester,
+                        ),
+                  ),
+                );
+              }),
               _buildDrawerTile(
                 'Post Announcements',
                 Icons.campaign_outlined,
@@ -621,35 +617,38 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   );
                 },
               ),
-              _buildDrawerTile(
-                'Profile Settings',
-                Icons.settings_outlined,
-                () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfileSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-              Divider(
-                color: Colors.white24,
-                thickness: 1,
-              ),
-              _buildDrawerTile(
-                'Logout',
-                Icons.logout,
-                () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AuthScreen(),
-                    ),
-                  );
-                },
-              ),
+              _buildDrawerTile('Profile Settings', Icons.settings_outlined, () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileSettingsScreen(),
+                  ),
+                );
+              }),
+              Divider(color: Colors.white24, thickness: 1),
+              _buildDrawerTile('Logout', Icons.logout, () async {
+                Navigator.pop(context); // Close the drawer
+
+                try {
+                  // Sign out from Supabase
+                  await Supabase.instance.client.auth.signOut();
+
+                  if (mounted) {
+                    // Navigate to AuthScreen and clear all previous routes
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => AuthScreen()),
+                      (route) => false, // This removes all previous routes
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error signing out: $e')),
+                    );
+                  }
+                }
+              }),
             ],
           ),
         ),
@@ -674,9 +673,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -742,11 +739,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white70,
-                  size: 16,
-                ),
+                Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
               ],
             ),
           ),
@@ -789,11 +782,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 42,
-                  ),
+                  Icon(icon, color: Colors.white, size: 42),
                   SizedBox(height: 12),
                   Text(
                     title,
@@ -819,12 +808,9 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
       leading: Icon(icon, color: Colors.white),
       title: Text(
         title,
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: 'Clash Grotesk',
-        ),
+        style: TextStyle(color: Colors.white, fontFamily: 'Clash Grotesk'),
       ),
       onTap: onTap,
     );
   }
-} 
+}

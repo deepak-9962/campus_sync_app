@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/notification_service.dart';
 import 'pdf_upload_screen.dart';
 
 class AnnouncementCreationScreen extends StatefulWidget {
@@ -15,11 +16,15 @@ class _AnnouncementCreationScreenState
   final _contentController = TextEditingController();
   String _selectedPriority = 'medium';
   bool _isEmergency = false;
+  bool _isSending = false;
   final _supabase = Supabase.instance.client;
+  final _notificationService = NotificationService();
 
   Future<void> _createAnnouncement() async {
     if (_formKey.currentState!.validate()) {
       try {
+        setState(() => _isSending = true);
+
         final user = _supabase.auth.currentUser;
         if (user == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -38,19 +43,43 @@ class _AnnouncementCreationScreenState
         };
 
         // Insert the announcement
-        final response = await _supabase
-            .from('announcements')
-            .insert(announcement)
-            .select()
-            .single();
+        final response =
+            await _supabase
+                .from('announcements')
+                .insert(announcement)
+                .select()
+                .single();
 
-        // Send real-time notification to all subscribers
-        await _supabase.rpc('notify_new_announcement', params: {
-          'announcement_id': response['id'],
-          'title': _titleController.text,
-          'content': _contentController.text,
-          'priority': _selectedPriority,
-        });
+        // Send notification to all users
+        if (_isEmergency) {
+          // For emergency announcements, send notification to all users immediately
+          await _notificationService.sendNotificationToAllUsers(
+            title: '🔴 EMERGENCY: ${_titleController.text}',
+            body: _contentController.text,
+            data: {
+              'announcement_id': response['id'],
+              'type': 'emergency_announcement',
+              'priority': _selectedPriority,
+            },
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Emergency announcement sent to all users!'),
+            ),
+          );
+        } else {
+          // For regular announcements, send a normal notification
+          await _notificationService.sendNotificationToAllUsers(
+            title: '${_getPriorityIcon()} ${_titleController.text}',
+            body: _contentController.text,
+            data: {
+              'announcement_id': response['id'],
+              'type': 'announcement',
+              'priority': _selectedPriority,
+            },
+          );
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Announcement created successfully!')),
@@ -61,7 +90,25 @@ class _AnnouncementCreationScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error creating announcement: $e')),
         );
+      } finally {
+        setState(() => _isSending = false);
       }
+    }
+  }
+
+  // Helper method to get emoji icon based on priority
+  String _getPriorityIcon() {
+    switch (_selectedPriority) {
+      case 'low':
+        return 'ℹ️';
+      case 'medium':
+        return '📢';
+      case 'high':
+        return '⚠️';
+      case 'emergency':
+        return '🔴';
+      default:
+        return '📢';
     }
   }
 
@@ -91,8 +138,9 @@ class _AnnouncementCreationScreenState
                           labelText: 'Title',
                           border: OutlineInputBorder(),
                         ),
-                        validator: (value) =>
-                            value?.isEmpty ?? true ? 'Required' : null,
+                        validator:
+                            (value) =>
+                                value?.isEmpty ?? true ? 'Required' : null,
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -102,8 +150,9 @@ class _AnnouncementCreationScreenState
                           border: OutlineInputBorder(),
                         ),
                         maxLines: 5,
-                        validator: (value) =>
-                            value?.isEmpty ?? true ? 'Required' : null,
+                        validator:
+                            (value) =>
+                                value?.isEmpty ?? true ? 'Required' : null,
                       ),
                     ],
                   ),
@@ -138,8 +187,9 @@ class _AnnouncementCreationScreenState
                             child: Text('Emergency'),
                           ),
                         ],
-                        onChanged: (value) =>
-                            setState(() => _selectedPriority = value!),
+                        onChanged:
+                            (value) =>
+                                setState(() => _selectedPriority = value!),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                         ),
@@ -154,8 +204,8 @@ class _AnnouncementCreationScreenState
                           'This will send immediate notifications to all users',
                         ),
                         value: _isEmergency,
-                        onChanged: (value) =>
-                            setState(() => _isEmergency = value),
+                        onChanged:
+                            (value) => setState(() => _isEmergency = value),
                       ),
                     ],
                   ),
@@ -170,10 +220,11 @@ class _AnnouncementCreationScreenState
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PdfUploadScreen(
-                              department: 'Computer Science Engineering',
-                              semester: 4,
-                            ),
+                            builder:
+                                (context) => PdfUploadScreen(
+                                  department: 'Computer Science Engineering',
+                                  semester: 4,
+                                ),
                           ),
                         );
                       },
@@ -189,15 +240,35 @@ class _AnnouncementCreationScreenState
               ),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _createAnnouncement,
+                onPressed: _isSending ? null : _createAnnouncement,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue,
                 ),
-                child: Text(
-                  'Publish Announcement',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child:
+                    _isSending
+                        ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Publishing...',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        )
+                        : Text(
+                          'Publish Announcement',
+                          style: TextStyle(fontSize: 16),
+                        ),
               ),
             ],
           ),

@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import '../models/resource_item_model.dart';
-import '../services/pdf_resource_service.dart';
-import 'package:path_provider/path_provider.dart';
+import 'resource_hub_screen.dart'; // Import directly from the file that defines ResourceItemModel
 
 class PDFViewerScreen extends StatefulWidget {
   final String? filePath;
@@ -25,91 +23,41 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
-  final PdfResourceService _pdfService = PdfResourceService();
-  String? _localFilePath;
-
+  
   @override
   void initState() {
     super.initState();
-    _prepareFile();
+    _verifyFile();
   }
-
-  Future<void> _prepareFile() async {
-    // If we already have a local file path, verify it
-    if (widget.filePath != null) {
-      _verifyLocalFile(widget.filePath!);
-      return;
-    }
-
-    // If we have a file URL but no local path, try to download it
-    if (widget.resource.fileUrl != null) {
+  
+  void _verifyFile() {
+    if (widget.filePath == null) {
       setState(() {
-        _isLoading = true;
-        _errorMessage = 'Downloading PDF file...';
+        _hasError = true;
+        _errorMessage = 'PDF file path is missing';
+        _isLoading = false;
       });
-
-      try {
-        // Check if we already have this file downloaded
-        final fileName = widget.resource.fileName ??
-            '${DateTime.now().millisecondsSinceEpoch}.pdf';
-
-        // Try to download the file
-        final localPath = await _pdfService.downloadPdf(
-          widget.resource.fileUrl!,
-          fileName,
-        );
-
-        if (localPath != null) {
-          setState(() {
-            _localFilePath = localPath;
-          });
-          _verifyLocalFile(localPath);
-        } else {
-          setState(() {
-            _hasError = true;
-            _errorMessage = 'Failed to download PDF file';
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        setState(() {
-          _hasError = true;
-          _errorMessage = 'Error downloading PDF: $e';
-          _isLoading = false;
-        });
-      }
       return;
     }
-
-    // If we have neither a file path nor a URL, show an error
-    setState(() {
-      _hasError = true;
-      _errorMessage = 'No PDF file available';
-      _isLoading = false;
-    });
-  }
-
-  void _verifyLocalFile(String filePath) {
+    
+    final file = File(widget.filePath!);
+    if (!file.existsSync()) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'File does not exist: ${widget.filePath}';
+        _isLoading = false;
+      });
+      return;
+    }
+    
     try {
-      final file = File(filePath);
-      if (!file.existsSync()) {
-        setState(() {
-          _hasError = true;
-          _errorMessage = 'File does not exist: $filePath';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final fileSize = file.lengthSync();
       debugPrint('PDF file exists. Size: ${_formatFileSize(fileSize)} bytes');
-
-      if (fileSize < 100) {
-        // Very small file, probably empty or corrupted
+      
+      if (fileSize < 100) { // Very small file, probably empty or corrupted
         setState(() {
           _hasError = true;
-          _errorMessage =
-              'File appears to be invalid or corrupt (${_formatFileSize(fileSize)})';
+          _errorMessage = 'File appears to be invalid or corrupt (${_formatFileSize(fileSize)})';
           _isLoading = false;
         });
       }
@@ -140,7 +88,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                 _isLoading = true;
                 _hasError = false;
               });
-              _prepareFile();
+              _verifyFile();
             },
           ),
         ],
@@ -151,9 +99,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   }
 
   Widget _buildBody() {
-    final effectiveFilePath = _localFilePath ?? widget.filePath;
-
-    if (effectiveFilePath == null) {
+    if (widget.filePath == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -214,7 +160,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     return Stack(
       children: [
         PDFView(
-          filePath: effectiveFilePath,
+          filePath: widget.filePath!,
           enableSwipe: true,
           swipeHorizontal: true,
           autoSpacing: false,
@@ -270,9 +216,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   }
 
   Widget _buildBottomBar() {
-    final effectiveFilePath = _localFilePath ?? widget.filePath;
-
-    if (effectiveFilePath == null || _hasError || _isLoading) {
+    if (widget.filePath == null || _hasError || _isLoading) {
       return SizedBox(height: 0);
     }
 
@@ -321,10 +265,10 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       ),
     );
   }
-
+  
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
-}
+} 

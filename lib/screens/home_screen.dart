@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'timetable_screen.dart';
 import 'resource_hub_screen.dart';
 import 'announcements_screen.dart';
@@ -7,8 +6,10 @@ import 'library_screen.dart';
 import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 import 'exams_screen.dart';
+import 'attendance_screen.dart';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -26,7 +27,8 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   String? selectedSemester;
   String? selectedDepartment;
   late AnimationController _animationController;
@@ -36,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     [const Color(0xFF2C3E50), const Color(0xFFE74C3C)], // Red theme
     [const Color(0xFF34495E), const Color(0xFF9B59B6)], // Purple theme
   ];
-  
+
   // Colors for drawer gradient
   final List<Color> _drawerGradientColors = [
     Color(0xFF2C3E50), // Dark blue-gray
@@ -77,11 +79,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       bubblePositions.add(
         Offset(
           math.Random().nextDouble() * 300,
-          math.Random().nextDouble() * 600, // Reduced to avoid offscreen bubbles
+          math.Random().nextDouble() *
+              600, // Reduced to avoid offscreen bubbles
         ),
       );
       bubbleSizes.add(math.Random().nextDouble() * 30 + 10); // Smaller bubbles
-      bubbleOpacities.add(math.Random().nextDouble() * 0.1 + 0.02); // More subtle opacity
+      bubbleOpacities.add(
+        math.Random().nextDouble() * 0.1 + 0.02,
+      ); // More subtle opacity
     }
   }
 
@@ -95,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -105,11 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.school,
-              color: Colors.white,
-              size: 24,
-            ),
+            Icon(Icons.school, color: Colors.white, size: 24),
             SizedBox(width: 8),
             Text(
               'Campus Sync',
@@ -124,22 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1), // More subtle background
-              ),
-              child: Icon(Icons.notifications_outlined, color: Colors.white),
-            ),
-            onPressed: () {
-              // TODO: Implement notifications
-            },
-          ),
-          SizedBox(width: 8),
-        ],
+        actions: [SizedBox(width: 8)],
       ),
       body: Stack(
         children: [
@@ -178,7 +164,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
                           CurvedAnimation(
                             parent: _animationController,
-                            curve: Interval(0.0, 0.5, curve: Curves.easeOutCubic),
+                            curve: Interval(
+                              0.0,
+                              0.5,
+                              curve: Curves.easeOutCubic,
+                            ),
                           ),
                         ),
                         child: SlideTransition(
@@ -188,7 +178,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ).animate(
                             CurvedAnimation(
                               parent: _animationController,
-                              curve: Interval(0.0, 0.5, curve: Curves.easeOutQuint),
+                              curve: Interval(
+                                0.0,
+                                0.5,
+                                curve: Curves.easeOutQuint,
+                              ),
                             ),
                           ),
                           child: child,
@@ -232,7 +226,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   children: [
                                     CircleAvatar(
                                       radius: 18,
-                                      backgroundColor: Colors.white.withOpacity(0.2),
+                                      backgroundColor: Colors.white.withOpacity(
+                                        0.2,
+                                      ),
                                       child: Icon(
                                         Icons.person,
                                         size: 20,
@@ -242,7 +238,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Welcome back,',
@@ -276,19 +273,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   children: [
                                     _buildInfoCard(
                                       "Semester",
-                                      selectedSemester ?? widget.semester.toString(),
+                                      selectedSemester ??
+                                          widget.semester.toString(),
                                       Icons.calendar_month_outlined,
-                                      [Colors.deepPurple.shade400, Colors.deepPurple.shade200],
+                                      [
+                                        Colors.deepPurple.shade400,
+                                        Colors.deepPurple.shade200,
+                                      ],
                                     ),
                                     SizedBox(width: 8),
                                     _buildInfoCard(
                                       "Department",
-                                      selectedDepartment?.substring(0, math.min(10, selectedDepartment?.length ?? 0)) ?? "CS",
+                                      selectedDepartment?.substring(
+                                            0,
+                                            math.min(
+                                              10,
+                                              selectedDepartment?.length ?? 0,
+                                            ),
+                                          ) ??
+                                          "CS",
                                       Icons.school_outlined,
-                                      [Colors.blue.shade400, Colors.blue.shade200],
+                                      [
+                                        Colors.blue.shade400,
+                                        Colors.blue.shade200,
+                                      ],
                                     ),
                                   ],
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -297,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Features Section Title
                 SliverToBoxAdapter(
                   child: Padding(
@@ -331,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Feature Cards in Vertical List
                 SliverToBoxAdapter(
                   child: AnimatedBuilder(
@@ -353,18 +364,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         children: [
                           _buildFeatureListItem(
                             title: 'Timetable',
-                            description: 'View your class schedule and manage your time',
+                            description:
+                                'View your class schedule and manage your time',
                             icon: Icons.calendar_today,
                             color: Color(0xFF3498DB),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => TimetableScreen(
-                                    department: selectedDepartment ?? widget.department,
-                                    semester: int.parse(selectedSemester ?? widget.semester.toString()),
-                                  ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => TimetableScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -383,18 +410,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Resource Hub',
-                            description: 'Access learning materials and resources',
+                            description:
+                                'Access learning materials and resources',
                             icon: Icons.folder,
                             color: Color(0xFF2ECC71),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ResourceHubScreen(
-                                    department: selectedDepartment ?? widget.department,
-                                    semester: int.tryParse(selectedSemester ?? widget.semester.toString()) ?? widget.semester,
-                                  ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => ResourceHubScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -413,15 +456,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Announcements',
-                            description: 'Stay updated with the latest news and announcements',
+                            description:
+                                'Stay updated with the latest news and announcements',
                             icon: Icons.campaign,
                             color: Color(0xFFE74C3C),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => AnnouncementsScreen(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => AnnouncementsScreen(),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -440,15 +494,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Library',
-                            description: 'Browse and read books from the digital library',
+                            description:
+                                'Browse and read books from the digital library',
                             icon: Icons.book,
                             color: Color(0xFF9B59B6),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => LibraryScreen(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => LibraryScreen(),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -467,18 +532,80 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Exams & Results',
-                            description: 'View exam schedules and check your results',
+                            description:
+                                'View exam schedules and check your results',
                             icon: Icons.quiz,
                             color: Color(0xFFF39C12),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ExamsScreen(
-                                    department: selectedDepartment ?? widget.department,
-                                    semester: int.parse(selectedSemester ?? widget.semester.toString()),
-                                  ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => ExamsScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: const Offset(0.1, 0.0),
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 12),
+                          _buildFeatureListItem(
+                            title: 'Attendance',
+                            description:
+                                'Check your attendance percentages for all subjects',
+                            icon: Icons.fact_check,
+                            color: Color(0xFF00BCD4),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => AttendanceScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -497,14 +624,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Student Community',
-                            description: 'Connect with peers and join discussion forums',
+                            description:
+                                'Connect with peers and join discussion forums',
                             icon: Icons.people,
                             color: Color(0xFF1ABC9C),
                             onTap: () {
                               // Show a feature coming soon message
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Student Community feature coming soon!'),
+                                  content: Text(
+                                    'Student Community feature coming soon!',
+                                  ),
                                   action: SnackBarAction(
                                     label: 'OK',
                                     onPressed: () {},
@@ -516,14 +646,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           SizedBox(height: 12),
                           _buildFeatureListItem(
                             title: 'Campus Map',
-                            description: 'Navigate campus buildings and find classrooms',
+                            description:
+                                'Navigate campus buildings and find classrooms',
                             icon: Icons.map,
                             color: Color(0xFF607D8B),
                             onTap: () {
                               // Show a feature coming soon message
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Campus Map feature coming soon!'),
+                                  content: Text(
+                                    'Campus Map feature coming soon!',
+                                  ),
                                   action: SnackBarAction(
                                     label: 'OK',
                                     onPressed: () {},
@@ -537,7 +670,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Quick Actions Title
                 SliverToBoxAdapter(
                   child: Padding(
@@ -571,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Quick Action Buttons - Convert to vertical list
                 SliverToBoxAdapter(
                   child: Padding(
@@ -593,7 +726,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ).animate(
                               CurvedAnimation(
                                 parent: _animationController,
-                                curve: Interval(0.5, 0.9, curve: Curves.easeOut),
+                                curve: Interval(
+                                  0.5,
+                                  0.9,
+                                  curve: Curves.easeOut,
+                                ),
                               ),
                             ),
                             child: child,
@@ -609,18 +746,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Colors.purple.shade300,
                             () {
                               // Check if user is CSE sem 4 before navigating to timetable
-                              bool isCSESem4 = (selectedDepartment ?? widget.department).contains('Computer Science') && 
-                                  (selectedSemester ?? widget.semester.toString()) == '4';
-                              
+                              bool isCSESem4 =
+                                  (selectedDepartment ?? widget.department)
+                                      .contains('Computer Science') &&
+                                  (selectedSemester ??
+                                          widget.semester.toString()) ==
+                                      '4';
+
                               if (isCSESem4) {
                                 Navigator.push(
                                   context,
                                   PageRouteBuilder(
-                                    pageBuilder: (context, animation, secondaryAnimation) => TimetableScreen(
-                                      department: selectedDepartment ?? widget.department,
-                                      semester: int.parse(selectedSemester ?? widget.semester.toString()),
-                                    ),
-                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                    pageBuilder:
+                                        (
+                                          context,
+                                          animation,
+                                          secondaryAnimation,
+                                        ) => TimetableScreen(
+                                          department:
+                                              selectedDepartment ??
+                                              widget.department,
+                                          semester: int.parse(
+                                            selectedSemester ??
+                                                widget.semester.toString(),
+                                          ),
+                                        ),
+                                    transitionsBuilder: (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
                                       return FadeTransition(
                                         opacity: animation,
                                         child: SlideTransition(
@@ -638,7 +794,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 // Show message for students from other departments/semesters
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Detailed timetable is only available for Computer Science Engineering Semester 4'),
+                                    content: Text(
+                                      'Detailed timetable is only available for Computer Science Engineering Semester 4',
+                                    ),
                                     action: SnackBarAction(
                                       label: 'OK',
                                       onPressed: () {},
@@ -649,8 +807,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                           // Show special CSE Sem 4 timetable button only if applicable
-                          if ((selectedDepartment ?? widget.department).contains('Computer Science') && 
-                              (selectedSemester ?? widget.semester.toString()) == '4')
+                          if ((selectedDepartment ?? widget.department)
+                                  .contains('Computer Science') &&
+                              (selectedSemester ??
+                                      widget.semester.toString()) ==
+                                  '4')
                             Column(
                               children: [
                                 SizedBox(height: 12),
@@ -663,11 +824,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     Navigator.push(
                                       context,
                                       PageRouteBuilder(
-                                        pageBuilder: (context, animation, secondaryAnimation) => TimetableScreen(
-                                          department: 'Computer Science Engineering',
-                                          semester: 4,
-                                        ),
-                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                        pageBuilder:
+                                            (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                            ) => TimetableScreen(
+                                              department:
+                                                  'Computer Science Engineering',
+                                              semester: 4,
+                                            ),
+                                        transitionsBuilder: (
+                                          context,
+                                          animation,
+                                          secondaryAnimation,
+                                          child,
+                                        ) {
                                           return FadeTransition(
                                             opacity: animation,
                                             child: SlideTransition(
@@ -695,11 +867,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ResourceHubScreen(
-                                    department: selectedDepartment ?? widget.department,
-                                    semester: int.tryParse(selectedSemester ?? widget.semester.toString()) ?? widget.semester,
-                                  ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => ResourceHubScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -725,11 +912,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               Navigator.push(
                                 context,
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ExamsScreen(
-                                    department: selectedDepartment ?? widget.department,
-                                    semester: int.parse(selectedSemester ?? widget.semester.toString()),
-                                  ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => ExamsScreen(
+                                        department:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        semester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
                                     return FadeTransition(
                                       opacity: animation,
                                       child: SlideTransition(
@@ -813,11 +1015,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 30,
-                    ),
+                    child: Icon(Icons.person, color: Colors.white, size: 30),
                   ),
                   SizedBox(height: 16),
                   Text(
@@ -878,49 +1076,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 );
               },
             ),
-            Divider(
-              color: Colors.white.withOpacity(0.2),
-              height: 32,
-            ),
+            Divider(color: Colors.white.withOpacity(0.2), height: 32),
             _buildDrawerItem(
               icon: Icons.logout,
               title: 'Logout',
               onTap: () async {
+                Navigator.pop(context); // Close the drawer
+
                 try {
-                  // Show loading indicator
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                  );
-                  
                   // Sign out from Supabase
-                  final supabase = Supabase.instance.client;
-                  await supabase.auth.signOut();
-                  
-                  // Close the loading dialog
-                  Navigator.pop(context);
-                  
-                  // Close the drawer and navigate to auth screen
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AuthScreen(),
-                    ),
-                  );
+                  await Supabase.instance.client.auth.signOut();
+
+                  if (mounted) {
+                    // Navigate to AuthScreen and clear all previous routes
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => AuthScreen()),
+                      (route) => false, // This removes all previous routes
+                    );
+                  }
                 } catch (e) {
-                  // Close the loading dialog if there's an error
-                  Navigator.pop(context);
-                  
-                  // Show error message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error signing out: $e')),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error signing out: $e')),
+                    );
+                  }
                 }
               },
             ),
@@ -936,22 +1115,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.white,
-      ),
+      leading: Icon(icon, color: Colors.white),
       title: Text(
         title,
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: 'Clash Grotesk',
-        ),
+        style: TextStyle(color: Colors.white, fontFamily: 'Clash Grotesk'),
       ),
       onTap: onTap,
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, List<Color> colors) {
+  Widget _buildInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    List<Color> colors,
+  ) {
     return Expanded(
       child: Container(
         padding: EdgeInsets.all(12),
@@ -971,14 +1149,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.white.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             SizedBox(width: 8), // Reduced space
-            Expanded( // Added Expanded to ensure text fits
+            Expanded(
+              // Added Expanded to ensure text fits
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1043,10 +1218,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    color.withOpacity(0.7),
-                    color.withOpacity(0.4),
-                  ],
+                  colors: [color.withOpacity(0.7), color.withOpacity(0.4)],
                 ),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.15),
@@ -1070,11 +1242,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             color: Colors.white24,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            icon,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                          child: Icon(icon, color: Colors.white, size: 24),
                         ),
                         SizedBox(width: 16),
                         Expanded(
@@ -1155,10 +1323,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    color.withOpacity(0.7),
-                    color.withOpacity(0.4),
-                  ],
+                  colors: [color.withOpacity(0.7), color.withOpacity(0.4)],
                 ),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.15),
@@ -1182,11 +1347,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             color: Colors.white24,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            icon,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                          child: Icon(icon, color: Colors.white, size: 24),
                         ),
                         SizedBox(width: 16),
                         Expanded(
@@ -1353,15 +1514,12 @@ class BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (int i = 0; i < bubblePositions.length; i++) {
-      final paint = Paint()
-        ..color = Colors.white.withOpacity(bubbleOpacities[i])
-        ..style = PaintingStyle.fill;
+      final paint =
+          Paint()
+            ..color = Colors.white.withOpacity(bubbleOpacities[i])
+            ..style = PaintingStyle.fill;
 
-      canvas.drawCircle(
-        bubblePositions[i],
-        bubbleSizes[i],
-        paint,
-      );
+      canvas.drawCircle(bubblePositions[i], bubbleSizes[i], paint);
     }
   }
 

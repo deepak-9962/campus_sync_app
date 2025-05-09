@@ -10,7 +10,8 @@ class AuthScreen extends StatefulWidget {
   _AuthScreenState createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -28,28 +29,31 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
       ),
     );
-    
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.1, 0.8, curve: Curves.easeOutQuint),
       ),
     );
-    
+
     _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.2, 0.9, curve: Curves.easeOutCubic),
       ),
     );
-    
+
     _animationController.forward();
 
     // Check if the user is already logged in
@@ -60,19 +64,21 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   Future<void> _checkSession() async {
     final supabase = Supabase.instance.client;
     final session = supabase.auth.currentSession;
-    
+
     if (session != null) {
       // User is already logged in, navigate to SemScreen
       if (mounted) {
-        // Use Future.microtask to avoid navigation during build
+        // Use Future.microtask to move the navigation to the next frame
+        // This prevents navigation during build/init
         Future.microtask(() {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => SemScreen(
-                userName: session.user?.email ?? '',
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder:
+                    (context) => SemScreen(userName: session.user?.email ?? ''),
               ),
-            ),
-          );
+            );
+          }
         });
       }
     }
@@ -101,7 +107,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
     final supabase = Supabase.instance.client;
 
@@ -116,31 +122,37 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         if (response.session != null) {
           // Navigate to SemScreen
           if (mounted) {
-            // Use Future.microtask to avoid navigation during build
-            Future.microtask(() {
-              Navigator.pushReplacement(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => 
-                    SemScreen(
-                      userName: _emailController.text.trim(),
-                    ),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    var begin = const Offset(1.0, 0.0);
-                    var end = Offset.zero;
-                    var curve = Curves.easeOutQuint;
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 400),
-                ),
-              );
+            // Use Future.microtask for safer navigation
+            await Future.microtask(() {
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder:
+                        (context, animation, secondaryAnimation) =>
+                            SemScreen(userName: _emailController.text.trim()),
+                    transitionsBuilder: (
+                      context,
+                      animation,
+                      secondaryAnimation,
+                      child,
+                    ) {
+                      var begin = const Offset(1.0, 0.0);
+                      var end = Offset.zero;
+                      var curve = Curves.easeOutQuint;
+                      var tween = Tween(
+                        begin: begin,
+                        end: end,
+                      ).chain(CurveTween(curve: curve));
+                      return SlideTransition(
+                        position: animation.drive(tween),
+                        child: FadeTransition(opacity: animation, child: child),
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 400),
+                  ),
+                );
+              }
             });
           }
         } else {
@@ -160,7 +172,11 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         if (response.user != null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Registration successful! Please check your email to verify your account.')),
+              const SnackBar(
+                content: Text(
+                  'Registration successful! Please check your email to verify your account.',
+                ),
+              ),
             );
             // Switch back to login mode
             setState(() {
@@ -170,16 +186,18 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Registration failed. Please try again.')),
+              const SnackBar(
+                content: Text('Registration failed. Please try again.'),
+              ),
             );
           }
         }
       }
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (e) {
       if (mounted) {
@@ -196,45 +214,52 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
   // Mock social login method
   void _socialLogin(String provider) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$provider login coming soon!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$provider login coming soon!')));
   }
 
   // Demo login method (for testing without real authentication)
   void _demoLogin() {
     setState(() => _isLoading = true);
-    
+
     // Simulate loading
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () async {
       if (mounted) {
         setState(() => _isLoading = false);
-        
+
         // Navigate to SemScreen with demo user
-        Future.microtask(() {
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => 
-                const SemScreen(
-                  userName: 'demo.user@example.com',
-                ),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                var begin = const Offset(1.0, 0.0);
-                var end = Offset.zero;
-                var curve = Curves.easeOutQuint;
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                return SlideTransition(
-                  position: animation.drive(tween),
-                  child: FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                );
-              },
-              transitionDuration: const Duration(milliseconds: 400),
-            ),
-          );
+        // Use Future.microtask for safer navigation
+        await Future.microtask(() {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              PageRouteBuilder(
+                pageBuilder:
+                    (context, animation, secondaryAnimation) =>
+                        const SemScreen(userName: 'demo.user@example.com'),
+                transitionsBuilder: (
+                  context,
+                  animation,
+                  secondaryAnimation,
+                  child,
+                ) {
+                  var begin = const Offset(1.0, 0.0);
+                  var end = Offset.zero;
+                  var curve = Curves.easeOutQuint;
+                  var tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 400),
+              ),
+            );
+          }
         });
       }
     });
@@ -271,12 +296,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                 end: Alignment.bottomRight,
               ),
             ),
-            child: CustomPaint(
-              painter: BubblesPainter(),
-              child: Container(),
-            ),
+            child: CustomPaint(painter: BubblesPainter(), child: Container()),
           ),
-          
+
           // Content
           SafeArea(
             child: SingleChildScrollView(
@@ -318,7 +340,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             ),
                           ),
                           SizedBox(height: 30),
-                          
+
                           // Welcome text
                           Text(
                             _isLogin ? 'Welcome Back' : 'Create Account',
@@ -333,7 +355,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           ),
                           SizedBox(height: 10),
                           Text(
-                            _isLogin ? 'Sign in to continue' : 'Sign up to get started',
+                            _isLogin
+                                ? 'Sign in to continue'
+                                : 'Sign up to get started',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
@@ -342,7 +366,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             ),
                           ),
                           SizedBox(height: 40),
-                          
+
                           // Email field
                           Container(
                             decoration: BoxDecoration(
@@ -357,16 +381,24 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 labelText: 'Email',
-                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                                prefixIcon: Icon(Icons.email, color: Colors.white.withOpacity(0.8)),
+                                labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.email,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
                               ),
                               keyboardType: TextInputType.emailAddress,
                             ),
                           ),
                           SizedBox(height: 20),
-                          
+
                           // Password field
                           Container(
                             decoration: BoxDecoration(
@@ -381,8 +413,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                                prefixIcon: Icon(Icons.lock, color: Colors.white.withOpacity(0.8)),
+                                labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
                                 suffixIcon: IconButton(
                                   onPressed: () {
                                     setState(() {
@@ -390,18 +427,23 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                     });
                                   },
                                   icon: Icon(
-                                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
                                     color: Colors.white.withOpacity(0.8),
                                   ),
                                 ),
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
                               ),
                               obscureText: _obscurePassword,
                             ),
                           ),
                           SizedBox(height: 12),
-                          
+
                           // Forgot password - only show in login mode
                           if (_isLogin)
                             Align(
@@ -412,42 +454,62 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      final TextEditingController resetEmailController = TextEditingController();
+                                      final TextEditingController
+                                      resetEmailController =
+                                          TextEditingController();
                                       return AlertDialog(
                                         backgroundColor: Color(0xFF3949AB),
                                         title: Text(
                                           'Reset Password',
-                                          style: TextStyle(color: Colors.white, fontFamily: 'Clash Grotesk'),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontFamily: 'Clash Grotesk',
+                                          ),
                                         ),
                                         content: TextField(
                                           controller: resetEmailController,
                                           style: TextStyle(color: Colors.white),
                                           decoration: InputDecoration(
                                             hintText: 'Enter your email',
-                                            hintStyle: TextStyle(color: Colors.white70),
+                                            hintStyle: TextStyle(
+                                              color: Colors.white70,
+                                            ),
                                             enabledBorder: UnderlineInputBorder(
-                                              borderSide: BorderSide(color: Colors.white54),
+                                              borderSide: BorderSide(
+                                                color: Colors.white54,
+                                              ),
                                             ),
                                           ),
                                         ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed:
+                                                () => Navigator.pop(context),
                                             child: Text(
                                               'Cancel',
-                                              style: TextStyle(color: Colors.white70),
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                              ),
                                             ),
                                           ),
                                           TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Password reset email sent!')),
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Password reset email sent!',
+                                                  ),
+                                                ),
                                               );
                                             },
                                             child: Text(
                                               'Send Email',
-                                              style: TextStyle(color: Colors.white),
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -465,7 +527,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               ),
                             ),
                           SizedBox(height: 30),
-                          
+
                           // Login/Signup button
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
@@ -481,26 +543,30 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5E35B1)),
+                              child:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF5E35B1),
+                                              ),
+                                        ),
+                                      )
+                                      : Text(
+                                        _isLogin ? 'LOGIN' : 'SIGN UP',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Clash Grotesk',
+                                        ),
                                       ),
-                                    )
-                                  : Text(
-                                      _isLogin ? 'LOGIN' : 'SIGN UP',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Clash Grotesk',
-                                      ),
-                                    ),
                             ),
                           ),
-                          
+
                           // Demo login button for testing
                           TextButton(
                             onPressed: _isLoading ? null : _demoLogin,
@@ -512,9 +578,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               ),
                             ),
                           ),
-                          
+
                           SizedBox(height: 20),
-                          
+
                           // OR divider
                           Row(
                             children: [
@@ -525,7 +591,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
                                   'OR',
                                   style: TextStyle(
@@ -543,7 +611,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             ],
                           ),
                           SizedBox(height: 30),
-                          
+
                           // Social login buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -566,13 +634,15 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             ],
                           ),
                           SizedBox(height: 30),
-                          
+
                           // Register/Login option
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _isLogin ? "Don't have an account? " : "Already have an account? ",
+                                _isLogin
+                                    ? "Don't have an account? "
+                                    : "Already have an account? ",
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.8),
                                   fontFamily: 'Clash Grotesk',
@@ -604,7 +674,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   // Social login button builder
   Widget _buildSocialButton({
     required IconData icon,
@@ -619,16 +689,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.1),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 30,
-        ),
+        child: Icon(icon, color: color, size: 30),
       ),
     );
   }
@@ -638,9 +701,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 class BubblesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = Colors.white.withOpacity(0.1)
+          ..style = PaintingStyle.fill;
 
     // Draw bubbles
     canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.2), 50, paint);
