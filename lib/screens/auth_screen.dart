@@ -379,6 +379,7 @@ class _AuthScreenState extends State<AuthScreen>
                             child: TextField(
                               controller: _emailController,
                               style: const TextStyle(color: Colors.white),
+                              cursorColor: Colors.white, // Added cursor color
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 labelStyle: TextStyle(
@@ -411,6 +412,7 @@ class _AuthScreenState extends State<AuthScreen>
                             child: TextField(
                               controller: _passwordController,
                               style: const TextStyle(color: Colors.white),
+                              cursorColor: Colors.white, // Added cursor color
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 labelStyle: TextStyle(

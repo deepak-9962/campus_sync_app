@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../services/notification_service.dart';
+// import '../../services/notification_service.dart';
 import 'pdf_upload_screen.dart';
 
 class AnnouncementCreationScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _AnnouncementCreationScreenState
   bool _isEmergency = false;
   bool _isSending = false;
   final _supabase = Supabase.instance.client;
-  final _notificationService = NotificationService();
+  // final _notificationService = NotificationService();
 
   Future<void> _createAnnouncement() async {
     if (_formKey.currentState!.validate()) {
@@ -53,15 +53,15 @@ class _AnnouncementCreationScreenState
         // Send notification to all users
         if (_isEmergency) {
           // For emergency announcements, send notification to all users immediately
-          await _notificationService.sendNotificationToAllUsers(
-            title: '🔴 EMERGENCY: ${_titleController.text}',
-            body: _contentController.text,
-            data: {
-              'announcement_id': response['id'],
-              'type': 'emergency_announcement',
-              'priority': _selectedPriority,
-            },
-          );
+          // await _notificationService.sendNotificationToAllUsers(
+          //   title: '🔴 EMERGENCY: ${_titleController.text}',
+          //   body: _contentController.text,
+          //   data: {
+          //     'announcement_id': response['id'],
+          //     'type': 'emergency_announcement',
+          //     'priority': _selectedPriority,
+          //   },
+          // );
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -70,15 +70,15 @@ class _AnnouncementCreationScreenState
           );
         } else {
           // For regular announcements, send a normal notification
-          await _notificationService.sendNotificationToAllUsers(
-            title: '${_getPriorityIcon()} ${_titleController.text}',
-            body: _contentController.text,
-            data: {
-              'announcement_id': response['id'],
-              'type': 'announcement',
-              'priority': _selectedPriority,
-            },
-          );
+          // await _notificationService.sendNotificationToAllUsers(
+          //   title: '${_getPriorityIcon()} ${_titleController.text}',
+          //   body: _contentController.text,
+          //   data: {
+          //     'announcement_id': response['id'],
+          //     'type': 'announcement',
+          //     'priority': _selectedPriority,
+          //   },
+          // );
         }
 
         ScaffoldMessenger.of(context).showSnackBar(

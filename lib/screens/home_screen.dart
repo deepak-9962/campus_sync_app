@@ -7,6 +7,8 @@ import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 import 'exams_screen.dart';
 import 'attendance_screen.dart';
+// import 'gpa_cgpa_calculator_screen.dart'; // Commented out direct import
+import 'regulation_selection_screen.dart'; // Added import for regulation selection
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -639,6 +641,52 @@ class _HomeScreenState extends State<HomeScreen>
                                     label: 'OK',
                                     onPressed: () {},
                                   ),
+                                ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 12),
+                          _buildFeatureListItem(
+                            // Added GPA/CGPA Calculator
+                            title: 'GPA/CGPA Calculator',
+                            description: 'Calculate your Grade Point Averages',
+                            icon: Icons.calculate,
+                            color: Color(0xFFE67E22), // Orange color
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => RegulationSelectionScreen(
+                                        userDepartment:
+                                            selectedDepartment ??
+                                            widget.department,
+                                        userSemester: int.parse(
+                                          selectedSemester ??
+                                              widget.semester.toString(),
+                                        ),
+                                      ), // Navigate to RegulationSelectionScreen
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: const Offset(0.1, 0.0),
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
                                 ),
                               );
                             },
