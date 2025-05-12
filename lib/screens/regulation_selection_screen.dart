@@ -13,10 +13,11 @@ class RegulationSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Regulation'),
-        backgroundColor: Theme.of(context).primaryColor,
+        // backgroundColor will be inherited from global theme
       ),
       body: Center(
         child: Padding(
@@ -28,26 +29,27 @@ class RegulationSelectionScreen extends StatelessWidget {
               Text(
                 'Please select the academic regulation for the GPA/CGPA calculator:',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onBackground.withOpacity(0.8),
                 ),
               ),
               const SizedBox(height: 30),
               ElevatedButton(
+                // This will use the global ElevatedButtonTheme
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  foregroundColor: Colors.white, // Added for better contrast
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   textStyle: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                  ),
+                  ), // Already in global theme but can be kept
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(
+                      12,
+                    ), // Keep custom shape if desired
                   ),
-                ),
+                ).merge(
+                  theme.elevatedButtonTheme.style,
+                ), // Ensure global style is base
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -64,14 +66,18 @@ class RegulationSelectionScreen extends StatelessWidget {
                 child: const Text('Regulation 2021'),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[400],
-                  foregroundColor: Colors.black87, // Added for better contrast
+              OutlinedButton(
+                // Changed to OutlinedButton for less emphasis
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: theme.colorScheme.primary.withOpacity(0.5),
+                  ),
+                  foregroundColor: theme.colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   textStyle: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Clash Grotesk',
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

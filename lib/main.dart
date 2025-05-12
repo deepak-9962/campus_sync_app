@@ -53,11 +53,158 @@ class MyApp extends StatelessWidget {
       title: 'Campus Sync App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        textTheme: Theme.of(
-          context,
-        ).textTheme.apply(fontFamily: 'Clash Grotesk'),
         useMaterial3: true,
+        fontFamily: 'Clash Grotesk', // Apply default font family
+        // Color Scheme
+        colorScheme: ColorScheme.light(
+          primary: const Color(0xFF1976D2), // Blue 700 (Accent)
+          secondary: const Color(
+            0xFF1976D2,
+          ), // Can be same as primary or different
+          surface: Colors.white, // Card and dialog backgrounds
+          background: const Color(0xFFF5F5F5), // Main background
+          error: Colors.red.shade700,
+          onPrimary: Colors.white, // Text/icons on primary color
+          onSecondary: Colors.white, // Text/icons on secondary color
+          onSurface: const Color(0xFF212121), // Primary text on surface
+          onBackground: const Color(0xFF212121), // Primary text on background
+          onError: Colors.white,
+        ),
+
+        // Scaffold Background Color
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+
+        // AppBar Theme
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white, // AppBar background
+          foregroundColor: const Color(0xFF212121), // Title and icons on AppBar
+          elevation: 0.5,
+          iconTheme: IconThemeData(color: const Color(0xFF424242)),
+          titleTextStyle: TextStyle(
+            fontFamily: 'Clash Grotesk',
+            color: const Color(0xFF212121),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        // Card Theme
+        cardTheme: CardTheme(
+          color: Colors.white,
+          elevation: 1.0, // Subtle elevation
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          margin: EdgeInsets.symmetric(
+            vertical: 6.0,
+            horizontal: 0,
+          ), // Default card margin
+        ),
+
+        // Text Theme
+        textTheme: TextTheme(
+          displayLarge: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          displayMedium: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          displaySmall: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          headlineMedium: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          headlineSmall: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          titleLarge: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+            fontWeight: FontWeight.bold,
+          ),
+          bodyLarge: TextStyle(
+            color: const Color(0xFF212121),
+            fontFamily: 'Clash Grotesk',
+          ),
+          bodyMedium: TextStyle(
+            color: const Color(0xFF757575),
+            fontFamily: 'Clash Grotesk',
+          ), // Secondary text
+          labelLarge: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Clash Grotesk',
+            fontWeight: FontWeight.bold,
+          ), // For buttons
+        ),
+
+        // ElevatedButton Theme
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1976D2), // Accent color
+            foregroundColor: Colors.white, // Text on button
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(
+              fontFamily: 'Clash Grotesk',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+        ),
+
+        // InputDecoration Theme (for TextFields)
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[100], // Light fill for text fields
+          hintStyle: TextStyle(
+            color: Colors.grey[500],
+            fontFamily: 'Clash Grotesk',
+          ),
+          labelStyle: TextStyle(
+            color: const Color(0xFF757575),
+            fontFamily: 'Clash Grotesk',
+          ), // Medium grey for labels
+          border: OutlineInputBorder(
+            // Default border for all states if others not specified
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide(color: Colors.grey[400]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            // Border when the input field is enabled and not focused
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide(color: Colors.grey[400]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide(
+              color: const Color(0xFF1976D2), // Accent color on focus
+              width: 2.0,
+            ),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+
+        // Icon Theme
+        iconTheme: IconThemeData(
+          color: const Color(0xFF424242), // Darker grey for general icons
+        ),
+
+        // Floating Action Button Theme
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: const Color(0xFF1976D2),
+          foregroundColor: Colors.white,
+        ),
+
+        // Dialog Theme
+        dialogBackgroundColor: Colors.white,
       ),
       // Start with the AuthScreen
       home: const AuthScreen(),

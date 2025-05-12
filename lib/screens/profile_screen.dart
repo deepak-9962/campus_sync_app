@@ -1,13 +1,13 @@
-ElevatedButton(
-  onPressed: () async {
-    // First, sign out the user from authentication service
-    await _authService.signOut(); // Assuming you have an auth service
-    
-    // Navigate to login screen and remove all previous routes
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login', // Your login route name
-      (route) => false, // This removes all previous routes
+import 'package:flutter/material.dart';
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: const Center(child: Text('Profile Screen Placeholder')),
     );
-  },
-  child: Text('Logout'),
-),
+  }
+}
