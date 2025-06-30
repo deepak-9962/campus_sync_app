@@ -21,6 +21,7 @@ class _AuthScreenState extends State<AuthScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
+  String? _userRole;
 
   @override
   void initState() {

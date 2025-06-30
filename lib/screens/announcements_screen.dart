@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../services/auth_service.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -11,109 +12,28 @@ class AnnouncementsScreen extends StatefulWidget {
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   final _supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
   List<Map<String, dynamic>> _announcements = [];
   String? _errorMessage;
-  bool _isAdmin = false; // Track if current user is admin
+  bool _isStaffOrAdmin = false; // Track if current user is staff or admin
 
   @override
   void initState() {
     super.initState();
     _fetchAnnouncements();
-    _checkAdminStatus(); // Check if user is admin
+    _checkRoleStatus();
+  }
 
-    // TEMPORARY: Force enable admin for testing - REMOVE IN PRODUCTION
+  Future<void> _checkRoleStatus() async {
+    final isStaff = await _authService.isStaff();
+    final isAdmin = await _authService.isAdmin();
     setState(() {
-      _isAdmin = true;
+      _isStaffOrAdmin = isStaff || isAdmin;
     });
-    debugPrint('OVERRIDE: Admin status forced to true for testing');
   }
 
-  // Check if the current user is an admin
-  Future<void> _checkAdminStatus() async {
-    try {
-      final user = _supabase.auth.currentUser;
-      debugPrint('Checking admin status for user: ${user?.id}');
-
-      if (user != null) {
-        try {
-          // First, let's check if the profiles table exists and what fields it has
-          final profilesCheck = await _supabase
-              .from('profiles')
-              .select('*')
-              .limit(1);
-          debugPrint('Profiles table first row: $profilesCheck');
-
-          // Now try to get the current user's profile
-          final userData =
-              await _supabase
-                  .from('profiles')
-                  .select('*') // Select all fields to see what's available
-                  .eq('id', user.id)
-                  .single();
-
-          debugPrint('User profile data: $userData');
-
-          // Check multiple possible admin field names
-          bool isAdmin = false;
-          if (userData.containsKey('is_admin')) {
-            isAdmin = userData['is_admin'] == true;
-            debugPrint(
-              'is_admin field found with value: ${userData['is_admin']}',
-            );
-          } else if (userData.containsKey('admin')) {
-            isAdmin = userData['admin'] == true;
-            debugPrint('admin field found with value: ${userData['admin']}');
-          } else if (userData.containsKey('role')) {
-            isAdmin =
-                userData['role'] == 'admin' || userData['role'] == 'faculty';
-            debugPrint('role field found with value: ${userData['role']}');
-          } else if (userData.containsKey('user_type')) {
-            isAdmin =
-                userData['user_type'] == 'admin' ||
-                userData['user_type'] == 'faculty';
-            debugPrint(
-              'user_type field found with value: ${userData['user_type']}',
-            );
-          }
-
-          // For testing purposes, let's also check if the email contains certain domains
-          final email = user.email?.toLowerCase() ?? '';
-          if (email.contains('faculty') ||
-              email.contains('admin') ||
-              email.contains('teacher')) {
-            debugPrint('Email suggests admin status: $email');
-            isAdmin = true;
-          }
-
-          setState(() {
-            _isAdmin = isAdmin;
-          });
-
-          debugPrint('Final admin status set to: $_isAdmin');
-        } catch (e) {
-          debugPrint('Error fetching user profile: $e');
-
-          // Fallback: check if email contains faculty/admin keywords
-          final email = user.email?.toLowerCase() ?? '';
-          if (email.contains('faculty') ||
-              email.contains('admin') ||
-              email.contains('teacher')) {
-            debugPrint('Fallback: Email suggests admin status: $email');
-            setState(() {
-              _isAdmin = true;
-            });
-          }
-        }
-      } else {
-        debugPrint('No logged in user found');
-      }
-    } catch (e) {
-      debugPrint('Error checking admin status: $e');
-    }
-  }
-
-  // Create a new announcement
+  // Create a new announcement (only for staff/admin)
   void _createAnnouncement() {
     // These will be used in the form
     final titleController = TextEditingController();
@@ -245,6 +165,21 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     );
   }
 
+  // Delete an announcement (only for staff/admin)
+  Future<void> _deleteAnnouncement(String id) async {
+    try {
+      await _supabase.from('announcements').delete().eq('id', id);
+      _fetchAnnouncements();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Announcement deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting announcement: $e')),
+      );
+    }
+  }
+
   Future<void> _fetchAnnouncements() async {
     setState(() {
       _isLoading = true;
@@ -334,7 +269,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         ],
       ),
       floatingActionButton:
-          _isAdmin
+          _isStaffOrAdmin
               ? FloatingActionButton.extended(
                 onPressed: _createAnnouncement,
                 icon: const Icon(Icons.add),
@@ -402,10 +337,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                     final String createdAt = _formatDate(
                       announcement['created_at'],
                     );
-
-                    // Simplified creator name since we no longer have the users join
-                    final String creatorName =
-                        "Faculty Member"; // Default value
+                    final String creatorName = "Faculty Member";
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -459,6 +391,56 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                     fontSize: 12,
                                   ),
                                 ),
+                                if (_isStaffOrAdmin)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    tooltip: 'Delete Announcement',
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder:
+                                            (context) => AlertDialog(
+                                              title: const Text(
+                                                'Delete Announcement',
+                                              ),
+                                              content: const Text(
+                                                'Are you sure you want to delete this announcement?',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                        false,
+                                                      ),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                TextButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                        true,
+                                                      ),
+                                                  child: const Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color: Colors.red,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                      );
+                                      if (confirm == true) {
+                                        _deleteAnnouncement(
+                                          announcement['id'].toString(),
+                                        );
+                                      }
+                                    },
+                                  ),
                               ],
                             ),
                           ),

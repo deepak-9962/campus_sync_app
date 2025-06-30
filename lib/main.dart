@@ -14,6 +14,8 @@ import 'screens/announcements_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/exams_screen.dart';
 import 'screens/attendance_screen.dart'; // Add this import for Attendance
+import 'screens/daily_attendance_screen.dart';
+import 'screens/role_test_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -241,6 +243,8 @@ class MyApp extends StatelessWidget {
               department: 'Computer Science Engineering',
               semester: 4,
             ),
+        '/role_test': (context) => const RoleTestScreen(),
+        // '/daily_attendance': (context) => const DailyAttendanceScreen(),
       },
     );
   }

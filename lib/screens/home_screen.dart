@@ -12,6 +12,10 @@ import 'lost_and_found_screen.dart'; // Added for Lost and Found
 import 'about_us_screen.dart'; // Added for About Us
 import 'dart:math' as math;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'daily_attendance_screen.dart';
+import 'staff_attendance_screen.dart';
+import '../services/auth_service.dart';
+import 'role_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -34,16 +38,11 @@ class _HomeScreenState extends State<HomeScreen>
   String? selectedSemester;
   String? selectedDepartment;
   late AnimationController _animationController;
-
-  // Light Theme Colors
-  static const Color primaryLightBackground = Color(0xFFF5F5F5); // Off-white
-  static const Color cardLightBackground = Colors.white;
-  static const Color primaryTextLight = Color(
-    0xFF212121,
-  ); // Very dark grey (almost black)
-  static const Color secondaryTextLight = Color(0xFF757575); // Medium grey
-  static const Color iconLight = Color(0xFF424242); // Darker grey for icons
-  static const Color accentColorLight = Color(0xFF1976D2); // Blue 700
+  bool _isStaff = false;
+  bool _isAdmin = false;
+  String _userRole = 'student';
+  bool _isLoadingRole = true;
+  final AuthService _authService = AuthService();
 
   final List<String> semesters = ['1', '2', '3', '4', '5', '6', '7', '8'];
   final List<String> departments = [
@@ -71,6 +70,27 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+
+    _checkUserRole();
+  }
+
+  Future<void> _checkUserRole() async {
+    try {
+      final role = await _authService.getUserRole();
+      final isStaff = await _authService.isStaff();
+      final isAdmin = await _authService.isAdmin();
+
+      setState(() {
+        _userRole = role;
+        _isStaff = isStaff;
+        _isAdmin = isAdmin;
+        _isLoadingRole = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingRole = false;
+      });
+    }
   }
 
   @override
@@ -81,28 +101,29 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: primaryLightBackground,
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
-        backgroundColor: cardLightBackground,
+        backgroundColor: colorScheme.surface,
         elevation: 0.5, // Subtle elevation for light theme
         centerTitle: true,
-        iconTheme: IconThemeData(color: iconLight),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.school,
-              color: accentColorLight,
+              color: colorScheme.primary,
               size: 24,
             ), // Accent color for app icon
             SizedBox(width: 8),
             Text(
               'Campus Sync',
-              style: TextStyle(
-                fontFamily: 'Clash Grotesk',
-                fontWeight: FontWeight.bold,
-                color: primaryTextLight,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
                 letterSpacing: 0.5,
               ),
             ),
@@ -120,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen>
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: cardLightBackground,
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -137,11 +158,13 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundColor: accentColorLight.withOpacity(0.1),
+                            backgroundColor: colorScheme.primary.withOpacity(
+                              0.1,
+                            ),
                             child: Icon(
                               Icons.person,
                               size: 28,
-                              color: accentColorLight,
+                              color: colorScheme.primary,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -151,19 +174,16 @@ class _HomeScreenState extends State<HomeScreen>
                               children: [
                                 Text(
                                   'Welcome back,',
-                                  style: TextStyle(
+                                  style: textTheme.bodyMedium?.copyWith(
                                     fontSize: 14,
-                                    color: secondaryTextLight,
-                                    fontFamily: 'Clash Grotesk',
+                                    color: colorScheme.onBackground,
                                   ),
                                 ),
                                 Text(
                                   widget.userName,
-                                  style: TextStyle(
+                                  style: textTheme.titleLarge?.copyWith(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryTextLight,
-                                    fontFamily: 'Clash Grotesk',
+                                    color: colorScheme.onSurface,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -190,6 +210,48 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ],
                       ),
+                      if (!_isLoadingRole) ...[
+                        SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getRoleColor(
+                                  _userRole,
+                                ).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: _getRoleColor(_userRole),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getRoleIcon(_userRole),
+                                    size: 16,
+                                    color: _getRoleColor(_userRole),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    _userRole.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: _getRoleColor(_userRole),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -277,6 +339,47 @@ class _HomeScreenState extends State<HomeScreen>
                           builder: (context) => LostAndFoundScreen(),
                         ),
                       );
+                    },
+                  ),
+                  _buildFeatureListItem(
+                    title:
+                        _isStaff || _isAdmin
+                            ? 'Take Attendance'
+                            : 'View Attendance',
+                    description:
+                        _isStaff || _isAdmin
+                            ? 'Take daily attendance for your classes'
+                            : 'Check your attendance records',
+                    icon:
+                        _isStaff || _isAdmin
+                            ? Icons.assignment_turned_in
+                            : Icons.visibility,
+                    onTap: () async {
+                      if (_isStaff || _isAdmin) {
+                        // Staff and Admin can take attendance
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => StaffAttendanceScreen(
+                                  department: selectedDepartment!,
+                                  semester: int.parse(selectedSemester!),
+                                ),
+                          ),
+                        );
+                      } else {
+                        // Students can only view attendance
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AttendanceScreen(
+                                  department: selectedDepartment!,
+                                  semester: int.parse(selectedSemester!),
+                                ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ]),
@@ -368,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen>
         onPressed: () {
           // TODO: Add action
         },
-        backgroundColor: accentColorLight,
+        backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
         child: Icon(Icons.chat_bubble_outline),
       ),
@@ -376,23 +479,26 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildInfoChip(String text, IconData icon, {bool isExpanded = false}) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     Widget chipContent = Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: accentColorLight.withOpacity(0.08), // Subtle accent background
+        color: colorScheme.primary.withOpacity(
+          0.08,
+        ), // Subtle accent background
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: accentColorLight, size: 16),
+          Icon(icon, color: colorScheme.primary, size: 16),
           SizedBox(width: 6),
           Flexible(
             child: Text(
               text,
-              style: TextStyle(
-                color: accentColorLight,
-                fontFamily: 'Clash Grotesk',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.primary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -407,6 +513,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildSectionTitle(String title, IconData icon) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.only(
@@ -420,20 +528,19 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: accentColorLight.withOpacity(0.1),
+                color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: accentColorLight, size: 18),
+              child: Icon(icon, color: colorScheme.primary, size: 18),
             ),
             SizedBox(width: 10),
             Text(
               title.toUpperCase(),
-              style: TextStyle(
+              style: textTheme.titleSmall?.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: primaryTextLight,
+                color: colorScheme.onSurface,
                 letterSpacing: 1.1,
-                fontFamily: 'Clash Grotesk',
               ),
             ),
           ],
@@ -449,9 +556,11 @@ class _HomeScreenState extends State<HomeScreen>
     required VoidCallback onTap,
     Color? iconColor,
   }) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     return Card(
       elevation: 0.5,
-      color: cardLightBackground,
+      color: colorScheme.surface,
       margin: EdgeInsets.symmetric(vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
@@ -459,31 +568,29 @@ class _HomeScreenState extends State<HomeScreen>
         leading: Container(
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: (iconColor ?? accentColorLight).withOpacity(0.1),
+            color: (iconColor ?? colorScheme.primary).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: iconColor ?? accentColorLight, size: 22),
+          child: Icon(icon, color: iconColor ?? colorScheme.primary, size: 22),
         ),
         title: Text(
           title,
-          style: TextStyle(
-            color: primaryTextLight,
+          style: textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w500,
-            fontFamily: 'Clash Grotesk',
             fontSize: 15,
           ),
         ),
         subtitle: Text(
           description,
-          style: TextStyle(
-            color: secondaryTextLight,
-            fontFamily: 'Clash Grotesk',
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onBackground,
             fontSize: 13,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
-          color: secondaryTextLight,
+          color: colorScheme.onBackground,
           size: 16,
         ),
         onTap: onTap,
@@ -492,39 +599,39 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDrawer() {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     return Drawer(
-      backgroundColor: cardLightBackground,
+      backgroundColor: colorScheme.surface,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: primaryLightBackground),
+            decoration: BoxDecoration(color: colorScheme.background),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: accentColorLight.withOpacity(0.8),
+                  backgroundColor: colorScheme.primary.withOpacity(0.8),
                   child: Icon(Icons.person, color: Colors.white, size: 30),
                 ),
                 SizedBox(height: 12),
                 Text(
                   widget.userName,
-                  style: TextStyle(
-                    color: primaryTextLight,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colorScheme.onSurface,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
                   ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   '${selectedDepartment ?? widget.department} - Sem ${selectedSemester ?? widget.semester.toString()}',
-                  style: TextStyle(
-                    color: secondaryTextLight,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onBackground,
                     fontSize: 13,
-                    fontFamily: 'Clash Grotesk',
                   ),
                 ),
               ],
@@ -561,6 +668,33 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
+          // Temporarily show test screen to all users for debugging
+          Divider(color: Colors.grey[300]),
+          _buildDrawerItem(
+            icon: Icons.bug_report_outlined,
+            title: 'Role Setup Test',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RoleTestScreen()),
+              );
+            },
+          ),
+          if (_isAdmin) ...[
+            Divider(color: Colors.grey[300]),
+            _buildDrawerItem(
+              icon: Icons.admin_panel_settings,
+              title: 'Admin Tools',
+              onTap: () {
+                Navigator.pop(context);
+                // Add admin-specific functionality here
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Admin tools coming soon!')),
+                );
+              },
+            ),
+          ],
           Divider(color: Colors.grey[300]),
           _buildDrawerItem(
             icon: Icons.logout,
@@ -594,17 +728,44 @@ class _HomeScreenState extends State<HomeScreen>
     required String title,
     required VoidCallback onTap,
   }) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
     return ListTile(
-      leading: Icon(icon, color: iconLight),
+      leading: Icon(icon, color: colorScheme.onSurface),
       title: Text(
         title,
-        style: TextStyle(
-          color: primaryTextLight,
-          fontFamily: 'Clash Grotesk',
+        style: textTheme.titleMedium?.copyWith(
+          color: colorScheme.onSurface,
           fontSize: 15,
         ),
       ),
       onTap: onTap,
     );
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'student':
+        return Colors.green[700]!;
+      case 'staff':
+        return Colors.blue[700]!;
+      case 'admin':
+        return Colors.purple[700]!;
+      default:
+        throw Exception("Unknown role: $role");
+    }
+  }
+
+  IconData _getRoleIcon(String role) {
+    switch (role) {
+      case 'student':
+        return Icons.person;
+      case 'staff':
+        return Icons.school;
+      case 'admin':
+        return Icons.admin_panel_settings;
+      default:
+        throw Exception("Unknown role: $role");
+    }
   }
 }
