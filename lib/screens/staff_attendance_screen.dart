@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/attendance_service.dart';
 import 'daily_attendance_screen.dart';
 import 'package:intl/intl.dart';
+import '../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StaffAttendanceScreen extends StatefulWidget {
   final String department;
@@ -25,6 +27,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Map<String, bool> attendance = {};
 
   final List<String> sections = ['A', 'B'];
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -40,22 +43,24 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     });
 
     try {
-      final service = AttendanceService();
-      final allStudents = await service.getAllRegistrationNumbers();
-      final filtered =
-          allStudents
-              .where(
-                (s) =>
-                    s['department'] == widget.department &&
-                    s['semester'] == widget.semester &&
-                    s['section'] == selectedSection,
-              )
-              .toList();
+      // Fetch students from Supabase with id, registration_no, student_name, etc.
+      final supabase = Supabase.instance.client;
+      print(
+        'department: ${widget.department} (${widget.department.runtimeType}), current_semester: ${widget.semester} (${widget.semester.runtimeType}), section: $selectedSection (${selectedSection.runtimeType})',
+      );
+      final response = await supabase
+          .from('students')
+          .select('id,registration_no,department,current_semester, section')
+          .ilike('department', widget.department)
+          .eq('current_semester', widget.semester)
+          .eq('section', selectedSection!);
+
+      print('Fetched students: ' + response.toString());
 
       setState(() {
-        students = filtered;
+        students = List<Map<String, dynamic>>.from(response);
         attendance = {
-          for (var s in filtered) s['registration_no'] as String: true,
+          for (var s in students) s['registration_no'] as String: true,
         };
         isLoading = false;
       });
@@ -98,20 +103,45 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     });
   }
 
-  void _submitAttendance() {
-    // Here you would typically save to database
-    final presentCount = attendance.values.where((v) => v).length;
-    final absentCount = attendance.values.where((v) => !v).length;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Attendance submitted for ${DateFormat('dd MMM yyyy').format(selectedDate)}\n'
-          'Section $selectedSection: $presentCount present, $absentCount absent',
+  Future<void> _submitAttendance() async {
+    if (students.isEmpty) return;
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = _authService.currentUser?.id;
+      if (userId == null) throw Exception('User not logged in');
+      final dateStr = selectedDate.toIso8601String().substring(0, 10);
+      for (final student in students) {
+        final reg = student['registration_no'] as String;
+        final present = attendance[reg] ?? true;
+        final status = present ? 'present' : 'absent';
+        final studentId = student['id'];
+        await supabase.from('attendance').upsert({
+          'student_id': studentId,
+          'date': dateStr,
+          'status': status,
+          'marked_by': userId,
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Attendance submitted for ${DateFormat('dd MMM yyyy').format(selectedDate)}\nSection $selectedSection',
+          ),
+          duration: Duration(seconds: 3),
         ),
-        duration: Duration(seconds: 3),
-      ),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting attendance: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -302,7 +332,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             itemBuilder: (context, idx) {
                               final student = students[idx];
                               final reg = student['registration_no'] as String;
-                              final name = student['student_name'] as String;
                               final present = attendance[reg] ?? true;
 
                               return ListTile(
@@ -323,12 +352,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  name,
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                                subtitle: Text(
                                   reg,
-                                  style: TextStyle(fontSize: 12),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 trailing: Switch(
                                   value: present,
@@ -351,7 +379,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                         Container(
                           padding: EdgeInsets.all(16),
                           child: ElevatedButton.icon(
-                            onPressed: _submitAttendance,
+                            onPressed: isLoading ? null : _submitAttendance,
                             icon: Icon(Icons.save),
                             label: Text('Submit Attendance'),
                             style: ElevatedButton.styleFrom(
