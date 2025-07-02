@@ -50,7 +50,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       );
       final response = await supabase
           .from('students')
-          .select('id,registration_no,department,current_semester, section')
+          .select('registration_no,department,current_semester, section')
           .ilike('department', widget.department)
           .eq('current_semester', widget.semester)
           .eq('section', selectedSection!);
@@ -117,9 +117,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         final reg = student['registration_no'] as String;
         final present = attendance[reg] ?? true;
         final status = present ? 'present' : 'absent';
-        final studentId = student['id'];
         await supabase.from('attendance').upsert({
-          'student_id': studentId,
+          'registration_no': reg,
           'date': dateStr,
           'status': status,
           'marked_by': userId,
