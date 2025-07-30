@@ -281,15 +281,22 @@ GRANT EXECUTE ON FUNCTION public.count_fcm_tokens() TO authenticated;
 
 -- Create students table
 CREATE TABLE IF NOT EXISTS public.students (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    registration_no TEXT UNIQUE NOT NULL,
-    student_name TEXT NOT NULL,
-    department TEXT NOT NULL,
-    semester INTEGER NOT NULL,
-    section TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    registration_no TEXT NOT NULL,
+    user_id UUID NULL,
+    year_of_joining INTEGER NULL,
+    current_year_of_study INTEGER NULL,
+    current_semester INTEGER NULL,
+    section TEXT NULL,
+    department TEXT NULL,
+    batch TEXT NULL,
+    status TEXT NULL DEFAULT 'active'::TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE NULL DEFAULT NOW(),
+    CONSTRAINT students_pkey PRIMARY KEY (registration_no),
+    CONSTRAINT students_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE
 );
+
+-- Create index for user_id
+CREATE INDEX IF NOT EXISTS idx_students_user_id ON public.students USING btree (user_id);
 
 -- Enable RLS on the students table
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;

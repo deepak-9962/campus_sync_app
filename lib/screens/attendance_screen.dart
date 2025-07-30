@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'attendance_lookup_screen.dart';
 import 'database_setup_screen.dart';
 import 'staff_attendance_screen.dart';
+import 'student_attendance_screen.dart';
+import 'all_students_attendance_screen.dart';
 import '../services/auth_service.dart';
 import 'role_test_screen.dart';
 
@@ -203,8 +204,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.analytics),
-                    label: const Text('View Class Reports'),
+                    icon: const Icon(Icons.list),
+                    label: const Text('View All Students'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
@@ -216,11 +217,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       ),
                     ),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Attendance reports feature coming soon!',
-                          ),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AllStudentsAttendanceScreen(
+                                department: widget.department,
+                                semester: widget.semester,
+                              ),
                         ),
                       );
                     },
@@ -250,7 +254,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AttendanceLookupScreen(),
+                          builder:
+                              (context) => StudentAttendanceScreen(
+                                department: widget.department,
+                                semester: widget.semester,
+                              ),
                         ),
                       );
                     },

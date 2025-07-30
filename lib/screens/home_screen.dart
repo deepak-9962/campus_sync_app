@@ -382,6 +382,25 @@ class _HomeScreenState extends State<HomeScreen>
                       }
                     },
                   ),
+                  // Separate View Attendance for Staff/Admin
+                  if (_isStaff || _isAdmin)
+                    _buildFeatureListItem(
+                      title: 'View Attendance Records',
+                      description: 'Check attendance history and reports',
+                      icon: Icons.visibility,
+                      onTap: () async {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AttendanceScreen(
+                                  department: selectedDepartment!,
+                                  semester: int.parse(selectedSemester!),
+                                ),
+                          ),
+                        );
+                      },
+                    ),
                 ]),
               ),
             ),

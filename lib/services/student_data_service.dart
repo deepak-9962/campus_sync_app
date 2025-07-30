@@ -120,4 +120,33 @@ class StudentDataService {
       return [];
     }
   }
+
+  /// Get students by department and semester (for marks management)
+  Future<List<Map<String, dynamic>>> getStudentsByDepartmentAndSemester({
+    required String department,
+    required int semester,
+  }) async {
+    try {
+      print(
+        'Loading students for department: $department, semester: $semester',
+      );
+
+      final response = await _supabase
+          .from('students')
+          .select(
+            'registration_no,user_id,year_of_joining,current_year_of_study,current_semester,section,department,batch,status',
+          )
+          .ilike('department', department)
+          .eq('current_semester', semester)
+          .order('section, registration_no');
+
+      print(
+        'Loaded ${response.length} students for $department semester $semester',
+      );
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching students: $e');
+      return [];
+    }
+  }
 }
