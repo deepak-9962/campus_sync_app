@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/attendance_service.dart';
+import '../services/student_data_service.dart';
 import 'daily_attendance_screen.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
@@ -28,11 +29,20 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
   final List<String> sections = ['A', 'B'];
   final AuthService _authService = AuthService();
+  final StudentDataService _studentDataService = StudentDataService();
 
   @override
   void initState() {
     super.initState();
-    _loadStudents();
+    _setupDatabase();
+  }
+
+  Future<void> _setupDatabase() async {
+    // Setup students table and data
+    await _studentDataService.setupStudentsTable();
+    if (selectedSection != null) {
+      _loadStudents();
+    }
   }
 
   Future<void> _loadStudents() async {
@@ -43,28 +53,28 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     });
 
     try {
-      // Fetch students from Supabase with id, registration_no, student_name, etc.
-      final supabase = Supabase.instance.client;
       print(
-        'department: ${widget.department} (${widget.department.runtimeType}), current_semester: ${widget.semester} (${widget.semester.runtimeType}), section: $selectedSection (${selectedSection.runtimeType})',
+        'Loading students for department: ${widget.department}, semester: ${widget.semester}, section: $selectedSection',
       );
-      final response = await supabase
-          .from('students')
-          .select('registration_no,department,current_semester, section')
-          .ilike('department', widget.department)
-          .eq('current_semester', widget.semester)
-          .eq('section', selectedSection!);
 
-      print('Fetched students: ' + response.toString());
+      // Use the student data service to get students
+      final students = await _studentDataService.getStudentsBySection(
+        department: widget.department,
+        semester: widget.semester,
+        section: selectedSection!,
+      );
+
+      print('Loaded ${students.length} students: $students');
 
       setState(() {
-        students = List<Map<String, dynamic>>.from(response);
+        this.students = students;
         attendance = {
           for (var s in students) s['registration_no'] as String: true,
         };
         isLoading = false;
       });
     } catch (e) {
+      print('Error loading students: $e');
       setState(() {
         isLoading = false;
       });
@@ -351,10 +361,17 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  reg,
+                                  'Student ${idx + 1}',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 16,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Reg: $reg',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                                 trailing: Switch(

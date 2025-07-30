@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 // import 'package:firebase_core/firebase_core.dart'; // Remove Firebase import
 // import 'services/notification_service.dart'; // Remove this line
 import 'screens/profile_settings_screen.dart'; // Import the ProfileScreen
@@ -19,6 +22,18 @@ import 'screens/role_test_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase only for mobile platforms
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+      debugPrint('Firebase initialized successfully');
+    } catch (e) {
+      debugPrint('Firebase initialization error: $e');
+    }
+  } else {
+    debugPrint('Skipping Firebase initialization for web platform');
+  }
 
   // Remove Firebase initialization as it's causing errors
   // try {
@@ -46,11 +61,50 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// Call this after user login/registration, passing the Supabase user id.
+Future<void> setupPushNotifications(String userId) async {
+  if (!kIsWeb) {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission();
+      String? token = await messaging.getToken();
+      if (token != null) {
+        await Supabase.instance.client
+            .from('users')
+            .update({'fcm_token': token})
+            .eq('id', userId);
+      }
+    } catch (e) {
+      debugPrint('Push notification setup error: $e');
+    }
+  }
+}
+
+void setupNotificationListeners() {
+  if (!kIsWeb) {
+    try {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.notification != null) {
+          // You can show a dialog/snackbar/local notification here
+          debugPrint('Notification Title: ${message.notification!.title}');
+          debugPrint('Notification Body: ${message.notification!.body}');
+        }
+      });
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        // Handle notification tap when app is in background
+      });
+    } catch (e) {
+      debugPrint('Notification listeners setup error: $e');
+    }
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    setupNotificationListeners();
     return MaterialApp(
       title: 'Campus Sync App',
       debugShowCheckedModeBanner: false,

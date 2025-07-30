@@ -279,6 +279,52 @@ $$;
 REVOKE ALL ON FUNCTION public.count_fcm_tokens() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.count_fcm_tokens() TO authenticated;
 
+-- Create students table
+CREATE TABLE IF NOT EXISTS public.students (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    registration_no TEXT UNIQUE NOT NULL,
+    student_name TEXT NOT NULL,
+    department TEXT NOT NULL,
+    semester INTEGER NOT NULL,
+    section TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on the students table
+ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+
+-- Policies for the students table
+CREATE POLICY "Users can read all students" ON public.students
+    FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Faculty can insert students" ON public.students
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.users
+            WHERE users.id = auth.uid() AND (users.role = 'faculty' OR users.is_admin = true)
+        )
+    );
+
+CREATE POLICY "Faculty can update students" ON public.students
+    FOR UPDATE TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.users
+            WHERE users.id = auth.uid() AND (users.role = 'faculty' OR users.is_admin = true)
+        )
+    );
+
+-- RPC function to create students table (for programmatic creation)
+CREATE OR REPLACE FUNCTION create_students_table() RETURNS void AS $$
+BEGIN
+    -- This function is just a placeholder since the table is already created above
+    -- It's used by the app to attempt table creation
+    RAISE NOTICE 'Students table setup completed';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Announcements table
 CREATE TABLE IF NOT EXISTS public.announcements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
