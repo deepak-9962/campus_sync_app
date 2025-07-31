@@ -46,7 +46,29 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         throw Exception('User not logged in');
       }
 
-      // Get student information using the new RPC function
+      print('Loading attendance for user: ${user.email}');
+
+      // FIRST: Try to get attendance directly from email
+      final emailBasedAttendance =
+          await _attendanceService.getAttendanceFromEmail();
+
+      if (emailBasedAttendance != null) {
+        print(
+          'Successfully loaded attendance using email-based registration number',
+        );
+        setState(() {
+          _attendanceData = emailBasedAttendance;
+          _studentRegNo = emailBasedAttendance['registration_no'];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      print(
+        'Email-based attendance lookup failed, trying linked account method...',
+      );
+
+      // FALLBACK: Try linked account method
       final studentResponse = await Supabase.instance.client.rpc(
         'get_my_student_info',
       );
@@ -57,33 +79,10 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         final studentData = studentResponse.first;
         _studentRegNo = studentData['registration_no'];
         _studentInfo = studentData;
-      } else {
-        // If no student linked, navigate to link account screen
-        if (mounted) {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => LinkStudentAccountScreen(
-                    department: widget.department,
-                    semester: widget.semester,
-                  ),
-            ),
-          );
 
-          // If account was successfully linked, retry loading attendance
-          if (result == true && mounted) {
-            _loadStudentAttendance();
-            return;
-          }
-        }
-        throw Exception(
-          'Student account not linked. Please link your account to view attendance.',
-        );
-      }
+        print('Found linked student info for registration: $_studentRegNo');
 
-      // Get attendance data
-      if (_studentRegNo != null) {
+        // Get attendance data using linked registration number
         final attendanceResult = await _attendanceService
             .getAttendanceByRegistrationNo(_studentRegNo!);
 
@@ -91,6 +90,49 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           _attendanceData = attendanceResult;
           _isLoading = false;
         });
+      } else {
+        // If no student linked and email method failed, show helpful message
+        print('No linked account found and email-based lookup failed');
+
+        // Extract registration number from email for display
+        final extractedRegNo = _attendanceService.extractRegistrationFromEmail(
+          user.email ?? '',
+        );
+
+        if (extractedRegNo != null) {
+          throw Exception(
+            'No attendance data found for registration number: $extractedRegNo\n\n'
+            'Possible reasons:\n'
+            '• Attendance data not yet uploaded to the system\n'
+            '• Registration number format mismatch\n'
+            '• You may need to link your student account manually\n\n'
+            'Extracted from email: ${user.email}',
+          );
+        } else {
+          // If we can't extract reg number from email, navigate to link account screen
+          if (mounted) {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => LinkStudentAccountScreen(
+                      department: widget.department,
+                      semester: widget.semester,
+                    ),
+              ),
+            );
+
+            // If account was successfully linked, retry loading attendance
+            if (result == true && mounted) {
+              _loadStudentAttendance();
+              return;
+            }
+          }
+          throw Exception(
+            'Could not determine your registration number from email: ${user.email}\n\n'
+            'Please link your student account manually to view attendance.',
+          );
+        }
       }
     } catch (e) {
       setState(() {
