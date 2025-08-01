@@ -10,10 +10,7 @@ class MarksService {
     try {
       final response = await _supabase
           .from('marks')
-          .select('''
-            *,
-            exams!marks_exam_id_fkey(name, date)
-          ''')
+          .select('*')
           .eq('registration_no', registrationNo)
           .order('created_at', ascending: false);
 
@@ -115,6 +112,105 @@ class MarksService {
     }
   }
 
+  /// Get Database Management System marks for all students
+  Future<List<Map<String, dynamic>>> getDBMSMarks() async {
+    try {
+      final response = await _supabase
+          .from('marks')
+          .select('*')
+          .eq('subject', 'Database Management System')
+          .order('registration_no');
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error) {
+      print('Error fetching DBMS marks: $error');
+      return [];
+    }
+  }
+
+  /// Get marks for a specific subject
+  Future<List<Map<String, dynamic>>> getMarksBySubject(String subject) async {
+    try {
+      final response = await _supabase
+          .from('marks')
+          .select('*')
+          .eq('subject', subject)
+          .order('registration_no');
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error) {
+      print('Error fetching marks for subject $subject: $error');
+      return [];
+    }
+  }
+
+  /// Get marks statistics for a subject
+  Future<Map<String, dynamic>> getSubjectStatistics(String subject) async {
+    try {
+      final marks = await getMarksBySubject(subject);
+
+      if (marks.isEmpty) {
+        return {
+          'totalStudents': 0,
+          'studentsWithMarks': 0,
+          'absentStudents': 0,
+          'averageMark': 0.0,
+          'highestMark': 0,
+          'lowestMark': 0,
+          'passCount': 0,
+          'failCount': 0,
+        };
+      }
+
+      int totalStudents = marks.length;
+      int studentsWithMarks = 0;
+      int absentStudents = 0;
+      int passCount = 0;
+      int failCount = 0;
+      double totalMarks = 0;
+      int highestMark = 0;
+      int lowestMark = 100;
+
+      for (var markData in marks) {
+        final mark = markData['mark'];
+        if (mark != null && mark != -1) {
+          studentsWithMarks++;
+          totalMarks += mark;
+
+          if (mark >= 50)
+            passCount++;
+          else
+            failCount++;
+
+          if (mark > highestMark) highestMark = mark;
+          if (mark < lowestMark) lowestMark = mark;
+        } else {
+          absentStudents++;
+        }
+      }
+
+      double averageMark =
+          studentsWithMarks > 0 ? totalMarks / studentsWithMarks : 0.0;
+
+      return {
+        'subject': subject,
+        'totalStudents': totalStudents,
+        'studentsWithMarks': studentsWithMarks,
+        'absentStudents': absentStudents,
+        'averageMark': averageMark,
+        'highestMark': highestMark,
+        'lowestMark': studentsWithMarks > 0 ? lowestMark : 0,
+        'passCount': passCount,
+        'failCount': failCount,
+        'passPercentage':
+            studentsWithMarks > 0 ? (passCount / studentsWithMarks) * 100 : 0.0,
+      };
+    } catch (error) {
+      print('Error calculating statistics for subject $subject: $error');
+      return {};
+    }
+  }
+
   /// Get student performance summary
   Future<Map<String, dynamic>> getStudentPerformanceSummary(
     String registrationNo,
@@ -138,18 +234,21 @@ class MarksService {
       Set<String> subjects = {};
 
       for (var mark in marks) {
-        double percentage = (mark['mark'] / mark['out_of']) * 100;
-        totalPercentage += percentage;
+        if (mark['mark'] != null) {
+          double percentage = (mark['mark'] / mark['out_of']) * 100;
+          totalPercentage += percentage;
 
-        if (mark['mark'] > highestMark) highestMark = mark['mark'];
-        if (mark['mark'] < lowestMark) lowestMark = mark['mark'];
+          if (mark['mark'] > highestMark) highestMark = mark['mark'];
+          if (mark['mark'] < lowestMark) lowestMark = mark['mark'];
 
-        subjects.add(mark['subject']);
+          subjects.add(mark['subject']);
+        }
       }
 
       return {
         'totalExams': marks.length,
-        'averagePercentage': totalPercentage / marks.length,
+        'averagePercentage':
+            marks.isNotEmpty ? totalPercentage / marks.length : 0.0,
         'totalSubjects': subjects.length,
         'highestMark': highestMark,
         'lowestMark': lowestMark,

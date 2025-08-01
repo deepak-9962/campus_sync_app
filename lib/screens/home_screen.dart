@@ -10,6 +10,8 @@ import 'attendance_screen.dart';
 import 'regulation_selection_screen.dart';
 import 'lost_and_found_screen.dart'; // Added for Lost and Found
 import 'about_us_screen.dart'; // Added for About Us
+import 'dbms_marks_screen.dart'; // Added for DBMS marks
+import 'my_marks_screen.dart'; // Added for student individual marks
 import 'dart:math' as math;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'daily_attendance_screen.dart';
@@ -401,6 +403,37 @@ class _HomeScreenState extends State<HomeScreen>
                         );
                       },
                     ),
+                  // Marks feature
+                  _buildFeatureListItem(
+                    title:
+                        _isStaff || _isAdmin
+                            ? 'View All Students\' Marks'
+                            : 'My Exam Results',
+                    description:
+                        _isStaff || _isAdmin
+                            ? 'View class examination results'
+                            : 'Check your examination marks',
+                    icon: Icons.grade,
+                    onTap: () {
+                      if (_isStaff || _isAdmin) {
+                        // Staff/Admin can view all students' marks
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DBMSMarksScreen(),
+                          ),
+                        );
+                      } else {
+                        // Students can only view their own marks
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MyMarksScreen(),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ]),
               ),
             ),

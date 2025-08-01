@@ -15,7 +15,9 @@ class AttendanceService {
       // Query attendance table directly
       final attendanceResponse = await _supabase
           .from('attendance')
-          .select('registration_no, percentage, total_classes, attended_classes, status, date')
+          .select(
+            'registration_no, percentage, total_classes, attended_classes, status, date',
+          )
           .eq('registration_no', cleanedRegNo)
           .order('date', ascending: false) // Get latest record first
           .limit(1);
@@ -55,21 +57,27 @@ class AttendanceService {
         };
       }
 
-      print('No attendance record found for registration number: $cleanedRegNo');
-      
+      print(
+        'No attendance record found for registration number: $cleanedRegNo',
+      );
+
       // Also check if the registration number exists in students table
       final studentCheck = await _supabase
           .from('students')
           .select('registration_no')
           .eq('registration_no', cleanedRegNo)
           .limit(1);
-      
+
       if (studentCheck.isEmpty) {
-        print('Registration number $cleanedRegNo does not exist in students table');
+        print(
+          'Registration number $cleanedRegNo does not exist in students table',
+        );
       } else {
-        print('Registration number exists in students table but no attendance data found');
+        print(
+          'Registration number exists in students table but no attendance data found',
+        );
       }
-      
+
       return null;
     } catch (error) {
       print('Error fetching attendance: $error');
@@ -79,7 +87,8 @@ class AttendanceService {
 
   // Helper method to get status text based on percentage
   String _getStatusText(double percentage) {
-    if (percentage >= 90) return 'Excellent (${percentage.toStringAsFixed(1)}%)';
+    if (percentage >= 90)
+      return 'Excellent (${percentage.toStringAsFixed(1)}%)';
     if (percentage >= 75) return 'Good (${percentage.toStringAsFixed(1)}%)';
     if (percentage >= 60) return 'Average (${percentage.toStringAsFixed(1)}%)';
     return 'Below Average (${percentage.toStringAsFixed(1)}%)';
