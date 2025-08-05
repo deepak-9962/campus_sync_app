@@ -95,12 +95,8 @@ class _TimetableScreenState extends State<TimetableScreen>
       for (String day in _days) {
         formattedData[day] = [];
 
-        // Check for the day in lowercase to match database format
-        String dayLower = day.toLowerCase();
-        print('Checking for day: $day (lowercase: $dayLower)');
-        if (timetableData.containsKey(dayLower)) {
-          final daySchedule = timetableData[dayLower]!;
-          print('Found ${daySchedule.length} periods for $day');
+        if (timetableData.containsKey(day)) {
+          final daySchedule = timetableData[day]!;
 
           // Sort by period number
           daySchedule.sort(
@@ -123,14 +119,10 @@ class _TimetableScreenState extends State<TimetableScreen>
             final room = period['room'] ?? '';
             final batch = period['batch'] ?? '';
 
-            print('Adding period: $timeRange - $subjectName');
-
             formattedData[day]!.add(
               TimeSlot(timeRange, subjectName, facultyName, room, batch),
             );
           }
-        } else {
-          print('No data found for $day (lowercase: $dayLower)');
         }
 
         // Add standard break and lunch periods if not already present
@@ -138,10 +130,6 @@ class _TimetableScreenState extends State<TimetableScreen>
           _addStandardBreaks(formattedData[day]!);
         }
       }
-
-      print(
-        'Final formatted data: ${formattedData.keys.map((k) => '$k: ${formattedData[k]!.length} periods').join(', ')}',
-      );
 
       setState(() {
         _timetableData = formattedData;
@@ -157,7 +145,8 @@ class _TimetableScreenState extends State<TimetableScreen>
   }
 
   void _addStandardBreaks(List<TimeSlot> daySchedule) {
-    // Add standard break and lunch periods based on your college schedule
+    // This is a simplified version - you might want to make this more sophisticated
+    // based on the actual period timings in your database
 
     bool hasBreak = daySchedule.any(
       (slot) => slot.subject.toLowerCase().contains('break'),
@@ -167,16 +156,11 @@ class _TimetableScreenState extends State<TimetableScreen>
     );
 
     if (!hasBreak && daySchedule.length >= 2) {
-      // Insert break after 2nd period (10:15 - 10:30)
-      daySchedule.insert(
-        2,
-        TimeSlot('10:15 AM - 10:30 AM', 'Break', '', 'C11'),
-      );
+      daySchedule.insert(2, TimeSlot('10:40 - 10:55', 'Break', '', ''));
     }
 
     if (!hasLunch && daySchedule.length >= 5) {
-      // Insert lunch after 5th period (12:00 - 12:45)
-      daySchedule.insert(5, TimeSlot('12:00 PM - 12:45 PM', 'Lunch', '', ''));
+      daySchedule.insert(5, TimeSlot('12:35 - 01:25', 'Lunch', '', ''));
     }
   }
 
@@ -395,17 +379,16 @@ class _TimetableScreenState extends State<TimetableScreen>
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 90,
+              width: 64,
               child: Text(
                 slot.time,
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 10,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Clash Grotesk',
                 ),
                 overflow: TextOverflow.ellipsis,
-                maxLines: 2,
               ),
             ),
             Container(

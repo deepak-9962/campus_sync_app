@@ -85,7 +85,7 @@ class StudentDataService {
       final response = await _supabase
           .from('students')
           .select(
-            'registration_no,user_id,year_of_joining,current_year_of_study,current_semester,section,department,batch,status',
+            'registration_no,student_name,user_id,year_of_joining,current_year_of_study,current_semester,section,department,batch,status',
           )
           .ilike(
             'department',

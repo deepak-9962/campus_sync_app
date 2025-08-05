@@ -25,6 +25,8 @@ class _AllStudentsAttendanceScreenState
   String _searchQuery = '';
   String _sortBy = 'registration_no'; // registration_no, percentage, name
   bool _sortAscending = true;
+  bool _showTodayAttendance =
+      false; // Toggle between today's and overall attendance
 
   @override
   void initState() {
@@ -43,11 +45,21 @@ class _AllStudentsAttendanceScreenState
         'Loading attendance data for: ${widget.department}, Semester: ${widget.semester}',
       );
 
-      // Get all students attendance data
-      final attendanceData = await _attendanceService.getAllStudentsAttendance(
-        department: widget.department,
-        semester: widget.semester,
-      );
+      List<Map<String, dynamic>> attendanceData;
+
+      if (_showTodayAttendance) {
+        // Get today's attendance records
+        attendanceData = await _attendanceService.getTodayAttendance(
+          department: widget.department,
+          semester: widget.semester,
+        );
+      } else {
+        // Get overall attendance data
+        attendanceData = await _attendanceService.getAllStudentsAttendance(
+          department: widget.department,
+          semester: widget.semester,
+        );
+      }
 
       print('Received ${attendanceData.length} attendance records');
 
@@ -112,7 +124,9 @@ class _AllStudentsAttendanceScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Students Attendance'),
+        title: Text(
+          _showTodayAttendance ? 'Today\'s Attendance' : 'Overall Attendance',
+        ),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
         elevation: 0,
@@ -187,6 +201,88 @@ class _AllStudentsAttendanceScreenState
               ),
             ),
 
+            // Toggle Buttons for Today's vs Overall Attendance
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (_showTodayAttendance) {
+                          setState(() {
+                            _showTodayAttendance = false;
+                          });
+                          _loadAllStudentsAttendance();
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color:
+                              !_showTodayAttendance
+                                  ? Colors.blue[700]
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Overall Attendance',
+                            style: TextStyle(
+                              color:
+                                  !_showTodayAttendance
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (!_showTodayAttendance) {
+                          setState(() {
+                            _showTodayAttendance = true;
+                          });
+                          _loadAllStudentsAttendance();
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color:
+                              _showTodayAttendance
+                                  ? Colors.blue[700]
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Today\'s Attendance',
+                            style: TextStyle(
+                              color:
+                                  _showTodayAttendance
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Search Bar
             Padding(
               padding: const EdgeInsets.all(16),
@@ -229,29 +325,52 @@ class _AllStudentsAttendanceScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildStatItem(
-                      'Total Students',
+                      _showTodayAttendance
+                          ? 'Total Present Today'
+                          : 'Total Students',
                       _allStudentsAttendance.length.toString(),
                       Icons.people,
                       Colors.blue,
                     ),
-                    _buildStatItem(
-                      'Above 75%',
-                      _allStudentsAttendance
-                          .where((s) => (s['percentage'] ?? 0) >= 75)
-                          .length
-                          .toString(),
-                      Icons.trending_up,
-                      Colors.green,
-                    ),
-                    _buildStatItem(
-                      'Below 75%',
-                      _allStudentsAttendance
-                          .where((s) => (s['percentage'] ?? 0) < 75)
-                          .length
-                          .toString(),
-                      Icons.trending_down,
-                      Colors.red,
-                    ),
+                    if (_showTodayAttendance) ...[
+                      _buildStatItem(
+                        'Present',
+                        _allStudentsAttendance
+                            .where((s) => s['status'] == 'present')
+                            .length
+                            .toString(),
+                        Icons.check_circle,
+                        Colors.green,
+                      ),
+                      _buildStatItem(
+                        'Absent',
+                        _allStudentsAttendance
+                            .where((s) => s['status'] == 'absent')
+                            .length
+                            .toString(),
+                        Icons.cancel,
+                        Colors.red,
+                      ),
+                    ] else ...[
+                      _buildStatItem(
+                        'Above 75%',
+                        _allStudentsAttendance
+                            .where((s) => (s['percentage'] ?? 0) >= 75)
+                            .length
+                            .toString(),
+                        Icons.trending_up,
+                        Colors.green,
+                      ),
+                      _buildStatItem(
+                        'Below 75%',
+                        _allStudentsAttendance
+                            .where((s) => (s['percentage'] ?? 0) < 75)
+                            .length
+                            .toString(),
+                        Icons.trending_down,
+                        Colors.red,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -303,7 +422,9 @@ class _AllStudentsAttendanceScreenState
                             const SizedBox(height: 16),
                             Text(
                               _allStudentsAttendance.isEmpty
-                                  ? 'No attendance data available'
+                                  ? (_showTodayAttendance
+                                      ? 'No attendance data available for today'
+                                      : 'No overall attendance data available')
                                   : 'No students match your search',
                               style: const TextStyle(
                                 fontSize: 18,
@@ -314,7 +435,9 @@ class _AllStudentsAttendanceScreenState
                             const SizedBox(height: 8),
                             Text(
                               _allStudentsAttendance.isEmpty
-                                  ? 'Please ensure attendance data has been added to the database'
+                                  ? (_showTodayAttendance
+                                      ? 'Attendance for today will appear here once marked'
+                                      : 'Please ensure attendance data has been added to the database')
                                   : 'Try adjusting your search criteria',
                               style: TextStyle(
                                 fontSize: 14,
@@ -377,6 +500,7 @@ class _AllStudentsAttendanceScreenState
     final attendedClasses = student['attended_classes'] ?? 0;
     final totalClasses = student['total_classes'] ?? 0;
     final registrationNo = student['registration_no'] ?? '';
+    final status = student['status'] ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -386,26 +510,43 @@ class _AllStudentsAttendanceScreenState
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            // Percentage Circle
+            // Percentage Circle or Status Indicator
             Container(
               width: 60,
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: _getPercentageColor(percentage),
+                  color:
+                      _showTodayAttendance
+                          ? (status == 'present' ? Colors.green : Colors.red)
+                          : _getPercentageColor(percentage),
                   width: 3,
                 ),
+                color:
+                    _showTodayAttendance
+                        ? (status == 'present'
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1))
+                        : _getPercentageColor(percentage).withOpacity(0.1),
               ),
               child: Center(
-                child: Text(
-                  '${percentage.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: _getPercentageColor(percentage),
-                  ),
-                ),
+                child:
+                    _showTodayAttendance
+                        ? Icon(
+                          status == 'present' ? Icons.check : Icons.close,
+                          color:
+                              status == 'present' ? Colors.green : Colors.red,
+                          size: 30,
+                        )
+                        : Text(
+                          '${percentage.toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: _getPercentageColor(percentage),
+                          ),
+                        ),
               ),
             ),
             const SizedBox(width: 16),
@@ -424,27 +565,42 @@ class _AllStudentsAttendanceScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$attendedClasses / $totalClasses classes',
+                    _showTodayAttendance
+                        ? 'Status: ${status.toUpperCase()}'
+                        : '$attendedClasses / $totalClasses classes',
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                 ],
               ),
             ),
 
-            // Performance Badge
+            // Performance Badge or Status Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getPercentageColor(percentage).withOpacity(0.1),
+                color:
+                    _showTodayAttendance
+                        ? (status == 'present' ? Colors.green : Colors.red)
+                            .withOpacity(0.1)
+                        : _getPercentageColor(percentage).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _getPercentageColor(percentage).withOpacity(0.3),
+                  color:
+                      _showTodayAttendance
+                          ? (status == 'present' ? Colors.green : Colors.red)
+                              .withOpacity(0.3)
+                          : _getPercentageColor(percentage).withOpacity(0.3),
                 ),
               ),
               child: Text(
-                _getPerformanceLabel(percentage),
+                _showTodayAttendance
+                    ? (status == 'present' ? 'Present' : 'Absent')
+                    : _getPerformanceLabel(percentage),
                 style: TextStyle(
-                  color: _getPercentageColor(percentage),
+                  color:
+                      _showTodayAttendance
+                          ? (status == 'present' ? Colors.green : Colors.red)
+                          : _getPercentageColor(percentage),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'timetable_screen.dart';
+import 'timetable_editor_screen.dart'; // Added for direct timetable editing
 import 'resource_hub_screen.dart';
 import 'announcements_screen.dart';
-import 'library_screen.dart';
 import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
-import 'exams_screen.dart';
 import 'attendance_screen.dart';
 import 'regulation_selection_screen.dart';
 import 'lost_and_found_screen.dart'; // Added for Lost and Found
 import 'about_us_screen.dart'; // Added for About Us
 import 'dbms_marks_screen.dart'; // Added for DBMS marks
 import 'my_marks_screen.dart'; // Added for student individual marks
-import 'dart:math' as math;
+import 'faculty_dashboard_screen.dart'; // Added for Faculty Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'daily_attendance_screen.dart';
 import 'staff_attendance_screen.dart';
 import '../services/auth_service.dart';
 import 'role_test_screen.dart';
@@ -403,6 +401,27 @@ class _HomeScreenState extends State<HomeScreen>
                         );
                       },
                     ),
+                  // Faculty Dashboard for Staff/Admin
+                  if (_isStaff || _isAdmin)
+                    _buildFeatureListItem(
+                      title: 'Faculty Dashboard',
+                      description:
+                          'Access timetable management, resources, and announcements',
+                      icon: Icons.dashboard,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => FacultyDashboardScreen(
+                                  userName: widget.userName,
+                                  department: selectedDepartment!,
+                                  semester: int.parse(selectedSemester!),
+                                ),
+                          ),
+                        );
+                      },
+                    ),
                   // Marks feature
                   _buildFeatureListItem(
                     title:
@@ -476,6 +495,21 @@ class _HomeScreenState extends State<HomeScreen>
                       }
                     },
                   ),
+                  // Edit Timetable for Staff/Admin
+                  if (_isStaff || _isAdmin)
+                    _buildFeatureListItem(
+                      title: 'Edit Timetable',
+                      description: 'Manage class schedules and periods',
+                      icon: Icons.edit_calendar,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TimetableEditorScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   _buildFeatureListItem(
                     title: 'Profile Settings',
                     description: 'Manage your account',
@@ -733,6 +767,15 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
+          Divider(color: Colors.grey[300]),
+          _buildDrawerItem(
+            icon: Icons.school_outlined,
+            title: 'Switch Department/Semester',
+            onTap: () {
+              Navigator.pop(context);
+              _showDepartmentSemesterDialog();
+            },
+          ),
           if (_isAdmin) ...[
             Divider(color: Colors.grey[300]),
             _buildDrawerItem(
@@ -819,5 +862,186 @@ class _HomeScreenState extends State<HomeScreen>
       default:
         throw Exception("Unknown role: $role");
     }
+  }
+
+  void _showDepartmentSemesterDialog() {
+    String tempDepartment = selectedDepartment ?? widget.department;
+    String tempSemester = selectedSemester ?? widget.semester.toString();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.school, color: Theme.of(context).primaryColor),
+                  SizedBox(width: 8),
+                  Text('Switch Department & Semester'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select Department:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: tempDepartment,
+                        isExpanded: true,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        items:
+                            [
+                              'Computer Science and Engineering',
+                              'Electronics and Communication Engineering',
+                              'Mechanical Engineering',
+                              'Civil Engineering',
+                              'Electrical and Electronics Engineering',
+                              'Information Technology',
+                              'Chemical Engineering',
+                              'Biotechnology',
+                            ].map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(
+                                  value,
+                                  style: TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              tempDepartment = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Select Semester:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: tempSemester,
+                        isExpanded: true,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        items:
+                            ['1', '2', '3', '4', '5', '6', '7', '8'].map((
+                              String value,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(
+                                  'Semester $value',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              );
+                            }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              tempSemester = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue[600],
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'This will change your view to show content for the selected department and semester.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[800],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Update the selected department and semester
+                    this.setState(() {
+                      selectedDepartment = tempDepartment;
+                      selectedSemester = tempSemester;
+                    });
+
+                    Navigator.of(context).pop();
+
+                    // Show confirmation
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Switched to $tempDepartment - Semester $tempSemester',
+                        ),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Apply Changes'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/attendance_service.dart';
 import '../services/student_data_service.dart';
-import 'daily_attendance_screen.dart';
+import '../services/attendance_service.dart';
 import 'package:intl/intl.dart';
-import '../services/auth_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StaffAttendanceScreen extends StatefulWidget {
   final String department;
@@ -22,14 +19,21 @@ class StaffAttendanceScreen extends StatefulWidget {
 
 class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   String? selectedSection;
+  String? selectedSubject;
+  int? selectedPeriod;
   DateTime selectedDate = DateTime.now();
   bool isLoading = false;
   List<Map<String, dynamic>> students = [];
+  List<Map<String, dynamic>> subjects = [];
+  List<Map<String, dynamic>> schedule = [];
   Map<String, bool> attendance = {};
+  String _sortBy = 'student_name'; // registration_no, student_name
+  bool _sortAscending = true;
 
   final List<String> sections = ['A', 'B'];
-  final AuthService _authService = AuthService();
+  final List<int> periods = [1, 2, 3, 4, 5, 6];
   final StudentDataService _studentDataService = StudentDataService();
+  final AttendanceService _attendanceService = AttendanceService();
 
   @override
   void initState() {
@@ -40,8 +44,40 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Future<void> _setupDatabase() async {
     // Setup students table and data
     await _studentDataService.setupStudentsTable();
+    await _loadSubjects();
+    await _loadSchedule();
     if (selectedSection != null) {
       _loadStudents();
+    }
+  }
+
+  Future<void> _loadSubjects() async {
+    try {
+      final subjectsList = await _attendanceService.getSubjects(
+        department: widget.department,
+        semester: widget.semester,
+      );
+      setState(() {
+        subjects = subjectsList;
+      });
+    } catch (e) {
+      print('Error loading subjects: $e');
+    }
+  }
+
+  Future<void> _loadSchedule() async {
+    try {
+      final dayOfWeek = DateFormat('EEEE').format(selectedDate).toLowerCase();
+      final scheduleList = await _attendanceService.getClassSchedule(
+        department: widget.department,
+        semester: widget.semester,
+        dayOfWeek: dayOfWeek,
+      );
+      setState(() {
+        schedule = scheduleList;
+      });
+    } catch (e) {
+      print('Error loading schedule: $e');
     }
   }
 
@@ -73,6 +109,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         };
         isLoading = false;
       });
+
+      // Sort students after loading
+      _sortStudents();
     } catch (e) {
       print('Error loading students: $e');
       setState(() {
@@ -89,6 +128,62 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       selectedSection = section;
     });
     _loadStudents();
+  }
+
+  void _sortStudents() {
+    setState(() {
+      students.sort((a, b) {
+        int comparison = 0;
+
+        switch (_sortBy) {
+          case 'registration_no':
+            comparison = a['registration_no'].toString().compareTo(
+              b['registration_no'].toString(),
+            );
+            break;
+          case 'student_name':
+            final nameA =
+                a['student_name']?.toString() ??
+                _generateStudentName(a['registration_no'].toString(), 0);
+            final nameB =
+                b['student_name']?.toString() ??
+                _generateStudentName(b['registration_no'].toString(), 0);
+            comparison = nameA.compareTo(nameB);
+            break;
+        }
+
+        return _sortAscending ? comparison : -comparison;
+      });
+    });
+  }
+
+  void _changeSortOrder(String sortBy) {
+    setState(() {
+      if (_sortBy == sortBy) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sortBy = sortBy;
+        _sortAscending = true;
+      }
+    });
+    _sortStudents();
+  }
+
+  String _generateStudentName(String registrationNo, int index) {
+    // Extract meaningful parts from registration number if possible
+    // For example: CS21001 -> "CS Student 001"
+    if (registrationNo.length >= 6) {
+      final department = registrationNo.substring(0, 2).toUpperCase();
+      final year =
+          registrationNo.length >= 4 ? registrationNo.substring(2, 4) : '';
+      final number =
+          registrationNo.length >= 6 ? registrationNo.substring(4) : '';
+
+      return '$department$year Student $number';
+    }
+
+    // Fallback to simple numbering
+    return 'Student ${index + 1}';
   }
 
   void _selectDate() async {
@@ -114,34 +209,53 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   }
 
   Future<void> _submitAttendance() async {
-    if (students.isEmpty) return;
+    if (students.isEmpty || selectedSubject == null || selectedPeriod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select subject and period')),
+      );
+      return;
+    }
+
     setState(() {
       isLoading = true;
     });
+
     try {
-      final supabase = Supabase.instance.client;
-      final userId = _authService.currentUser?.id;
-      if (userId == null) throw Exception('User not logged in');
-      final dateStr = selectedDate.toIso8601String().substring(0, 10);
+      bool success = true;
+
       for (final student in students) {
         final reg = student['registration_no'] as String;
         final present = attendance[reg] ?? true;
-        final status = present ? 'present' : 'absent';
-        await supabase.from('attendance').upsert({
-          'registration_no': reg,
-          'date': dateStr,
-          'status': status,
-          'marked_by': userId,
-        });
+
+        final result = await _attendanceService.markPeriodAttendance(
+          registrationNo: reg,
+          subjectCode: selectedSubject!,
+          periodNumber: selectedPeriod!,
+          isPresent: present,
+          date: selectedDate,
+        );
+
+        if (!result) {
+          success = false;
+          break;
+        }
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Attendance submitted for ${DateFormat('dd MMM yyyy').format(selectedDate)}\nSection $selectedSection',
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Period $selectedPeriod attendance submitted for $selectedSubject\n'
+              '${DateFormat('dd MMM yyyy').format(selectedDate)} - Section $selectedSection',
+            ),
+            duration: Duration(seconds: 3),
           ),
-          duration: Duration(seconds: 3),
-        ),
-      );
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting some attendance records')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error submitting attendance: $e')),
@@ -160,6 +274,49 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         title: Text('Staff Attendance - ${widget.department}'),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            onSelected: _changeSortOrder,
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    value: 'registration_no',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _sortBy == 'registration_no'
+                              ? (_sortAscending
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward)
+                              : Icons.sort,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Sort by Registration No'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'student_name',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _sortBy == 'student_name'
+                              ? (_sortAscending
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward)
+                              : Icons.sort,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Sort by Student Name'),
+                      ],
+                    ),
+                  ),
+                ],
+          ),
+        ],
         elevation: 0,
       ),
       body: Column(
@@ -202,6 +359,74 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                               if (selected) _selectSection(section);
                             },
                             selectedColor: Colors.blue[200],
+                          ),
+                        );
+                      }).toList(),
+                ),
+
+                SizedBox(height: 12),
+
+                // Subject selection
+                Text(
+                  'Select Subject:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                SizedBox(height: 8),
+                if (subjects.isNotEmpty)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children:
+                          subjects.map((subject) {
+                            return Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(
+                                  subject['subject_name'] ??
+                                      subject['subject_code'],
+                                ),
+                                selected:
+                                    selectedSubject == subject['subject_code'],
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() {
+                                      selectedSubject = subject['subject_code'];
+                                    });
+                                  }
+                                },
+                                selectedColor: Colors.green[200],
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  )
+                else
+                  Text('No subjects available for this department/semester'),
+
+                SizedBox(height: 12),
+
+                // Period selection
+                Text(
+                  'Select Period:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children:
+                      periods.map((period) {
+                        return Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text('Period $period'),
+                            selected: selectedPeriod == period,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  selectedPeriod = period;
+                                });
+                              }
+                            },
+                            selectedColor: Colors.orange[200],
                           ),
                         );
                       }).toList(),
@@ -261,7 +486,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
           // Students list
           Expanded(
             child:
-                selectedSection == null
+                selectedSection == null ||
+                        selectedSubject == null ||
+                        selectedPeriod == null
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -273,7 +500,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'Please select a section to view students',
+                            'Please select section, subject, and period to view students',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[600],
@@ -333,6 +561,49 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           ),
                         ),
 
+                        // Sort indicator
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          color: Colors.blue[50],
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.sort,
+                                size: 16,
+                                color: Colors.blue[700],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Sorted by: ${_sortBy == 'registration_no' ? 'Registration Number' : 'Student Name'}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(
+                                _sortAscending
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
+                                size: 16,
+                                color: Colors.blue[700],
+                              ),
+                              Spacer(),
+                              Text(
+                                '${students.length} students',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         // Students list
                         Expanded(
                           child: ListView.separated(
@@ -342,6 +613,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                               final student = students[idx];
                               final reg = student['registration_no'] as String;
                               final present = attendance[reg] ?? true;
+
+                              // Generate a meaningful student name if not available
+                              String studentName =
+                                  student['student_name'] as String? ??
+                                  _generateStudentName(reg, idx);
 
                               return ListTile(
                                 leading: CircleAvatar(
@@ -361,7 +637,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Student ${idx + 1}',
+                                  studentName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
