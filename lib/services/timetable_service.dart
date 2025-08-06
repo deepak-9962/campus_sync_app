@@ -17,6 +17,7 @@ class TimetableService {
       final response = await _supabase
           .from('class_schedule')
           .select('''
+            id,
             day_of_week,
             period_number,
             start_time,

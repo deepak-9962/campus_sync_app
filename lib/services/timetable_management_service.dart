@@ -27,7 +27,19 @@ class TimetableManagementService {
       print('Subject: $subjectCode');
       print('Faculty: $facultyName');
 
-      final data = {
+      // Check if record exists
+      final existingRecord =
+          await _supabase
+              .from('class_schedule')
+              .select()
+              .eq('department', department)
+              .eq('semester', semester)
+              .eq('section', section)
+              .eq('day_of_week', dayOfWeek.toLowerCase())
+              .eq('period_number', periodNumber)
+              .maybeSingle();
+
+      final insertData = {
         'department': department,
         'semester': semester,
         'section': section,
@@ -42,19 +54,24 @@ class TimetableManagementService {
         'created_at': DateTime.now().toIso8601String(),
       };
 
-      print('DEBUG: Data to insert/update: $data');
+      final updateData = {
+        'department': department,
+        'semester': semester,
+        'section': section,
+        'day_of_week': dayOfWeek.toLowerCase(),
+        'period_number': periodNumber,
+        'start_time': startTime,
+        'end_time': endTime,
+        'subject_code': subjectCode,
+        'room': room ?? '',
+        'faculty_name': facultyName ?? '',
+        'batch': batch ?? '',
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      // Check if record exists
-      final existingRecord =
-          await _supabase
-              .from('class_schedule')
-              .select()
-              .eq('department', department)
-              .eq('semester', semester)
-              .eq('section', section)
-              .eq('day_of_week', dayOfWeek.toLowerCase())
-              .eq('period_number', periodNumber)
-              .maybeSingle();
+      print(
+        'DEBUG: Data to insert/update: ${existingRecord != null ? updateData : insertData}',
+      );
 
       if (existingRecord != null) {
         // Update existing record
@@ -63,13 +80,13 @@ class TimetableManagementService {
         );
         await _supabase
             .from('class_schedule')
-            .update(data)
+            .update(updateData)
             .eq('id', existingRecord['id']);
         print('DEBUG: Update successful');
       } else {
         // Insert new record
         print('DEBUG: Inserting new record');
-        await _supabase.from('class_schedule').insert(data);
+        await _supabase.from('class_schedule').insert(insertData);
         print('DEBUG: Insert successful');
       }
 
@@ -282,17 +299,24 @@ class TimetableManagementService {
     required int periodNumber,
     String? room,
     String? facultyName,
+    String? excludeRecordId, // Exclude current record when editing
   }) async {
     try {
-      var query = _supabase
-          .from('class_schedule')
-          .select()
-          .eq('day_of_week', dayOfWeek.toLowerCase())
-          .eq('period_number', periodNumber);
-
       // Check for room conflict
       if (room != null && room.isNotEmpty) {
-        final roomConflict = await query.eq('room', room).maybeSingle();
+        var roomQuery = _supabase
+            .from('class_schedule')
+            .select()
+            .eq('day_of_week', dayOfWeek.toLowerCase())
+            .eq('period_number', periodNumber)
+            .eq('room', room);
+
+        // Exclude current record if editing
+        if (excludeRecordId != null) {
+          roomQuery = roomQuery.neq('id', excludeRecordId);
+        }
+
+        final roomConflict = await roomQuery.maybeSingle();
         if (roomConflict != null) {
           return true; // Room is already booked
         }
@@ -300,8 +324,19 @@ class TimetableManagementService {
 
       // Check for faculty conflict
       if (facultyName != null && facultyName.isNotEmpty) {
-        final facultyConflict =
-            await query.eq('faculty_name', facultyName).maybeSingle();
+        var facultyQuery = _supabase
+            .from('class_schedule')
+            .select()
+            .eq('day_of_week', dayOfWeek.toLowerCase())
+            .eq('period_number', periodNumber)
+            .eq('faculty_name', facultyName);
+
+        // Exclude current record if editing
+        if (excludeRecordId != null) {
+          facultyQuery = facultyQuery.neq('id', excludeRecordId);
+        }
+
+        final facultyConflict = await facultyQuery.maybeSingle();
         if (facultyConflict != null) {
           return true; // Faculty is already assigned
         }

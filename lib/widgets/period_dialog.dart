@@ -582,6 +582,8 @@ class _PeriodDialogState extends State<PeriodDialog> {
         'faculty_name': _selectedFaculty ?? '',
         'room': _selectedRoom ?? '',
         'batch': _selectedBatch ?? '',
+        'existing_id':
+            widget.existingClass?['id'], // Include existing record ID
       };
 
       widget.onSave(classData);
