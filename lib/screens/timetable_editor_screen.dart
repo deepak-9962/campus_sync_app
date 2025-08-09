@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/timetable_management_service.dart';
 import '../services/timetable_service.dart';
@@ -36,6 +37,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
   Map<String, List<Map<String, dynamic>>> _currentTimetable = {};
   bool _isLoading = false;
   bool _hasUnsavedChanges = false;
+  Timer? _refreshTimer;
 
   // Dropdown data
   List<Map<String, dynamic>> _subjects = [];
@@ -62,16 +64,93 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
     'Saturday',
   ];
 
+  // Helper methods for current time detection
+  String _getCurrentDay() {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    switch (weekday) {
+      case 1:
+        return 'monday';
+      case 2:
+        return 'tuesday';
+      case 3:
+        return 'wednesday';
+      case 4:
+        return 'thursday';
+      case 5:
+        return 'friday';
+      case 6:
+        return 'saturday';
+      case 7:
+        return 'sunday';
+      default:
+        return '';
+    }
+  }
+
+  bool _isCurrentPeriod(String dayOfWeek, String startTime, String endTime) {
+    final now = DateTime.now();
+    final currentDay = _getCurrentDay();
+
+    // Check if it's the current day
+    if (dayOfWeek.toLowerCase() != currentDay) {
+      return false;
+    }
+
+    try {
+      // Parse time strings (format: "HH:MM" or "HH:MM:SS")
+      final startParts = startTime.split(':');
+      final endParts = endTime.split(':');
+
+      final startHour = int.parse(startParts[0]);
+      final startMinute = int.parse(startParts[1]);
+      final endHour = int.parse(endParts[0]);
+      final endMinute = int.parse(endParts[1]);
+
+      // Create DateTime objects for comparison
+      final startDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        startHour,
+        startMinute,
+      );
+      final endDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        endHour,
+        endMinute,
+      );
+
+      // Check if current time is within the period
+      return now.isAfter(startDateTime) && now.isBefore(endDateTime);
+    } catch (e) {
+      print('Error parsing time: $e');
+      return false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
     _loadInitialData();
+
+    // Start timer to refresh UI every minute to update current period highlighting
+    _refreshTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // This will trigger a rebuild to update current period highlighting
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -124,7 +203,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
         title: Text(
           'Timetable Editor',
           style: TextStyle(
-            fontFamily: 'Clash Grotesk',
+            
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
@@ -397,7 +476,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
         ).colorScheme.onSurface.withOpacity(0.6),
         labelStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          fontFamily: 'Clash Grotesk',
+          
         ),
         tabs: _days.map((day) => Tab(text: day)).toList(),
       ),
@@ -466,7 +545,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
           type,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontFamily: 'Clash Grotesk',
+            
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -491,99 +570,171 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
     final subject =
         hasClass ? _getSubjectName(existingClass['subject_code']) : null;
 
+    // Check if this is the current period
+    final isCurrentPeriod = _isCurrentPeriod(day, startTime, endTime);
+
     return Card(
       margin: EdgeInsets.symmetric(vertical: 4),
-      color: Theme.of(context).colorScheme.surface,
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-              hasClass
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline,
-          child: Text(
-            '$periodNumber',
-            style: TextStyle(
-              color:
-                  hasClass
-                      ? Theme.of(context).colorScheme.onPrimary
-                      : Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: Text(
-          hasClass ? subject ?? 'Unknown Subject' : 'Empty Period',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Clash Grotesk',
-            color:
-                hasClass
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$startTime - $endTime',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            if (hasClass) ...[
-              if (existingClass['faculty_name']?.isNotEmpty == true)
-                Text(
-                  'Faculty: ${existingClass['faculty_name']}',
+      color:
+          isCurrentPeriod
+              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
+              : Theme.of(context).colorScheme.surface,
+      elevation: isCurrentPeriod ? 8 : 2,
+      shadowColor:
+          isCurrentPeriod
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+              : null,
+      child: Container(
+        decoration:
+            isCurrentPeriod
+                ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                )
+                : null,
+        child: ListTile(
+          leading: Stack(
+            children: [
+              CircleAvatar(
+                backgroundColor:
+                    hasClass
+                        ? (isCurrentPeriod
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.primary)
+                        : Theme.of(context).colorScheme.outline,
+                child: Text(
+                  '$periodNumber',
                   style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.8),
+                    color:
+                        hasClass
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (existingClass['room']?.isNotEmpty == true)
-                Text(
-                  'Room: ${existingClass['room']}',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                ),
-              if (existingClass['batch']?.isNotEmpty == true)
-                Text(
-                  'Batch: ${existingClass['batch']}',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.8),
+              ),
+              if (isCurrentPeriod)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
                   ),
                 ),
             ],
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasClass)
-              IconButton(
-                icon: Icon(Icons.edit, size: 20),
-                onPressed:
-                    () => _editPeriod(
-                      day,
-                      periodNumber,
-                      startTime,
-                      endTime,
-                      existingClass,
-                    ),
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  hasClass ? subject ?? 'Unknown Subject' : 'Empty Period',
+                  style: TextStyle(
+                    fontWeight:
+                        isCurrentPeriod ? FontWeight.w900 : FontWeight.bold,
+                    
+                    color:
+                        hasClass
+                            ? (isCurrentPeriod
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface)
+                            : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
               ),
-            IconButton(
-              icon: Icon(hasClass ? Icons.delete : Icons.add, size: 20),
-              onPressed:
-                  hasClass
-                      ? () => _deletePeriod(day, periodNumber)
-                      : () => _addPeriod(day, periodNumber, startTime, endTime),
-            ),
-          ],
+              if (isCurrentPeriod)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$startTime - $endTime',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              if (hasClass) ...[
+                if (existingClass['faculty_name']?.isNotEmpty == true)
+                  Text(
+                    'Faculty: ${existingClass['faculty_name']}',
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                if (existingClass['room']?.isNotEmpty == true)
+                  Text(
+                    'Room: ${existingClass['room']}',
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                if (existingClass['batch']?.isNotEmpty == true)
+                  Text(
+                    'Batch: ${existingClass['batch']}',
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasClass)
+                IconButton(
+                  icon: Icon(Icons.edit, size: 20),
+                  onPressed:
+                      () => _editPeriod(
+                        day,
+                        periodNumber,
+                        startTime,
+                        endTime,
+                        existingClass,
+                      ),
+                ),
+              IconButton(
+                icon: Icon(hasClass ? Icons.delete : Icons.add, size: 20),
+                onPressed:
+                    hasClass
+                        ? () => _deletePeriod(day, periodNumber)
+                        : () =>
+                            _addPeriod(day, periodNumber, startTime, endTime),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -796,7 +947,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
                   'Change Section',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
-                    fontFamily: 'Clash Grotesk',
+                    
                     fontWeight: FontWeight.bold,
                   ),
                 ),

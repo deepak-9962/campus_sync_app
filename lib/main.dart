@@ -110,7 +110,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Clash Grotesk', // Apply default font family
+        fontFamily: 'Roboto', // Set Roboto as the default font
         // Color Scheme
         colorScheme: ColorScheme.light(
           primary: const Color(0xFF1976D2), // Blue 700 (Accent)
@@ -137,7 +137,6 @@ class MyApp extends StatelessWidget {
           elevation: 0.5,
           iconTheme: IconThemeData(color: const Color(0xFF424242)),
           titleTextStyle: TextStyle(
-            fontFamily: 'Clash Grotesk',
             color: const Color(0xFF212121),
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -159,42 +158,21 @@ class MyApp extends StatelessWidget {
 
         // Text Theme
         textTheme: TextTheme(
-          displayLarge: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
-          displayMedium: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
-          displaySmall: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
-          headlineMedium: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
-          headlineSmall: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
+          displayLarge: TextStyle(color: const Color(0xFF212121)),
+          displayMedium: TextStyle(color: const Color(0xFF212121)),
+          displaySmall: TextStyle(color: const Color(0xFF212121)),
+          headlineMedium: TextStyle(color: const Color(0xFF212121)),
+          headlineSmall: TextStyle(color: const Color(0xFF212121)),
           titleLarge: TextStyle(
             color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
             fontWeight: FontWeight.bold,
           ),
-          bodyLarge: TextStyle(
-            color: const Color(0xFF212121),
-            fontFamily: 'Clash Grotesk',
-          ),
+          bodyLarge: TextStyle(color: const Color(0xFF212121)),
           bodyMedium: TextStyle(
             color: const Color(0xFF757575),
-            fontFamily: 'Clash Grotesk',
           ), // Secondary text
           labelLarge: TextStyle(
             color: Colors.white,
-            fontFamily: 'Clash Grotesk',
             fontWeight: FontWeight.bold,
           ), // For buttons
         ),
@@ -206,7 +184,6 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white, // Text on button
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             textStyle: const TextStyle(
-              fontFamily: 'Clash Grotesk',
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -220,13 +197,9 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.grey[100], // Light fill for text fields
-          hintStyle: TextStyle(
-            color: Colors.grey[500],
-            fontFamily: 'Clash Grotesk',
-          ),
+          hintStyle: TextStyle(color: Colors.grey[500]),
           labelStyle: TextStyle(
             color: const Color(0xFF757575),
-            fontFamily: 'Clash Grotesk',
           ), // Medium grey for labels
           border: OutlineInputBorder(
             // Default border for all states if others not specified
@@ -250,13 +223,21 @@ class MyApp extends StatelessWidget {
 
         // Icon Theme
         iconTheme: IconThemeData(
-          color: const Color(0xFF424242), // Darker grey for general icons
+          color: const Color(0xFF1976D2), // Primary color for better visibility
+          size: 24.0,
+        ),
+
+        // Primary Icon Theme (for AppBar and other primary contexts)
+        primaryIconTheme: IconThemeData(
+          color: const Color(0xFF424242),
+          size: 24.0,
         ),
 
         // Floating Action Button Theme
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: const Color(0xFF1976D2),
           foregroundColor: Colors.white,
+          iconSize: 24.0,
         ),
 
         // Dialog Theme

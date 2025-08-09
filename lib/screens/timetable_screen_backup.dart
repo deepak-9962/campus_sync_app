@@ -225,7 +225,7 @@ import 'package:flutter/material.dart';
   title: Text(
   'Timetable',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   fontWeight: FontWeight.bold,
   fontSize: 16,
   ),
@@ -249,7 +249,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 24,
   fontWeight: FontWeight.bold,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(height: 8),
@@ -259,7 +259,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 16,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(height: 24),
@@ -276,7 +276,7 @@ import 'package:flutter/material.dart';
   child: Text(
   'Go Back',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   fontWeight: FontWeight.bold,
   ),
   ),
@@ -294,7 +294,7 @@ import 'package:flutter/material.dart';
   title: Text(
   'Timetable',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   fontWeight: FontWeight.bold,
   fontSize: 16,
   ),
@@ -385,7 +385,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.bold,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
@@ -406,7 +406,7 @@ import 'package:flutter/material.dart';
   color: Colors.white,
   fontSize: 10,
   fontWeight: FontWeight.bold,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(width: 4),
@@ -435,7 +435,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(width: 16),
@@ -446,7 +446,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ],
@@ -463,7 +463,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   children: [
   TextSpan(
@@ -495,7 +495,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(width: 16),
@@ -506,7 +506,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ],
@@ -553,7 +553,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 10,
   color: Colors.grey[500],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   overflow: TextOverflow.ellipsis,
   ),
@@ -572,7 +572,7 @@ import 'package:flutter/material.dart';
   fontSize: 12,
   color: Colors.grey[600],
   fontWeight: FontWeight.bold,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
@@ -612,7 +612,7 @@ import 'package:flutter/material.dart';
   fontSize: 10,
   color: Colors.grey[600],
   fontWeight: FontWeight.w500,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   overflow: TextOverflow.ellipsis,
   ),
@@ -631,7 +631,7 @@ import 'package:flutter/material.dart';
   fontSize: 16,
   fontWeight: FontWeight.bold,
   color: subjectColor,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ),
@@ -645,7 +645,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.w500,
-  fontFamily: 'Clash Grotesk',
+  
   ),
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
@@ -660,7 +660,7 @@ import 'package:flutter/material.dart';
   style: TextStyle(
   fontSize: 12,
   color: Colors.grey[600],
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ],
@@ -763,7 +763,7 @@ import 'package:flutter/material.dart';
   title: const Text(
   'Select Section',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   fontWeight: FontWeight.bold,
   ),
   ),
@@ -773,7 +773,7 @@ import 'package:flutter/material.dart';
   const Text(
   'Please select your section to view the timetable.',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   SizedBox(height: 20),
@@ -788,7 +788,7 @@ import 'package:flutter/material.dart';
   child: const Text(
   'Section A',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ),
@@ -800,7 +800,7 @@ import 'package:flutter/material.dart';
   child: const Text(
   'Section B',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   ),
@@ -814,7 +814,7 @@ import 'package:flutter/material.dart';
   child: const Text(
   'Okay',
   style: TextStyle(
-  fontFamily: 'Clash Grotesk',
+  
   ),
   ),
   onPressed: () {

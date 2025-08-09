@@ -172,7 +172,6 @@ class _SemScreenState extends State<SemScreen>
                     'Welcome, ${widget.userName}!',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Clash Grotesk',
                       color: theme.colorScheme.onBackground,
                     ),
                     textAlign: TextAlign.center,
@@ -181,7 +180,6 @@ class _SemScreenState extends State<SemScreen>
                   Text(
                     'Set up your academic profile to continue',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'Clash Grotesk',
                       color: theme.colorScheme.onBackground.withOpacity(0.7),
                     ),
                     textAlign: TextAlign.center,
@@ -208,7 +206,7 @@ class _SemScreenState extends State<SemScreen>
                             theme
                                 .colorScheme
                                 .onSurface, // Selected item text color
-                        fontFamily: 'Clash Grotesk',
+
                         fontSize: 15,
                       ),
                       iconEnabledColor: theme.iconTheme.color,
@@ -253,7 +251,7 @@ class _SemScreenState extends State<SemScreen>
                             theme
                                 .colorScheme
                                 .onSurface, // Selected item text color
-                        fontFamily: 'Clash Grotesk',
+
                         fontSize: 15,
                       ),
                       iconEnabledColor: theme.iconTheme.color,
@@ -322,7 +320,7 @@ class _SemScreenState extends State<SemScreen>
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Clash Grotesk',
+
                 color: theme.colorScheme.onBackground,
               ),
             ),
@@ -338,11 +336,7 @@ class _SemScreenState extends State<SemScreen>
             padding: const EdgeInsets.only(top: 8, left: 12),
             child: Text(
               errorText,
-              style: TextStyle(
-                color: theme.colorScheme.error,
-                fontSize: 12,
-                fontFamily: 'Clash Grotesk',
-              ),
+              style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
             ),
           ),
       ],

@@ -87,7 +87,7 @@ class _PeriodDialogState extends State<PeriodDialog> {
       title: Text(
         isEditing ? 'Edit Class Period' : 'Add Class Period',
         style: TextStyle(
-          fontFamily: 'Clash Grotesk',
+          
           fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.onSurface,
         ),

@@ -171,7 +171,7 @@ class _TimetableScreenState extends State<TimetableScreen>
         title: const Text(
           'Timetable',
           style: TextStyle(
-            fontFamily: 'Clash Grotesk',
+            
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -214,7 +214,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.red[600],
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                     SizedBox(height: 16),
@@ -241,7 +241,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                   ],
@@ -260,7 +260,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   unselectedLabelColor: Colors.grey,
                   labelStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
+                    
                   ),
                   tabs: _days.map((day) => Tab(text: day)).toList(),
                 ),
@@ -295,7 +295,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
+                    
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -316,7 +316,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                   ],
@@ -344,7 +344,7 @@ class _TimetableScreenState extends State<TimetableScreen>
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
-                fontFamily: 'Clash Grotesk',
+                
               ),
             ),
           ],
@@ -386,7 +386,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   fontSize: 10,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
-                  fontFamily: 'Clash Grotesk',
+                  
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -405,7 +405,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: subjectColor,
-                  fontFamily: 'Clash Grotesk',
+                  
                 ),
               ),
             ),
@@ -419,7 +419,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      fontFamily: 'Clash Grotesk',
+                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -440,7 +440,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
-                              fontFamily: 'Clash Grotesk',
+                              
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -465,7 +465,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                       if (slot.batch?.isNotEmpty == true) ...[
@@ -485,7 +485,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                               fontSize: 10,
                               color: subjectColor,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Clash Grotesk',
+                              
                             ),
                           ),
                         ),

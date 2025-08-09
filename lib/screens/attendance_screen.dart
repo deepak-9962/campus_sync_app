@@ -72,7 +72,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         actions: [
           if (_canTakeAttendance)
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings),
+              icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
               tooltip: 'Admin Tools',
               onPressed: () {
                 Navigator.push(
@@ -84,10 +84,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
               _checkUserRole();
             },
+            tooltip: 'Refresh role',
           ),
         ],
       ),
@@ -153,7 +154,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 // Role-specific description
                 Text(
                   _canTakeAttendance
-                      ? 'Take attendance for your classes by selecting sections and marking students present/absent'
+                      ? 'Choose between Day Attendance (full day present/absent) or Period Attendance (subject and period specific)'
                       : 'Check your attendance records and view your attendance statistics',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -164,43 +165,118 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 ),
                 const SizedBox(height: 48),
 
+                // Help text for staff/admin
+                if (_canTakeAttendance) ...[
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.amber[700],
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Day Attendance: Mark students present/absent for the entire day\n'
+                            'Period Attendance: Mark attendance for specific subjects and periods',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.amber[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
                 // Role-specific buttons
                 if (_canTakeAttendance) ...[
                   // Staff/Admin buttons
-                  ElevatedButton.icon(
-                    icon: const Icon(
-                      Icons.assignment_turned_in,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      'Take Attendance',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[700],
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => StaffAttendanceScreen(
-                                department: widget.department,
-                                semester: widget.semester,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.today, color: Colors.white),
+                          label: const Text(
+                            'Day Attendance',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[700],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => StaffAttendanceScreen(
+                                      department: widget.department,
+                                      semester: widget.semester,
+                                      attendanceType: 'day',
+                                    ),
                               ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.schedule, color: Colors.white),
+                          label: const Text(
+                            'Period Attendance',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => StaffAttendanceScreen(
+                                      department: widget.department,
+                                      semester: widget.semester,
+                                      attendanceType: 'period',
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(

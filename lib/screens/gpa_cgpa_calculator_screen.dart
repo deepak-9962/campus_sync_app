@@ -1739,7 +1739,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
             dropdownColor: theme.cardColor,
             style: TextStyle(
               color: theme.colorScheme.onSurface,
-              fontFamily: 'Clash Grotesk',
+              
             ),
             iconEnabledColor: theme.iconTheme.color,
             isExpanded: true,
@@ -1770,7 +1770,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
             dropdownColor: theme.cardColor,
             style: TextStyle(
               color: theme.colorScheme.onSurface,
-              fontFamily: 'Clash Grotesk',
+              
             ),
             iconEnabledColor: theme.iconTheme.color,
           ),
@@ -1880,7 +1880,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
                     dropdownColor: theme.cardColor,
                     style: TextStyle(
                       color: theme.colorScheme.onSurface,
-                      fontFamily: 'Clash Grotesk',
+                      
                     ),
                     iconEnabledColor: theme.iconTheme.color,
                   ),
@@ -1898,7 +1898,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
                     ), // Uses global InputDecorationTheme
                     style: TextStyle(
                       color: theme.colorScheme.onSurface,
-                      fontFamily: 'Clash Grotesk',
+                      
                     ),
                     cursorColor: theme.colorScheme.primary,
                   ),
@@ -2002,7 +2002,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
                 ), // Uses global InputDecorationTheme
                 style: TextStyle(
                   color: theme.colorScheme.onSurface,
-                  fontFamily: 'Clash Grotesk',
+                  
                 ),
                 cursorColor: theme.colorScheme.primary,
               ),
@@ -2018,7 +2018,7 @@ class _GpaCgpaCalculatorScreenState extends State<GpaCgpaCalculatorScreen>
                 ), // Uses global InputDecorationTheme
                 style: TextStyle(
                   color: theme.colorScheme.onSurface,
-                  fontFamily: 'Clash Grotesk',
+                  
                 ),
                 cursorColor: theme.colorScheme.primary,
               ),

@@ -70,7 +70,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
         title: Text(
           'Faculty Dashboard',
           style: TextStyle(
-            fontFamily: 'Clash Grotesk',
+            
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
@@ -177,7 +177,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.onSurface.withOpacity(0.7),
-                                      fontFamily: 'Clash Grotesk',
+                                      
                                     ),
                                   ),
                                   Text(
@@ -189,7 +189,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                           Theme.of(
                                             context,
                                           ).colorScheme.onSurface,
-                                      fontFamily: 'Clash Grotesk',
+                                      
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -227,7 +227,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                               .colorScheme
                                               .onSurface
                                               .withOpacity(0.7),
-                                          fontFamily: 'Clash Grotesk',
+                                          
                                         ),
                                       ),
                                     ],
@@ -242,7 +242,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                           Theme.of(
                                             context,
                                           ).colorScheme.onSurface,
-                                      fontFamily: 'Clash Grotesk',
+                                      
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -274,7 +274,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                             .colorScheme
                                             .onSurface
                                             .withOpacity(0.7),
-                                        fontFamily: 'Clash Grotesk',
+                                        
                                       ),
                                     ),
                                   ],
@@ -288,7 +288,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                     fontWeight: FontWeight.bold,
                                     color:
                                         Theme.of(context).colorScheme.onSurface,
-                                    fontFamily: 'Clash Grotesk',
+                                    
                                   ),
                                 ),
                               ],
@@ -329,7 +329,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: 1.2,
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                     ],
@@ -420,7 +420,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           letterSpacing: 1.2,
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                     ],
@@ -581,7 +581,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                     Text(
@@ -590,7 +590,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                         color: Theme.of(
                           context,
                         ).colorScheme.onSurface.withOpacity(0.7),
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                   ],
@@ -772,7 +772,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                           color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                       SizedBox(height: 4),
@@ -783,7 +783,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                             context,
                           ).colorScheme.onSurface.withOpacity(0.7),
                           fontSize: 14,
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                       SizedBox(height: 8),
@@ -802,7 +802,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                 context,
                               ).colorScheme.onSurface.withOpacity(0.7),
                               fontSize: 14,
-                              fontFamily: 'Clash Grotesk',
+                              
                             ),
                           ),
                         ],
@@ -872,7 +872,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Clash Grotesk',
+                      
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -892,7 +892,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
         title,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
-          fontFamily: 'Clash Grotesk',
+          
         ),
       ),
       onTap: onTap,

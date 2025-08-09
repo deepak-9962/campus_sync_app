@@ -75,208 +75,1008 @@ class _ExamsScreenState extends State<ExamsScreen>
     if (selectedAssessment == 'Internal Assessment 1') {
       allStudentMarks = [
         // CSE A Students - Real data from provided table
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Theory of Computation", marks: 68),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Database Management Systems", marks: 70),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Operating Systems", marks: 62),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Artificial Intelligence", marks: 70),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Algorithm", marks: 80),
-        
-        StudentMark(name: "ABEL C JOY", rollNumber: "210823104002", subject: "Theory of Computation", marks: 82),
-        StudentMark(name: "ABEL C JOY", rollNumber: "210823104002", subject: "Database Management Systems", marks: 54),
-        StudentMark(name: "ABEL C JOY", rollNumber: "210823104002", subject: "Operating Systems", marks: 82),
-        StudentMark(name: "ABEL C JOY", rollNumber: "210823104002", subject: "Artificial Intelligence", marks: 62),
-        StudentMark(name: "ABEL C JOY", rollNumber: "210823104002", subject: "Algorithm", marks: 90),
-        
-        StudentMark(name: "ABINAYA T", rollNumber: "210823104003", subject: "Theory of Computation", marks: 90),
-        StudentMark(name: "ABINAYA T", rollNumber: "210823104003", subject: "Database Management Systems", marks: 58),
-        StudentMark(name: "ABINAYA T", rollNumber: "210823104003", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "ABINAYA T", rollNumber: "210823104003", subject: "Artificial Intelligence", marks: 66),
-        StudentMark(name: "ABINAYA T", rollNumber: "210823104003", subject: "Algorithm", marks: 65),
-        
-        StudentMark(name: "ABISHA JEBAMANI K", rollNumber: "210823104004", subject: "Theory of Computation", marks: 84),
-        StudentMark(name: "ABISHA JEBAMANI K", rollNumber: "210823104004", subject: "Database Management Systems", marks: 90),
-        StudentMark(name: "ABISHA JEBAMANI K", rollNumber: "210823104004", subject: "Operating Systems", marks: 82),
-        StudentMark(name: "ABISHA JEBAMANI K", rollNumber: "210823104004", subject: "Artificial Intelligence", marks: 66),
-        StudentMark(name: "ABISHA JEBAMANI K", rollNumber: "210823104004", subject: "Algorithm", marks: 68),
-        
-        StudentMark(name: "ABISHEK PAULSON S", rollNumber: "210823104005", subject: "Theory of Computation", marks: 24),
-        StudentMark(name: "ABISHEK PAULSON S", rollNumber: "210823104005", subject: "Database Management Systems", marks: 50),
-        StudentMark(name: "ABISHEK PAULSON S", rollNumber: "210823104005", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "ABISHEK PAULSON S", rollNumber: "210823104005", subject: "Artificial Intelligence", marks: 40),
-        StudentMark(name: "ABISHEK PAULSON S", rollNumber: "210823104005", subject: "Algorithm", marks: 55),
-        
-        StudentMark(name: "ABY ROSY M", rollNumber: "210823104006", subject: "Theory of Computation", marks: 80),
-        StudentMark(name: "ABY ROSY M", rollNumber: "210823104006", subject: "Database Management Systems", marks: 88),
-        StudentMark(name: "ABY ROSY M", rollNumber: "210823104006", subject: "Operating Systems", marks: 84),
-        StudentMark(name: "ABY ROSY M", rollNumber: "210823104006", subject: "Artificial Intelligence", marks: 90),
-        StudentMark(name: "ABY ROSY M", rollNumber: "210823104006", subject: "Algorithm", marks: 86),
-        
-        StudentMark(name: "AKSHAYA PRABHA M (H)", rollNumber: "210823104007", subject: "Theory of Computation", marks: 84),
-        StudentMark(name: "AKSHAYA PRABHA M (H)", rollNumber: "210823104007", subject: "Database Management Systems", marks: 92),
-        StudentMark(name: "AKSHAYA PRABHA M (H)", rollNumber: "210823104007", subject: "Operating Systems", marks: 30),
-        StudentMark(name: "AKSHAYA PRABHA M (H)", rollNumber: "210823104007", subject: "Artificial Intelligence", marks: 94),
-        StudentMark(name: "AKSHAYA PRABHA M (H)", rollNumber: "210823104007", subject: "Algorithm", marks: 76),
-        
-        StudentMark(name: "ANGELIN MARY S (H)", rollNumber: "210823104008", subject: "Theory of Computation", marks: 52),
-        StudentMark(name: "ANGELIN MARY S (H)", rollNumber: "210823104008", subject: "Database Management Systems", marks: 80),
-        StudentMark(name: "ANGELIN MARY S (H)", rollNumber: "210823104008", subject: "Operating Systems", marks: 84),
-        StudentMark(name: "ANGELIN MARY S (H)", rollNumber: "210823104008", subject: "Artificial Intelligence", marks: 66),
-        StudentMark(name: "ANGELIN MARY S (H)", rollNumber: "210823104008", subject: "Algorithm", marks: 84),
-        
-        StudentMark(name: "ANISHA SWEETY J", rollNumber: "210823104009", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "ANISHA SWEETY J", rollNumber: "210823104009", subject: "Database Management Systems", marks: 80),
-        StudentMark(name: "ANISHA SWEETY J", rollNumber: "210823104009", subject: "Operating Systems", marks: 78),
-        StudentMark(name: "ANISHA SWEETY J", rollNumber: "210823104009", subject: "Artificial Intelligence", marks: 76),
-        StudentMark(name: "ANISHA SWEETY J", rollNumber: "210823104009", subject: "Algorithm", marks: 71),
-        
-        StudentMark(name: "ANNESHARON A S", rollNumber: "210823104010", subject: "Theory of Computation", marks: 24),
-        StudentMark(name: "ANNESHARON A S", rollNumber: "210823104010", subject: "Database Management Systems", marks: 52),
-        StudentMark(name: "ANNESHARON A S", rollNumber: "210823104010", subject: "Operating Systems", marks: 72),
-        StudentMark(name: "ANNESHARON A S", rollNumber: "210823104010", subject: "Artificial Intelligence", marks: 0),
-        StudentMark(name: "ANNESHARON A S", rollNumber: "210823104010", subject: "Algorithm", marks: 45),
-        
-        StudentMark(name: "ANNIE DORAH ABEL", rollNumber: "210823104011", subject: "Theory of Computation", marks: 36),
-        StudentMark(name: "ANNIE DORAH ABEL", rollNumber: "210823104011", subject: "Database Management Systems", marks: 28),
-        StudentMark(name: "ANNIE DORAH ABEL", rollNumber: "210823104011", subject: "Operating Systems", marks: 82),
-        StudentMark(name: "ANNIE DORAH ABEL", rollNumber: "210823104011", subject: "Artificial Intelligence", marks: 0),
-        StudentMark(name: "ANNIE DORAH ABEL", rollNumber: "210823104011", subject: "Algorithm", marks: 0),
-        
-        StudentMark(name: "ANTONY MELVIN T", rollNumber: "210823104012", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "ANTONY MELVIN T", rollNumber: "210823104012", subject: "Database Management Systems", marks: 52),
-        StudentMark(name: "ANTONY MELVIN T", rollNumber: "210823104012", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "ANTONY MELVIN T", rollNumber: "210823104012", subject: "Artificial Intelligence", marks: 72),
-        StudentMark(name: "ANTONY MELVIN T", rollNumber: "210823104012", subject: "Algorithm", marks: 31),
-        
-        StudentMark(name: "ARPUTHA STEPHIN A (H)", rollNumber: "210823104013", subject: "Theory of Computation", marks: 36),
-        StudentMark(name: "ARPUTHA STEPHIN A (H)", rollNumber: "210823104013", subject: "Database Management Systems", marks: 56),
-        StudentMark(name: "ARPUTHA STEPHIN A (H)", rollNumber: "210823104013", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "ARPUTHA STEPHIN A (H)", rollNumber: "210823104013", subject: "Artificial Intelligence", marks: 8),
-        StudentMark(name: "ARPUTHA STEPHIN A (H)", rollNumber: "210823104013", subject: "Algorithm", marks: 63),
-        
-        StudentMark(name: "ARTHI M", rollNumber: "210823104014", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "ARTHI M", rollNumber: "210823104014", subject: "Database Management Systems", marks: 28),
-        StudentMark(name: "ARTHI M", rollNumber: "210823104014", subject: "Operating Systems", marks: 30),
-        StudentMark(name: "ARTHI M", rollNumber: "210823104014", subject: "Artificial Intelligence", marks: 4),
-        StudentMark(name: "ARTHI M", rollNumber: "210823104014", subject: "Algorithm", marks: 26),
-        
-        StudentMark(name: "ARUNACHALAM R", rollNumber: "210823104015", subject: "Theory of Computation", marks: 24),
-        StudentMark(name: "ARUNACHALAM R", rollNumber: "210823104015", subject: "Database Management Systems", marks: 52),
-        StudentMark(name: "ARUNACHALAM R", rollNumber: "210823104015", subject: "Operating Systems", marks: 62),
-        StudentMark(name: "ARUNACHALAM R", rollNumber: "210823104015", subject: "Artificial Intelligence", marks: 30),
-        StudentMark(name: "ARUNACHALAM R", rollNumber: "210823104015", subject: "Algorithm", marks: 50),
-        
-        StudentMark(name: "ASBOURN JOEL I", rollNumber: "210823104016", subject: "Theory of Computation", marks: 58),
-        StudentMark(name: "ASBOURN JOEL I", rollNumber: "210823104016", subject: "Database Management Systems", marks: 78),
-        StudentMark(name: "ASBOURN JOEL I", rollNumber: "210823104016", subject: "Operating Systems", marks: 68),
-        StudentMark(name: "ASBOURN JOEL I", rollNumber: "210823104016", subject: "Artificial Intelligence", marks: 56),
-        StudentMark(name: "ASBOURN JOEL I", rollNumber: "210823104016", subject: "Algorithm", marks: 78),
-        
-        StudentMark(name: "ASLIN BRIMA P H (H)", rollNumber: "210823104017", subject: "Theory of Computation", marks: 52),
-        StudentMark(name: "ASLIN BRIMA P H (H)", rollNumber: "210823104017", subject: "Database Management Systems", marks: 58),
-        StudentMark(name: "ASLIN BRIMA P H (H)", rollNumber: "210823104017", subject: "Operating Systems", marks: 74),
-        StudentMark(name: "ASLIN BRIMA P H (H)", rollNumber: "210823104017", subject: "Artificial Intelligence", marks: 56),
-        StudentMark(name: "ASLIN BRIMA P H (H)", rollNumber: "210823104017", subject: "Algorithm", marks: 80),
-        
-        StudentMark(name: "ASWITHA K", rollNumber: "210823104018", subject: "Theory of Computation", marks: 90),
-        StudentMark(name: "ASWITHA K", rollNumber: "210823104018", subject: "Database Management Systems", marks: 92),
-        StudentMark(name: "ASWITHA K", rollNumber: "210823104018", subject: "Operating Systems", marks: 80),
-        StudentMark(name: "ASWITHA K", rollNumber: "210823104018", subject: "Artificial Intelligence", marks: 84),
-        StudentMark(name: "ASWITHA K", rollNumber: "210823104018", subject: "Algorithm", marks: 92),
-        
-        StudentMark(name: "BABY SHALINI K", rollNumber: "210823104019", subject: "Theory of Computation", marks: 0),
-        StudentMark(name: "BABY SHALINI K", rollNumber: "210823104019", subject: "Database Management Systems", marks: 0),
-        StudentMark(name: "BABY SHALINI K", rollNumber: "210823104019", subject: "Operating Systems", marks: 0),
-        StudentMark(name: "BABY SHALINI K", rollNumber: "210823104019", subject: "Artificial Intelligence", marks: 0),
-        StudentMark(name: "BABY SHALINI K", rollNumber: "210823104019", subject: "Algorithm", marks: 0),
-        
-        StudentMark(name: "BALAMURUGAN M", rollNumber: "210823104020", subject: "Theory of Computation", marks: 86),
-        StudentMark(name: "BALAMURUGAN M", rollNumber: "210823104020", subject: "Database Management Systems", marks: 90),
-        StudentMark(name: "BALAMURUGAN M", rollNumber: "210823104020", subject: "Operating Systems", marks: 82),
-        StudentMark(name: "BALAMURUGAN M", rollNumber: "210823104020", subject: "Artificial Intelligence", marks: 16),
-        StudentMark(name: "BALAMURUGAN M", rollNumber: "210823104020", subject: "Algorithm", marks: 86),
-        
-        StudentMark(name: "BLESSING RAJA P (H)", rollNumber: "210823104021", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "BLESSING RAJA P (H)", rollNumber: "210823104021", subject: "Database Management Systems", marks: 66),
-        StudentMark(name: "BLESSING RAJA P (H)", rollNumber: "210823104021", subject: "Operating Systems", marks: 66),
-        StudentMark(name: "BLESSING RAJA P (H)", rollNumber: "210823104021", subject: "Artificial Intelligence", marks: 56),
-        StudentMark(name: "BLESSING RAJA P (H)", rollNumber: "210823104021", subject: "Algorithm", marks: 50),
-        
-        StudentMark(name: "BOAZ K", rollNumber: "210823104022", subject: "Theory of Computation", marks: 38),
-        StudentMark(name: "BOAZ K", rollNumber: "210823104022", subject: "Database Management Systems", marks: 86),
-        StudentMark(name: "BOAZ K", rollNumber: "210823104022", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "BOAZ K", rollNumber: "210823104022", subject: "Artificial Intelligence", marks: 24),
-        StudentMark(name: "BOAZ K", rollNumber: "210823104022", subject: "Algorithm", marks: 55),
-        
-        StudentMark(name: "CHANDRA MOHAN C (H)", rollNumber: "210823104023", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "CHANDRA MOHAN C (H)", rollNumber: "210823104023", subject: "Database Management Systems", marks: 60),
-        StudentMark(name: "CHANDRA MOHAN C (H)", rollNumber: "210823104023", subject: "Operating Systems", marks: 70),
-        StudentMark(name: "CHANDRA MOHAN C (H)", rollNumber: "210823104023", subject: "Artificial Intelligence", marks: 50),
-        StudentMark(name: "CHANDRA MOHAN C (H)", rollNumber: "210823104023", subject: "Algorithm", marks: 54),
-        
-        StudentMark(name: "CHRISTYBAI JENCY K", rollNumber: "210823104024", subject: "Theory of Computation", marks: 90),
-        StudentMark(name: "CHRISTYBAI JENCY K", rollNumber: "210823104024", subject: "Database Management Systems", marks: 60),
-        StudentMark(name: "CHRISTYBAI JENCY K", rollNumber: "210823104024", subject: "Operating Systems", marks: 80),
-        StudentMark(name: "CHRISTYBAI JENCY K", rollNumber: "210823104024", subject: "Artificial Intelligence", marks: 78),
-        StudentMark(name: "CHRISTYBAI JENCY K", rollNumber: "210823104024", subject: "Algorithm", marks: 84),
-        
-        StudentMark(name: "DANIYEL K L (H)", rollNumber: "210823104025", subject: "Theory of Computation", marks: 0),
-        StudentMark(name: "DANIYEL K L (H)", rollNumber: "210823104025", subject: "Database Management Systems", marks: 52),
-        StudentMark(name: "DANIYEL K L (H)", rollNumber: "210823104025", subject: "Operating Systems", marks: 54),
-        StudentMark(name: "DANIYEL K L (H)", rollNumber: "210823104025", subject: "Artificial Intelligence", marks: 38),
-        StudentMark(name: "DANIYEL K L (H)", rollNumber: "210823104025", subject: "Algorithm", marks: 10),
-        
-        StudentMark(name: "DEEPA G C", rollNumber: "210823104026", subject: "Theory of Computation", marks: 60),
-        StudentMark(name: "DEEPA G C", rollNumber: "210823104026", subject: "Database Management Systems", marks: 70),
-        StudentMark(name: "DEEPA G C", rollNumber: "210823104026", subject: "Operating Systems", marks: 74),
-        StudentMark(name: "DEEPA G C", rollNumber: "210823104026", subject: "Artificial Intelligence", marks: 74),
-        StudentMark(name: "DEEPA G C", rollNumber: "210823104026", subject: "Algorithm", marks: 50),
-        
-        StudentMark(name: "DEEPAK S", rollNumber: "210823104027", subject: "Theory of Computation", marks: 74),
-        StudentMark(name: "DEEPAK S", rollNumber: "210823104027", subject: "Database Management Systems", marks: 72),
-        StudentMark(name: "DEEPAK S", rollNumber: "210823104027", subject: "Operating Systems", marks: 56),
-        StudentMark(name: "DEEPAK S", rollNumber: "210823104027", subject: "Artificial Intelligence", marks: 66),
-        StudentMark(name: "DEEPAK S", rollNumber: "210823104027", subject: "Algorithm", marks: 53),
-        
-        StudentMark(name: "DHANUSH A", rollNumber: "210823104028", subject: "Theory of Computation", marks: 60),
-        StudentMark(name: "DHANUSH A", rollNumber: "210823104028", subject: "Database Management Systems", marks: 56),
-        StudentMark(name: "DHANUSH A", rollNumber: "210823104028", subject: "Operating Systems", marks: 76),
-        StudentMark(name: "DHANUSH A", rollNumber: "210823104028", subject: "Artificial Intelligence", marks: 80),
-        StudentMark(name: "DHANUSH A", rollNumber: "210823104028", subject: "Algorithm", marks: 70),
-        
-        StudentMark(name: "DHARNESH S", rollNumber: "210823104029", subject: "Theory of Computation", marks: 50),
-        StudentMark(name: "DHARNESH S", rollNumber: "210823104029", subject: "Database Management Systems", marks: 76),
-        StudentMark(name: "DHARNESH S", rollNumber: "210823104029", subject: "Operating Systems", marks: 68),
-        StudentMark(name: "DHARNESH S", rollNumber: "210823104029", subject: "Artificial Intelligence", marks: 20),
-        StudentMark(name: "DHARNESH S", rollNumber: "210823104029", subject: "Algorithm", marks: 62),
-        
-        StudentMark(name: "DHARSHANA R", rollNumber: "210823104030", subject: "Theory of Computation", marks: 64),
-        StudentMark(name: "DHARSHANA R", rollNumber: "210823104030", subject: "Database Management Systems", marks: 82),
-        StudentMark(name: "DHARSHANA R", rollNumber: "210823104030", subject: "Operating Systems", marks: 86),
-        StudentMark(name: "DHARSHANA R", rollNumber: "210823104030", subject: "Artificial Intelligence", marks: 76),
-        StudentMark(name: "DHARSHANA R", rollNumber: "210823104030", subject: "Algorithm", marks: 80),
-        
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Theory of Computation",
+          marks: 68,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Database Management Systems",
+          marks: 70,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Operating Systems",
+          marks: 62,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Artificial Intelligence",
+          marks: 70,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Algorithm",
+          marks: 80,
+        ),
+
+        StudentMark(
+          name: "ABEL C JOY",
+          rollNumber: "210823104002",
+          subject: "Theory of Computation",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "ABEL C JOY",
+          rollNumber: "210823104002",
+          subject: "Database Management Systems",
+          marks: 54,
+        ),
+        StudentMark(
+          name: "ABEL C JOY",
+          rollNumber: "210823104002",
+          subject: "Operating Systems",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "ABEL C JOY",
+          rollNumber: "210823104002",
+          subject: "Artificial Intelligence",
+          marks: 62,
+        ),
+        StudentMark(
+          name: "ABEL C JOY",
+          rollNumber: "210823104002",
+          subject: "Algorithm",
+          marks: 90,
+        ),
+
+        StudentMark(
+          name: "ABINAYA T",
+          rollNumber: "210823104003",
+          subject: "Theory of Computation",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "ABINAYA T",
+          rollNumber: "210823104003",
+          subject: "Database Management Systems",
+          marks: 58,
+        ),
+        StudentMark(
+          name: "ABINAYA T",
+          rollNumber: "210823104003",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "ABINAYA T",
+          rollNumber: "210823104003",
+          subject: "Artificial Intelligence",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "ABINAYA T",
+          rollNumber: "210823104003",
+          subject: "Algorithm",
+          marks: 65,
+        ),
+
+        StudentMark(
+          name: "ABISHA JEBAMANI K",
+          rollNumber: "210823104004",
+          subject: "Theory of Computation",
+          marks: 84,
+        ),
+        StudentMark(
+          name: "ABISHA JEBAMANI K",
+          rollNumber: "210823104004",
+          subject: "Database Management Systems",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "ABISHA JEBAMANI K",
+          rollNumber: "210823104004",
+          subject: "Operating Systems",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "ABISHA JEBAMANI K",
+          rollNumber: "210823104004",
+          subject: "Artificial Intelligence",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "ABISHA JEBAMANI K",
+          rollNumber: "210823104004",
+          subject: "Algorithm",
+          marks: 68,
+        ),
+
+        StudentMark(
+          name: "ABISHEK PAULSON S",
+          rollNumber: "210823104005",
+          subject: "Theory of Computation",
+          marks: 24,
+        ),
+        StudentMark(
+          name: "ABISHEK PAULSON S",
+          rollNumber: "210823104005",
+          subject: "Database Management Systems",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "ABISHEK PAULSON S",
+          rollNumber: "210823104005",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "ABISHEK PAULSON S",
+          rollNumber: "210823104005",
+          subject: "Artificial Intelligence",
+          marks: 40,
+        ),
+        StudentMark(
+          name: "ABISHEK PAULSON S",
+          rollNumber: "210823104005",
+          subject: "Algorithm",
+          marks: 55,
+        ),
+
+        StudentMark(
+          name: "ABY ROSY M",
+          rollNumber: "210823104006",
+          subject: "Theory of Computation",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "ABY ROSY M",
+          rollNumber: "210823104006",
+          subject: "Database Management Systems",
+          marks: 88,
+        ),
+        StudentMark(
+          name: "ABY ROSY M",
+          rollNumber: "210823104006",
+          subject: "Operating Systems",
+          marks: 84,
+        ),
+        StudentMark(
+          name: "ABY ROSY M",
+          rollNumber: "210823104006",
+          subject: "Artificial Intelligence",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "ABY ROSY M",
+          rollNumber: "210823104006",
+          subject: "Algorithm",
+          marks: 86,
+        ),
+
+        StudentMark(
+          name: "AKSHAYA PRABHA M (H)",
+          rollNumber: "210823104007",
+          subject: "Theory of Computation",
+          marks: 84,
+        ),
+        StudentMark(
+          name: "AKSHAYA PRABHA M (H)",
+          rollNumber: "210823104007",
+          subject: "Database Management Systems",
+          marks: 92,
+        ),
+        StudentMark(
+          name: "AKSHAYA PRABHA M (H)",
+          rollNumber: "210823104007",
+          subject: "Operating Systems",
+          marks: 30,
+        ),
+        StudentMark(
+          name: "AKSHAYA PRABHA M (H)",
+          rollNumber: "210823104007",
+          subject: "Artificial Intelligence",
+          marks: 94,
+        ),
+        StudentMark(
+          name: "AKSHAYA PRABHA M (H)",
+          rollNumber: "210823104007",
+          subject: "Algorithm",
+          marks: 76,
+        ),
+
+        StudentMark(
+          name: "ANGELIN MARY S (H)",
+          rollNumber: "210823104008",
+          subject: "Theory of Computation",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "ANGELIN MARY S (H)",
+          rollNumber: "210823104008",
+          subject: "Database Management Systems",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "ANGELIN MARY S (H)",
+          rollNumber: "210823104008",
+          subject: "Operating Systems",
+          marks: 84,
+        ),
+        StudentMark(
+          name: "ANGELIN MARY S (H)",
+          rollNumber: "210823104008",
+          subject: "Artificial Intelligence",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "ANGELIN MARY S (H)",
+          rollNumber: "210823104008",
+          subject: "Algorithm",
+          marks: 84,
+        ),
+
+        StudentMark(
+          name: "ANISHA SWEETY J",
+          rollNumber: "210823104009",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "ANISHA SWEETY J",
+          rollNumber: "210823104009",
+          subject: "Database Management Systems",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "ANISHA SWEETY J",
+          rollNumber: "210823104009",
+          subject: "Operating Systems",
+          marks: 78,
+        ),
+        StudentMark(
+          name: "ANISHA SWEETY J",
+          rollNumber: "210823104009",
+          subject: "Artificial Intelligence",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "ANISHA SWEETY J",
+          rollNumber: "210823104009",
+          subject: "Algorithm",
+          marks: 71,
+        ),
+
+        StudentMark(
+          name: "ANNESHARON A S",
+          rollNumber: "210823104010",
+          subject: "Theory of Computation",
+          marks: 24,
+        ),
+        StudentMark(
+          name: "ANNESHARON A S",
+          rollNumber: "210823104010",
+          subject: "Database Management Systems",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "ANNESHARON A S",
+          rollNumber: "210823104010",
+          subject: "Operating Systems",
+          marks: 72,
+        ),
+        StudentMark(
+          name: "ANNESHARON A S",
+          rollNumber: "210823104010",
+          subject: "Artificial Intelligence",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "ANNESHARON A S",
+          rollNumber: "210823104010",
+          subject: "Algorithm",
+          marks: 45,
+        ),
+
+        StudentMark(
+          name: "ANNIE DORAH ABEL",
+          rollNumber: "210823104011",
+          subject: "Theory of Computation",
+          marks: 36,
+        ),
+        StudentMark(
+          name: "ANNIE DORAH ABEL",
+          rollNumber: "210823104011",
+          subject: "Database Management Systems",
+          marks: 28,
+        ),
+        StudentMark(
+          name: "ANNIE DORAH ABEL",
+          rollNumber: "210823104011",
+          subject: "Operating Systems",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "ANNIE DORAH ABEL",
+          rollNumber: "210823104011",
+          subject: "Artificial Intelligence",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "ANNIE DORAH ABEL",
+          rollNumber: "210823104011",
+          subject: "Algorithm",
+          marks: 0,
+        ),
+
+        StudentMark(
+          name: "ANTONY MELVIN T",
+          rollNumber: "210823104012",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "ANTONY MELVIN T",
+          rollNumber: "210823104012",
+          subject: "Database Management Systems",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "ANTONY MELVIN T",
+          rollNumber: "210823104012",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "ANTONY MELVIN T",
+          rollNumber: "210823104012",
+          subject: "Artificial Intelligence",
+          marks: 72,
+        ),
+        StudentMark(
+          name: "ANTONY MELVIN T",
+          rollNumber: "210823104012",
+          subject: "Algorithm",
+          marks: 31,
+        ),
+
+        StudentMark(
+          name: "ARPUTHA STEPHIN A (H)",
+          rollNumber: "210823104013",
+          subject: "Theory of Computation",
+          marks: 36,
+        ),
+        StudentMark(
+          name: "ARPUTHA STEPHIN A (H)",
+          rollNumber: "210823104013",
+          subject: "Database Management Systems",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "ARPUTHA STEPHIN A (H)",
+          rollNumber: "210823104013",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "ARPUTHA STEPHIN A (H)",
+          rollNumber: "210823104013",
+          subject: "Artificial Intelligence",
+          marks: 8,
+        ),
+        StudentMark(
+          name: "ARPUTHA STEPHIN A (H)",
+          rollNumber: "210823104013",
+          subject: "Algorithm",
+          marks: 63,
+        ),
+
+        StudentMark(
+          name: "ARTHI M",
+          rollNumber: "210823104014",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "ARTHI M",
+          rollNumber: "210823104014",
+          subject: "Database Management Systems",
+          marks: 28,
+        ),
+        StudentMark(
+          name: "ARTHI M",
+          rollNumber: "210823104014",
+          subject: "Operating Systems",
+          marks: 30,
+        ),
+        StudentMark(
+          name: "ARTHI M",
+          rollNumber: "210823104014",
+          subject: "Artificial Intelligence",
+          marks: 4,
+        ),
+        StudentMark(
+          name: "ARTHI M",
+          rollNumber: "210823104014",
+          subject: "Algorithm",
+          marks: 26,
+        ),
+
+        StudentMark(
+          name: "ARUNACHALAM R",
+          rollNumber: "210823104015",
+          subject: "Theory of Computation",
+          marks: 24,
+        ),
+        StudentMark(
+          name: "ARUNACHALAM R",
+          rollNumber: "210823104015",
+          subject: "Database Management Systems",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "ARUNACHALAM R",
+          rollNumber: "210823104015",
+          subject: "Operating Systems",
+          marks: 62,
+        ),
+        StudentMark(
+          name: "ARUNACHALAM R",
+          rollNumber: "210823104015",
+          subject: "Artificial Intelligence",
+          marks: 30,
+        ),
+        StudentMark(
+          name: "ARUNACHALAM R",
+          rollNumber: "210823104015",
+          subject: "Algorithm",
+          marks: 50,
+        ),
+
+        StudentMark(
+          name: "ASBOURN JOEL I",
+          rollNumber: "210823104016",
+          subject: "Theory of Computation",
+          marks: 58,
+        ),
+        StudentMark(
+          name: "ASBOURN JOEL I",
+          rollNumber: "210823104016",
+          subject: "Database Management Systems",
+          marks: 78,
+        ),
+        StudentMark(
+          name: "ASBOURN JOEL I",
+          rollNumber: "210823104016",
+          subject: "Operating Systems",
+          marks: 68,
+        ),
+        StudentMark(
+          name: "ASBOURN JOEL I",
+          rollNumber: "210823104016",
+          subject: "Artificial Intelligence",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "ASBOURN JOEL I",
+          rollNumber: "210823104016",
+          subject: "Algorithm",
+          marks: 78,
+        ),
+
+        StudentMark(
+          name: "ASLIN BRIMA P H (H)",
+          rollNumber: "210823104017",
+          subject: "Theory of Computation",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "ASLIN BRIMA P H (H)",
+          rollNumber: "210823104017",
+          subject: "Database Management Systems",
+          marks: 58,
+        ),
+        StudentMark(
+          name: "ASLIN BRIMA P H (H)",
+          rollNumber: "210823104017",
+          subject: "Operating Systems",
+          marks: 74,
+        ),
+        StudentMark(
+          name: "ASLIN BRIMA P H (H)",
+          rollNumber: "210823104017",
+          subject: "Artificial Intelligence",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "ASLIN BRIMA P H (H)",
+          rollNumber: "210823104017",
+          subject: "Algorithm",
+          marks: 80,
+        ),
+
+        StudentMark(
+          name: "ASWITHA K",
+          rollNumber: "210823104018",
+          subject: "Theory of Computation",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "ASWITHA K",
+          rollNumber: "210823104018",
+          subject: "Database Management Systems",
+          marks: 92,
+        ),
+        StudentMark(
+          name: "ASWITHA K",
+          rollNumber: "210823104018",
+          subject: "Operating Systems",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "ASWITHA K",
+          rollNumber: "210823104018",
+          subject: "Artificial Intelligence",
+          marks: 84,
+        ),
+        StudentMark(
+          name: "ASWITHA K",
+          rollNumber: "210823104018",
+          subject: "Algorithm",
+          marks: 92,
+        ),
+
+        StudentMark(
+          name: "BABY SHALINI K",
+          rollNumber: "210823104019",
+          subject: "Theory of Computation",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "BABY SHALINI K",
+          rollNumber: "210823104019",
+          subject: "Database Management Systems",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "BABY SHALINI K",
+          rollNumber: "210823104019",
+          subject: "Operating Systems",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "BABY SHALINI K",
+          rollNumber: "210823104019",
+          subject: "Artificial Intelligence",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "BABY SHALINI K",
+          rollNumber: "210823104019",
+          subject: "Algorithm",
+          marks: 0,
+        ),
+
+        StudentMark(
+          name: "BALAMURUGAN M",
+          rollNumber: "210823104020",
+          subject: "Theory of Computation",
+          marks: 86,
+        ),
+        StudentMark(
+          name: "BALAMURUGAN M",
+          rollNumber: "210823104020",
+          subject: "Database Management Systems",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "BALAMURUGAN M",
+          rollNumber: "210823104020",
+          subject: "Operating Systems",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "BALAMURUGAN M",
+          rollNumber: "210823104020",
+          subject: "Artificial Intelligence",
+          marks: 16,
+        ),
+        StudentMark(
+          name: "BALAMURUGAN M",
+          rollNumber: "210823104020",
+          subject: "Algorithm",
+          marks: 86,
+        ),
+
+        StudentMark(
+          name: "BLESSING RAJA P (H)",
+          rollNumber: "210823104021",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "BLESSING RAJA P (H)",
+          rollNumber: "210823104021",
+          subject: "Database Management Systems",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "BLESSING RAJA P (H)",
+          rollNumber: "210823104021",
+          subject: "Operating Systems",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "BLESSING RAJA P (H)",
+          rollNumber: "210823104021",
+          subject: "Artificial Intelligence",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "BLESSING RAJA P (H)",
+          rollNumber: "210823104021",
+          subject: "Algorithm",
+          marks: 50,
+        ),
+
+        StudentMark(
+          name: "BOAZ K",
+          rollNumber: "210823104022",
+          subject: "Theory of Computation",
+          marks: 38,
+        ),
+        StudentMark(
+          name: "BOAZ K",
+          rollNumber: "210823104022",
+          subject: "Database Management Systems",
+          marks: 86,
+        ),
+        StudentMark(
+          name: "BOAZ K",
+          rollNumber: "210823104022",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "BOAZ K",
+          rollNumber: "210823104022",
+          subject: "Artificial Intelligence",
+          marks: 24,
+        ),
+        StudentMark(
+          name: "BOAZ K",
+          rollNumber: "210823104022",
+          subject: "Algorithm",
+          marks: 55,
+        ),
+
+        StudentMark(
+          name: "CHANDRA MOHAN C (H)",
+          rollNumber: "210823104023",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "CHANDRA MOHAN C (H)",
+          rollNumber: "210823104023",
+          subject: "Database Management Systems",
+          marks: 60,
+        ),
+        StudentMark(
+          name: "CHANDRA MOHAN C (H)",
+          rollNumber: "210823104023",
+          subject: "Operating Systems",
+          marks: 70,
+        ),
+        StudentMark(
+          name: "CHANDRA MOHAN C (H)",
+          rollNumber: "210823104023",
+          subject: "Artificial Intelligence",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "CHANDRA MOHAN C (H)",
+          rollNumber: "210823104023",
+          subject: "Algorithm",
+          marks: 54,
+        ),
+
+        StudentMark(
+          name: "CHRISTYBAI JENCY K",
+          rollNumber: "210823104024",
+          subject: "Theory of Computation",
+          marks: 90,
+        ),
+        StudentMark(
+          name: "CHRISTYBAI JENCY K",
+          rollNumber: "210823104024",
+          subject: "Database Management Systems",
+          marks: 60,
+        ),
+        StudentMark(
+          name: "CHRISTYBAI JENCY K",
+          rollNumber: "210823104024",
+          subject: "Operating Systems",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "CHRISTYBAI JENCY K",
+          rollNumber: "210823104024",
+          subject: "Artificial Intelligence",
+          marks: 78,
+        ),
+        StudentMark(
+          name: "CHRISTYBAI JENCY K",
+          rollNumber: "210823104024",
+          subject: "Algorithm",
+          marks: 84,
+        ),
+
+        StudentMark(
+          name: "DANIYEL K L (H)",
+          rollNumber: "210823104025",
+          subject: "Theory of Computation",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "DANIYEL K L (H)",
+          rollNumber: "210823104025",
+          subject: "Database Management Systems",
+          marks: 52,
+        ),
+        StudentMark(
+          name: "DANIYEL K L (H)",
+          rollNumber: "210823104025",
+          subject: "Operating Systems",
+          marks: 54,
+        ),
+        StudentMark(
+          name: "DANIYEL K L (H)",
+          rollNumber: "210823104025",
+          subject: "Artificial Intelligence",
+          marks: 38,
+        ),
+        StudentMark(
+          name: "DANIYEL K L (H)",
+          rollNumber: "210823104025",
+          subject: "Algorithm",
+          marks: 10,
+        ),
+
+        StudentMark(
+          name: "DEEPA G C",
+          rollNumber: "210823104026",
+          subject: "Theory of Computation",
+          marks: 60,
+        ),
+        StudentMark(
+          name: "DEEPA G C",
+          rollNumber: "210823104026",
+          subject: "Database Management Systems",
+          marks: 70,
+        ),
+        StudentMark(
+          name: "DEEPA G C",
+          rollNumber: "210823104026",
+          subject: "Operating Systems",
+          marks: 74,
+        ),
+        StudentMark(
+          name: "DEEPA G C",
+          rollNumber: "210823104026",
+          subject: "Artificial Intelligence",
+          marks: 74,
+        ),
+        StudentMark(
+          name: "DEEPA G C",
+          rollNumber: "210823104026",
+          subject: "Algorithm",
+          marks: 50,
+        ),
+
+        StudentMark(
+          name: "DEEPAK S",
+          rollNumber: "210823104027",
+          subject: "Theory of Computation",
+          marks: 74,
+        ),
+        StudentMark(
+          name: "DEEPAK S",
+          rollNumber: "210823104027",
+          subject: "Database Management Systems",
+          marks: 72,
+        ),
+        StudentMark(
+          name: "DEEPAK S",
+          rollNumber: "210823104027",
+          subject: "Operating Systems",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "DEEPAK S",
+          rollNumber: "210823104027",
+          subject: "Artificial Intelligence",
+          marks: 66,
+        ),
+        StudentMark(
+          name: "DEEPAK S",
+          rollNumber: "210823104027",
+          subject: "Algorithm",
+          marks: 53,
+        ),
+
+        StudentMark(
+          name: "DHANUSH A",
+          rollNumber: "210823104028",
+          subject: "Theory of Computation",
+          marks: 60,
+        ),
+        StudentMark(
+          name: "DHANUSH A",
+          rollNumber: "210823104028",
+          subject: "Database Management Systems",
+          marks: 56,
+        ),
+        StudentMark(
+          name: "DHANUSH A",
+          rollNumber: "210823104028",
+          subject: "Operating Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "DHANUSH A",
+          rollNumber: "210823104028",
+          subject: "Artificial Intelligence",
+          marks: 80,
+        ),
+        StudentMark(
+          name: "DHANUSH A",
+          rollNumber: "210823104028",
+          subject: "Algorithm",
+          marks: 70,
+        ),
+
+        StudentMark(
+          name: "DHARNESH S",
+          rollNumber: "210823104029",
+          subject: "Theory of Computation",
+          marks: 50,
+        ),
+        StudentMark(
+          name: "DHARNESH S",
+          rollNumber: "210823104029",
+          subject: "Database Management Systems",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "DHARNESH S",
+          rollNumber: "210823104029",
+          subject: "Operating Systems",
+          marks: 68,
+        ),
+        StudentMark(
+          name: "DHARNESH S",
+          rollNumber: "210823104029",
+          subject: "Artificial Intelligence",
+          marks: 20,
+        ),
+        StudentMark(
+          name: "DHARNESH S",
+          rollNumber: "210823104029",
+          subject: "Algorithm",
+          marks: 62,
+        ),
+
+        StudentMark(
+          name: "DHARSHANA R",
+          rollNumber: "210823104030",
+          subject: "Theory of Computation",
+          marks: 64,
+        ),
+        StudentMark(
+          name: "DHARSHANA R",
+          rollNumber: "210823104030",
+          subject: "Database Management Systems",
+          marks: 82,
+        ),
+        StudentMark(
+          name: "DHARSHANA R",
+          rollNumber: "210823104030",
+          subject: "Operating Systems",
+          marks: 86,
+        ),
+        StudentMark(
+          name: "DHARSHANA R",
+          rollNumber: "210823104030",
+          subject: "Artificial Intelligence",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "DHARSHANA R",
+          rollNumber: "210823104030",
+          subject: "Algorithm",
+          marks: 80,
+        ),
+
         // Continue with the rest of the students up to roll number 210823104063
-        StudentMark(name: "KARTHIKEYAN D", rollNumber: "210823104063", subject: "Theory of Computation", marks: 10),
-        StudentMark(name: "KARTHIKEYAN D", rollNumber: "210823104063", subject: "Database Management Systems", marks: 0),
-        StudentMark(name: "KARTHIKEYAN D", rollNumber: "210823104063", subject: "Operating Systems", marks: 0),
-        StudentMark(name: "KARTHIKEYAN D", rollNumber: "210823104063", subject: "Artificial Intelligence", marks: 20),
-        StudentMark(name: "KARTHIKEYAN D", rollNumber: "210823104063", subject: "Algorithm", marks: 0),
+        StudentMark(
+          name: "KARTHIKEYAN D",
+          rollNumber: "210823104063",
+          subject: "Theory of Computation",
+          marks: 10,
+        ),
+        StudentMark(
+          name: "KARTHIKEYAN D",
+          rollNumber: "210823104063",
+          subject: "Database Management Systems",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "KARTHIKEYAN D",
+          rollNumber: "210823104063",
+          subject: "Operating Systems",
+          marks: 0,
+        ),
+        StudentMark(
+          name: "KARTHIKEYAN D",
+          rollNumber: "210823104063",
+          subject: "Artificial Intelligence",
+          marks: 20,
+        ),
+        StudentMark(
+          name: "KARTHIKEYAN D",
+          rollNumber: "210823104063",
+          subject: "Algorithm",
+          marks: 0,
+        ),
       ];
     } else if (selectedAssessment == 'Internal Assessment 2') {
       allStudentMarks = [
         // Sample data for Internal Assessment 2
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Theory of Computation", marks: 75),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Database Management Systems", marks: 78),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Operating Systems", marks: 70),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Artificial Intelligence", marks: 76),
-        StudentMark(name: "AATHI BALA KUMAR B (H)", rollNumber: "210823104001", subject: "Algorithm", marks: 85),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Theory of Computation",
+          marks: 75,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Database Management Systems",
+          marks: 78,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Operating Systems",
+          marks: 70,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Artificial Intelligence",
+          marks: 76,
+        ),
+        StudentMark(
+          name: "AATHI BALA KUMAR B (H)",
+          rollNumber: "210823104001",
+          subject: "Algorithm",
+          marks: 85,
+        ),
       ];
     }
 
     // Create a map of student marks by roll number and build unique registrations list
     studentMarksByRollNumber = {};
     availableRegistrations = [];
-    
+
     for (var mark in allStudentMarks) {
       if (!studentMarksByRollNumber.containsKey(mark.rollNumber)) {
         studentMarksByRollNumber[mark.rollNumber] = [];
@@ -284,7 +1084,7 @@ class _ExamsScreenState extends State<ExamsScreen>
       }
       studentMarksByRollNumber[mark.rollNumber]!.add(mark);
     }
-    
+
     // Sort registrations for better display
     availableRegistrations.sort();
 
@@ -350,10 +1150,7 @@ class _ExamsScreenState extends State<ExamsScreen>
       appBar: AppBar(
         title: Text(
           'Exam Results',
-          style: TextStyle(
-            fontFamily: 'Clash Grotesk',
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: FadeTransition(

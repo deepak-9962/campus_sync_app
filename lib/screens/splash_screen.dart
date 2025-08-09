@@ -130,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    fontFamily: 'Clash Grotesk',
+                    
                     letterSpacing: 1.2,
                   ),
                 ),

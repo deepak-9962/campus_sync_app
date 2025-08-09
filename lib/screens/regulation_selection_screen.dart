@@ -77,7 +77,6 @@ class RegulationSelectionScreen extends StatelessWidget {
                   textStyle: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

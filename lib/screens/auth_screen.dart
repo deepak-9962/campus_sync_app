@@ -283,11 +283,21 @@ class _AuthScreenState extends State<AuthScreen>
                               ),
                             ],
                           ),
-                          child: Icon(
-                            Icons.school,
-                            size: 60,
-                            color:
-                                theme.colorScheme.primary, // Use theme accent
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.primary.withOpacity(0.8),
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Text("🏫", style: TextStyle(fontSize: 45)),
+                            ),
                           ),
                         ),
                       ),
@@ -297,7 +307,6 @@ class _AuthScreenState extends State<AuthScreen>
                         textAlign: TextAlign.center,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Clash Grotesk',
                         ),
                       ),
                       SizedBox(height: 10),
@@ -306,9 +315,7 @@ class _AuthScreenState extends State<AuthScreen>
                             ? 'Sign in to continue'
                             : 'Sign up to get started',
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontFamily: 'Clash Grotesk',
-                        ),
+                        style: theme.textTheme.bodyMedium,
                       ),
                       SizedBox(height: 40),
                       TextField(
@@ -318,9 +325,11 @@ class _AuthScreenState extends State<AuthScreen>
                         decoration: InputDecoration(
                           labelText: 'Email',
                           // labelStyle will be from theme
-                          prefixIcon: Icon(
-                            Icons.email,
-                            color: theme.iconTheme.color,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Text("✉️", style: TextStyle(fontSize: 20)),
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
@@ -333,20 +342,20 @@ class _AuthScreenState extends State<AuthScreen>
                         decoration: InputDecoration(
                           labelText: 'Password',
                           // labelStyle will be from theme
-                          prefixIcon: Icon(
-                            Icons.lock,
-                            color: theme.iconTheme.color,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Text("🔒", style: TextStyle(fontSize: 20)),
                           ),
                           suffixIcon: IconButton(
                             onPressed:
                                 () => setState(
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: theme.iconTheme.color,
+                            icon: Text(
+                              _obscurePassword ? "👁️" : "🙈",
+                              style: TextStyle(fontSize: 20),
                             ),
                           ),
                         ),
@@ -422,7 +431,6 @@ class _AuthScreenState extends State<AuthScreen>
                               'Forgot Password?',
                               style: TextStyle(
                                 color: theme.colorScheme.primary,
-                                fontFamily: 'Clash Grotesk',
                               ),
                             ),
                           ),
@@ -449,10 +457,7 @@ class _AuthScreenState extends State<AuthScreen>
                         onPressed: _isLoading ? null : _demoLogin,
                         child: Text(
                           'Use Demo Account',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontFamily: 'Clash Grotesk',
-                          ),
+                          style: TextStyle(color: theme.colorScheme.primary),
                         ),
                       ),
                       SizedBox(height: 20),
@@ -474,17 +479,17 @@ class _AuthScreenState extends State<AuthScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildSocialButton(
-                            icon: Icons.g_mobiledata,
+                            icon: Icons.login,
                             onTap: () => _socialLogin('Google'),
                             theme: theme,
                           ),
                           _buildSocialButton(
-                            icon: Icons.facebook,
+                            icon: Icons.people,
                             onTap: () => _socialLogin('Facebook'),
                             theme: theme,
                           ),
                           _buildSocialButton(
-                            icon: Icons.apple,
+                            icon: Icons.phone_iphone,
                             onTap: () => _socialLogin('Apple'),
                             theme: theme,
                           ),
@@ -507,7 +512,6 @@ class _AuthScreenState extends State<AuthScreen>
                               style: TextStyle(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Clash Grotesk',
                               ),
                             ),
                           ),
@@ -530,6 +534,15 @@ class _AuthScreenState extends State<AuthScreen>
     required VoidCallback onTap,
     required ThemeData theme,
   }) {
+    // Map icon to emoji
+    String emoji = "";
+    if (icon == Icons.login)
+      emoji = "G";
+    else if (icon == Icons.people)
+      emoji = "f";
+    else if (icon == Icons.phone_iphone)
+      emoji = "A";
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
@@ -537,13 +550,20 @@ class _AuthScreenState extends State<AuthScreen>
         width: 60,
         height: 60,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(
-            0.5,
-          ), // Use a theme color
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
           shape: BoxShape.circle,
           border: Border.all(color: theme.dividerColor, width: 1),
         ),
-        child: Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 30),
+        child: Center(
+          child: Text(
+            emoji,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ),
       ),
     );
   }

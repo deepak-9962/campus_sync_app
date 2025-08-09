@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
@@ -41,6 +42,9 @@ class _TimetableScreenState extends State<TimetableScreen>
   String _selectedSection = 'A';
   final TimetableService _timetableService = TimetableService();
   String _errorMessage = '';
+  Timer? _refreshTimer;
+  Map<String, ScrollController> _scrollControllers = {};
+  Map<String, GlobalKey> _listViewKeys = {};
 
   final List<String> _days = [
     'Monday',
@@ -51,10 +55,124 @@ class _TimetableScreenState extends State<TimetableScreen>
     'Saturday',
   ];
 
+  // Helper methods for current time detection
+  String _getCurrentDay() {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    switch (weekday) {
+      case 1:
+        return 'monday';
+      case 2:
+        return 'tuesday';
+      case 3:
+        return 'wednesday';
+      case 4:
+        return 'thursday';
+      case 5:
+        return 'friday';
+      case 6:
+        return 'saturday';
+      case 7:
+        return 'sunday';
+      default:
+        return '';
+    }
+  }
+
+  bool _isCurrentPeriod(String day, String timeSlot) {
+    final now = DateTime.now();
+    final currentDay = _getCurrentDay();
+
+    // Check if it's the current day
+    if (day.toLowerCase() != currentDay) {
+      return false;
+    }
+
+    try {
+      // Parse time slot (format: "HH:MM AM/PM - HH:MM AM/PM")
+      final timeParts = timeSlot.split(' - ');
+      if (timeParts.length != 2) return false;
+
+      // Parse start time
+      final startTime = _parseTimeString(timeParts[0].trim());
+      final endTime = _parseTimeString(timeParts[1].trim());
+
+      if (startTime == null || endTime == null) return false;
+
+      // Create DateTime objects for comparison
+      final startDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        startTime.hour,
+        startTime.minute,
+      );
+      final endDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        endTime.hour,
+        endTime.minute,
+      );
+
+      // Check if current time is within the period
+      return now.isAfter(startDateTime) && now.isBefore(endDateTime);
+    } catch (e) {
+      print('Error parsing time: $e');
+      return false;
+    }
+  }
+
+  DateTime? _parseTimeString(String timeStr) {
+    try {
+      // Handle formats like "9:15 AM", "12:45 PM", etc.
+      final regex = RegExp(
+        r'(\d{1,2}):(\d{2})\s*(AM|PM)',
+        caseSensitive: false,
+      );
+      final match = regex.firstMatch(timeStr);
+
+      if (match == null) return null;
+
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+      String period = match.group(3)!.toUpperCase();
+
+      // Convert to 24-hour format
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) {
+        hour = 0;
+      }
+
+      return DateTime(2025, 1, 1, hour, minute); // Just need hour and minute
+    } catch (e) {
+      print('Error parsing time string "$timeStr": $e');
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
+
+    // Initialize scroll controllers and keys for each day
+    for (String day in _days) {
+      _scrollControllers[day] = ScrollController();
+      _listViewKeys[day] = GlobalKey();
+    }
+
+    // Add listener to tab controller
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        // Tab change completed, check if we need to auto-scroll
+        Future.delayed(Duration(milliseconds: 300), () {
+          _scrollToCurrentPeriod();
+        });
+      }
+    });
+
     _loadTimetableData();
 
     // Set the initial tab to today's day of the week
@@ -63,12 +181,82 @@ class _TimetableScreenState extends State<TimetableScreen>
     if (todayIndex >= 0 && todayIndex < 6) {
       _tabController.animateTo(todayIndex);
     }
+
+    // Start timer to refresh UI every minute to update current period highlighting
+    _refreshTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // This will trigger a rebuild to update current period highlighting
+        });
+        // Auto-scroll to current period after state update
+        _scrollToCurrentPeriod();
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _refreshTimer?.cancel();
+    // Dispose all scroll controllers
+    for (ScrollController controller in _scrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _scrollToCurrentPeriod() {
+    if (!mounted) return;
+
+    // Get current day and current tab
+    String currentDay = _getCurrentDay();
+    int currentTabIndex = _tabController.index;
+    String currentTabDay = _days[currentTabIndex];
+
+    // Only auto-scroll if we're on today's tab
+    if (currentTabDay.toLowerCase() != currentDay) return;
+
+    // Get scroll controller for current tab
+    ScrollController? scrollController = _scrollControllers[currentTabDay];
+    if (scrollController == null || !scrollController.hasClients) return;
+
+    // Get schedule for current day
+    List<TimeSlot> schedule = _timetableData[currentTabDay] ?? [];
+    if (schedule.isEmpty) return;
+
+    // Find current period index
+    int currentPeriodIndex = -1;
+    for (int i = 0; i < schedule.length; i++) {
+      if (_isCurrentPeriod(currentDay, schedule[i].time)) {
+        currentPeriodIndex = i;
+        break;
+      }
+    }
+
+    // If current period found, scroll to make it visible
+    if (currentPeriodIndex >= 0) {
+      // Calculate item position
+      double itemHeight = 86.0; // Approximate card height + margin
+      double targetPosition = currentPeriodIndex * itemHeight;
+
+      // Get viewport height
+      double viewportHeight = scrollController.position.viewportDimension;
+
+      // Calculate position to center the item
+      double centerPosition =
+          targetPosition - (viewportHeight / 2) + (itemHeight / 2);
+
+      // Ensure position is within bounds
+      double maxScroll = scrollController.position.maxScrollExtent;
+      double scrollPosition = centerPosition.clamp(0.0, maxScroll);
+
+      // Animate to position
+      scrollController.animateTo(
+        scrollPosition,
+        duration: Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   Future<void> _loadTimetableData() async {
@@ -147,6 +335,11 @@ class _TimetableScreenState extends State<TimetableScreen>
         _timetableData = formattedData;
         _isLoading = false;
       });
+
+      // Auto-scroll to current period after data is loaded
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentPeriod();
+      });
     } catch (e) {
       print('Error loading timetable: $e');
       setState(() {
@@ -187,16 +380,36 @@ class _TimetableScreenState extends State<TimetableScreen>
         title: const Text(
           'Timetable',
           style: TextStyle(
-            fontFamily: 'Clash Grotesk',
+            
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         elevation: 0,
         actions: [
-          IconButton(icon: Icon(Icons.refresh), onPressed: _loadTimetableData),
+          IconButton(
+            icon: Icon(Icons.refresh, color: Theme.of(context).primaryColor),
+            onPressed: _loadTimetableData,
+            tooltip: 'Refresh timetable',
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.center_focus_strong,
+              color: Theme.of(context).primaryColor,
+            ),
+            onPressed: () {
+              _scrollToCurrentPeriod();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Scrolled to current period'),
+                  duration: Duration(milliseconds: 1500),
+                ),
+              );
+            },
+            tooltip: 'Center current period',
+          ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.group),
+            icon: Icon(Icons.group, color: Theme.of(context).primaryColor),
             onSelected: (String section) {
               setState(() {
                 _selectedSection = section;
@@ -208,6 +421,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   PopupMenuItem<String>(value: 'A', child: Text('Section A')),
                   PopupMenuItem<String>(value: 'B', child: Text('Section B')),
                 ],
+            tooltip: 'Select section',
           ),
         ],
       ),
@@ -230,7 +444,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.red[600],
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                     SizedBox(height: 16),
@@ -257,7 +471,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                   ],
@@ -276,7 +490,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   unselectedLabelColor: Colors.grey,
                   labelStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
+                    
                   ),
                   tabs: _days.map((day) => Tab(text: day)).toList(),
                 ),
@@ -311,7 +525,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
+                    
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -332,7 +546,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                   ],
@@ -360,7 +574,7 @@ class _TimetableScreenState extends State<TimetableScreen>
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
-                fontFamily: 'Clash Grotesk',
+                
               ),
             ),
           ],
@@ -368,27 +582,40 @@ class _TimetableScreenState extends State<TimetableScreen>
       );
     }
 
+    // Get scroll controller for this day
+    ScrollController scrollController =
+        _scrollControllers[day] ?? ScrollController();
+
     return ListView.builder(
+      key: _listViewKeys[day],
+      controller: scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: schedule.length,
       itemBuilder: (context, index) {
-        return _buildTimeSlotCard(schedule[index]);
+        return _buildTimeSlotCard(schedule[index], day);
       },
     );
   }
 
-  Widget _buildTimeSlotCard(TimeSlot slot) {
+  Widget _buildTimeSlotCard(TimeSlot slot, String day) {
     // Determine color based on subject
     Color subjectColor = _getSubjectColor(slot.subject);
     String defaultClassroom = _selectedSection == 'A' ? 'C11' : 'C12';
 
+    // Check if this is the current period - use the passed day parameter
+    bool isCurrentPeriod = _isCurrentPeriod(day.toLowerCase(), slot.time);
+
     return Card(
-      elevation: 0,
+      elevation: isCurrentPeriod ? 4 : 0,
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: isCurrentPeriod ? Colors.green.shade400 : Colors.grey.shade200,
+          width: isCurrentPeriod ? 2 : 1,
+        ),
       ),
+      color: isCurrentPeriod ? Colors.green.shade50 : null,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Row(
@@ -396,24 +623,60 @@ class _TimetableScreenState extends State<TimetableScreen>
           children: [
             Container(
               width: 90,
-              child: Text(
-                slot.time,
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Clash Grotesk',
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    slot.time,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color:
+                          isCurrentPeriod
+                              ? Colors.green[700]
+                              : Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                      
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  if (isCurrentPeriod) ...[
+                    const SizedBox(height: 2),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade600,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: subjectColor.withOpacity(0.2),
+                color:
+                    isCurrentPeriod
+                        ? Colors.green.withOpacity(0.3)
+                        : subjectColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
+                border:
+                    isCurrentPeriod
+                        ? Border.all(color: Colors.green.shade400, width: 2)
+                        : null,
               ),
               alignment: Alignment.center,
               child: Text(
@@ -421,8 +684,8 @@ class _TimetableScreenState extends State<TimetableScreen>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: subjectColor,
-                  fontFamily: 'Clash Grotesk',
+                  color: isCurrentPeriod ? Colors.green.shade700 : subjectColor,
+                  
                 ),
               ),
             ),
@@ -433,10 +696,14 @@ class _TimetableScreenState extends State<TimetableScreen>
                 children: [
                   Text(
                     slot.subject,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      fontFamily: 'Clash Grotesk',
+                      
+                      color:
+                          isCurrentPeriod
+                              ? Colors.green.shade700
+                              : Colors.black87,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -448,7 +715,10 @@ class _TimetableScreenState extends State<TimetableScreen>
                         Icon(
                           Icons.person_outline,
                           size: 12,
-                          color: Colors.grey[600],
+                          color:
+                              isCurrentPeriod
+                                  ? Colors.green[600]
+                                  : Colors.grey[600],
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -456,8 +726,11 @@ class _TimetableScreenState extends State<TimetableScreen>
                             slot.instructor!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
-                              fontFamily: 'Clash Grotesk',
+                              color:
+                                  isCurrentPeriod
+                                      ? Colors.green[600]
+                                      : Colors.grey[600],
+                              
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -472,7 +745,10 @@ class _TimetableScreenState extends State<TimetableScreen>
                       Icon(
                         Icons.location_on_outlined,
                         size: 12,
-                        color: Colors.grey[600],
+                        color:
+                            isCurrentPeriod
+                                ? Colors.green[600]
+                                : Colors.grey[600],
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -481,8 +757,11 @@ class _TimetableScreenState extends State<TimetableScreen>
                             : defaultClassroom,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
-                          fontFamily: 'Clash Grotesk',
+                          color:
+                              isCurrentPeriod
+                                  ? Colors.green[600]
+                                  : Colors.grey[600],
+                          
                         ),
                       ),
                       if (slot.batch?.isNotEmpty == true) ...[
@@ -493,16 +772,22 @@ class _TimetableScreenState extends State<TimetableScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: subjectColor.withOpacity(0.1),
+                            color:
+                                isCurrentPeriod
+                                    ? Colors.green.withOpacity(0.2)
+                                    : subjectColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             slot.batch!,
                             style: TextStyle(
                               fontSize: 10,
-                              color: subjectColor,
+                              color:
+                                  isCurrentPeriod
+                                      ? Colors.green.shade700
+                                      : subjectColor,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Clash Grotesk',
+                              
                             ),
                           ),
                         ),

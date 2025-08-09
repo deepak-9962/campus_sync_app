@@ -6,6 +6,7 @@ import 'announcements_screen.dart';
 import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 import 'attendance_screen.dart';
+import 'attendance_view_screen.dart'; // Added for viewing attendance records
 import 'regulation_selection_screen.dart';
 import 'lost_and_found_screen.dart'; // Added for Lost and Found
 import 'about_us_screen.dart'; // Added for About Us
@@ -393,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen>
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => AttendanceScreen(
+                                (context) => AttendanceViewScreen(
                                   department: selectedDepartment!,
                                   semester: int.parse(selectedSemester!),
                                 ),

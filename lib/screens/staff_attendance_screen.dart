@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 class StaffAttendanceScreen extends StatefulWidget {
   final String department;
   final int semester;
+  final String attendanceType; // 'day' or 'period'
 
   const StaffAttendanceScreen({
     Key? key,
     required this.department,
     required this.semester,
+    this.attendanceType = 'period', // Default to period attendance
   }) : super(key: key);
 
   @override
@@ -30,6 +32,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   String _sortBy = 'student_name'; // registration_no, student_name
   bool _sortAscending = true;
 
+  // Add local mode that can be toggled in-screen
+  late String _attendanceMode; // 'day' or 'period'
+
   final List<String> sections = ['A', 'B'];
   final List<int> periods = [1, 2, 3, 4, 5, 6];
   final StudentDataService _studentDataService = StudentDataService();
@@ -38,6 +43,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   @override
   void initState() {
     super.initState();
+    _attendanceMode =
+        widget.attendanceType; // initialize from initial route param
     _setupDatabase();
   }
 
@@ -209,11 +216,24 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   }
 
   Future<void> _submitAttendance() async {
-    if (students.isEmpty || selectedSubject == null || selectedPeriod == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select subject and period')),
-      );
-      return;
+    // Validation based on attendance mode
+    if (_attendanceMode == 'period') {
+      if (students.isEmpty ||
+          selectedSubject == null ||
+          selectedPeriod == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please select subject and period')),
+        );
+        return;
+      }
+    } else {
+      // Day attendance validation
+      if (students.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Please select a section')));
+        return;
+      }
     }
 
     setState(() {
@@ -227,13 +247,25 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         final reg = student['registration_no'] as String;
         final present = attendance[reg] ?? true;
 
-        final result = await _attendanceService.markPeriodAttendance(
-          registrationNo: reg,
-          subjectCode: selectedSubject!,
-          periodNumber: selectedPeriod!,
-          isPresent: present,
-          date: selectedDate,
-        );
+        dynamic result;
+
+        if (_attendanceMode == 'period') {
+          // Period-wise attendance
+          result = await _attendanceService.markPeriodAttendance(
+            registrationNo: reg,
+            subjectCode: selectedSubject!,
+            periodNumber: selectedPeriod!,
+            isPresent: present,
+            date: selectedDate,
+          );
+        } else {
+          // Day attendance
+          result = await _attendanceService.markDayAttendance(
+            registrationNo: reg,
+            isPresent: present,
+            date: selectedDate,
+          );
+        }
 
         if (!result) {
           success = false;
@@ -245,8 +277,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Period $selectedPeriod attendance submitted for $selectedSubject\n'
-              '${DateFormat('dd MMM yyyy').format(selectedDate)} - Section $selectedSection',
+              _attendanceMode == 'period'
+                  ? 'Period $selectedPeriod attendance submitted for $selectedSubject\n${DateFormat('dd MMM yyyy').format(selectedDate)} - Section $selectedSection'
+                  : 'Day attendance submitted for Section $selectedSection\n${DateFormat('dd MMM yyyy').format(selectedDate)}',
             ),
             duration: Duration(seconds: 3),
           ),
@@ -271,12 +304,15 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Staff Attendance - ${widget.department}'),
-        backgroundColor: Colors.blue[700],
+        title: Text(
+          '${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance - ${widget.department}',
+        ),
+        backgroundColor:
+            _attendanceMode == 'day' ? Colors.blue[700] : Colors.green[700],
         foregroundColor: Colors.white,
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
+            icon: const Icon(Icons.sort, color: Colors.white),
             onSelected: _changeSortOrder,
             itemBuilder:
                 (context) => [
@@ -291,6 +327,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   : Icons.arrow_downward)
                               : Icons.sort,
                           size: 16,
+                          color: Colors.grey[700],
                         ),
                         const SizedBox(width: 8),
                         const Text('Sort by Registration No'),
@@ -308,6 +345,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   : Icons.arrow_downward)
                               : Icons.sort,
                           size: 16,
+                          color: Colors.grey[700],
                         ),
                         const SizedBox(width: 8),
                         const Text('Sort by Student Name'),
@@ -315,6 +353,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     ),
                   ),
                 ],
+            tooltip: 'Sort students',
           ),
         ],
         elevation: 0,
@@ -325,20 +364,60 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color:
+                  _attendanceMode == 'day' ? Colors.blue[50] : Colors.green[50],
               border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Semester ${widget.semester}',
+                  'Semester ${widget.semester} - ${_attendanceMode == "day" ? "Day Attendance" : "Period Attendance"}',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
+                    color:
+                        _attendanceMode == 'day'
+                            ? Colors.blue[800]
+                            : Colors.green[800],
                   ),
                 ),
+                SizedBox(height: 12),
+
+                // Mode toggle: Day vs Period
+                Row(
+                  children: [
+                    ChoiceChip(
+                      label: const Text('Day Attendance'),
+                      selected: _attendanceMode == 'day',
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _attendanceMode = 'day';
+                            // Reset subject/period when switching to day
+                            selectedSubject = null;
+                            selectedPeriod = null;
+                          });
+                        }
+                      },
+                      selectedColor: Colors.blue[200],
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('Period Attendance'),
+                      selected: _attendanceMode == 'period',
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _attendanceMode = 'period';
+                          });
+                        }
+                      },
+                      selectedColor: Colors.green[200],
+                    ),
+                  ],
+                ),
+
                 SizedBox(height: 12),
 
                 // Section selection
@@ -366,73 +445,77 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
                 SizedBox(height: 12),
 
-                // Subject selection
-                Text(
-                  'Select Subject:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: 8),
-                if (subjects.isNotEmpty)
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children:
-                          subjects.map((subject) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(
-                                  subject['subject_name'] ??
+                // Subject selection (only for period attendance)
+                if (_attendanceMode == 'period') ...[
+                  Text(
+                    'Select Subject:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 8),
+                  if (subjects.isNotEmpty)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children:
+                            subjects.map((subject) {
+                              return Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    subject['subject_name'] ??
+                                        subject['subject_code'],
+                                  ),
+                                  selected:
+                                      selectedSubject ==
                                       subject['subject_code'],
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      setState(() {
+                                        selectedSubject =
+                                            subject['subject_code'];
+                                      });
+                                    }
+                                  },
+                                  selectedColor: Colors.green[200],
                                 ),
-                                selected:
-                                    selectedSubject == subject['subject_code'],
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(() {
-                                      selectedSubject = subject['subject_code'];
-                                    });
-                                  }
-                                },
-                                selectedColor: Colors.green[200],
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  )
-                else
-                  Text('No subjects available for this department/semester'),
+                              );
+                            }).toList(),
+                      ),
+                    )
+                  else
+                    Text('No subjects available for this department/semester'),
 
-                SizedBox(height: 12),
+                  SizedBox(height: 12),
 
-                // Period selection
-                Text(
-                  'Select Period:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children:
-                      periods.map((period) {
-                        return Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text('Period $period'),
-                            selected: selectedPeriod == period,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  selectedPeriod = period;
-                                });
-                              }
-                            },
-                            selectedColor: Colors.orange[200],
-                          ),
-                        );
-                      }).toList(),
-                ),
+                  // Period selection (only for period attendance)
+                  Text(
+                    'Select Period:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    children:
+                        periods.map((period) {
+                          return Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text('Period $period'),
+                              selected: selectedPeriod == period,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() {
+                                    selectedPeriod = period;
+                                  });
+                                }
+                              },
+                              selectedColor: Colors.orange[200],
+                            ),
+                          );
+                        }).toList(),
+                  ),
 
-                SizedBox(height: 12),
+                  SizedBox(height: 12),
+                ],
 
                 // Date selection
                 Row(
@@ -443,8 +526,16 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     ),
                     Text(DateFormat('dd MMM yyyy').format(selectedDate)),
                     IconButton(
-                      icon: Icon(Icons.calendar_today, size: 20),
+                      icon: Icon(
+                        Icons.calendar_today,
+                        size: 20,
+                        color:
+                            _attendanceMode == 'day'
+                                ? Colors.blue[700]
+                                : Colors.green[700],
+                      ),
                       onPressed: _selectDate,
+                      tooltip: 'Select date',
                     ),
                   ],
                 ),
@@ -486,9 +577,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
           // Students list
           Expanded(
             child:
-                selectedSection == null ||
-                        selectedSubject == null ||
-                        selectedPeriod == null
+                (_attendanceMode == 'period'
+                        ? (selectedSection == null ||
+                            selectedSubject == null ||
+                            selectedPeriod == null)
+                        : (selectedSection == null))
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -500,7 +593,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'Please select section, subject, and period to view students',
+                            _attendanceMode == 'period'
+                                ? 'Please select section, subject, and period to view students'
+                                : 'Please select a section to view students',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
@@ -673,9 +768,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           child: ElevatedButton.icon(
                             onPressed: isLoading ? null : _submitAttendance,
                             icon: Icon(Icons.save),
-                            label: Text('Submit Attendance'),
+                            label: Text(
+                              'Submit ${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance',
+                            ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[700],
+                              backgroundColor:
+                                  _attendanceMode == 'day'
+                                      ? Colors.blue[700]
+                                      : Colors.green[700],
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 32,

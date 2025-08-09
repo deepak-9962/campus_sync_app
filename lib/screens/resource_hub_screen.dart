@@ -245,7 +245,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
         title: Text(
           'Resource Hub',
           style: TextStyle(
-            fontFamily: 'Clash Grotesk', 
+             
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -324,7 +324,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -335,7 +335,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         style: TextStyle(
                           fontSize: 8,
                           color: Colors.grey[700],
-                          fontFamily: 'Clash Grotesk',
+                          
                         ),
                       ),
                     ],
@@ -397,7 +397,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Clash Grotesk',
+              
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 8,
               color: isSelected ? Theme.of(context).primaryColor : Colors.grey[600],
@@ -437,7 +437,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
               'No resources available',
               style: TextStyle(
                 fontSize: 16,
-                fontFamily: 'Clash Grotesk',
+                
                 color: Colors.grey[700],
               ),
             ),
@@ -446,7 +446,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
               'Tap the + button to add resources',
               style: TextStyle(
                 fontSize: 14,
-                fontFamily: 'Clash Grotesk',
+                
                 color: Colors.grey[500],
               ),
             ),
@@ -545,7 +545,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                 items[index].title,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Clash Grotesk',
+                  
                   fontSize: 12,
                 ),
                 maxLines: 1,
@@ -558,7 +558,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                   Text(
                     items[index].subject,
                     style: TextStyle(
-                      fontFamily: 'Clash Grotesk',
+                      
                       color: Colors.grey[600],
                       fontSize: 10,
                     ),
@@ -1530,7 +1530,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                   resource.title,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Clash Grotesk',
+                    
                   ),
                 ),
                 subtitle: Text(resource.subject),
@@ -1641,7 +1641,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                       'Current PDF: ${resource.title}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Clash Grotesk',
+                        
                       ),
                     ),
                     SizedBox(height: 8),
@@ -1905,7 +1905,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         items[index].title,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Clash Grotesk',
+                          
                           fontSize: 12,
                         ),
                         maxLines: 2,

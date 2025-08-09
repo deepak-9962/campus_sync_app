@@ -40,7 +40,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
           'About Us',
           style: TextStyle(
             color: primaryTextLight,
-            fontFamily: 'Clash Grotesk',
+            
           ),
         ),
         backgroundColor: cardLightBackground,
@@ -78,7 +78,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: accentColorLight,
-                      fontFamily: 'Clash Grotesk',
+                      
                     ),
                   ),
                   // const SizedBox(height: 16), // Space for video removed
@@ -90,7 +90,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                   //   style: TextStyle( // Removed Version
                   //     fontSize: 16, // Removed Version
                   //     color: primaryTextLight.withOpacity(0.8), // Removed Version
-                  //     fontFamily: 'Clash Grotesk', // Removed Version
+                  //      // Removed Version
                   //   ), // Removed Version
                   // ), // Removed Version
                   const SizedBox(
@@ -102,7 +102,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                   //     fontSize: 18, // Removed Our Mission
                   //     fontWeight: FontWeight.w600, // Removed Our Mission
                   //     color: primaryTextLight, // Removed Our Mission
-                  //     fontFamily: 'Clash Grotesk', // Removed Our Mission
+                  //      // Removed Our Mission
                   //   ), // Removed Our Mission
                   // ), // Removed Our Mission
                   // const SizedBox(height: 8), // Removed Our Mission
@@ -111,7 +111,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                   //   style: TextStyle( // Removed Our Mission
                   //     fontSize: 15, // Removed Our Mission
                   //     color: primaryTextLight.withOpacity(0.7), // Removed Our Mission
-                  //     fontFamily: 'Clash Grotesk', // Removed Our Mission
+                  //      // Removed Our Mission
                   //     height: 1.4, // Removed Our Mission
                   //   ), // Removed Our Mission
                   // ), // Removed Our Mission
@@ -122,7 +122,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                   //     fontSize: 18, // Removed "Developed By:" heading
                   //     fontWeight: FontWeight.w600, // Removed "Developed By:" heading
                   //     color: primaryTextLight, // Removed "Developed By:" heading
-                  //     fontFamily: 'Clash Grotesk', // Removed "Developed By:" heading
+                  //      // Removed "Developed By:" heading
                   //   ), // Removed "Developed By:" heading
                   // ), // Removed "Developed By:" heading
                   // const SizedBox(height: 8), // Removed SizedBox before InkWell
@@ -142,7 +142,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             _showDeveloperName
                                 ? primaryTextLight.withOpacity(0.9)
                                 : accentColorLight,
-                        fontFamily: 'Clash Grotesk',
+                        
                         fontStyle:
                             _showDeveloperName
                                 ? FontStyle.normal
