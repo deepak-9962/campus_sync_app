@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/student_data_service.dart';
 import '../services/attendance_service.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // added for period lock
 
 class StaffAttendanceScreen extends StatefulWidget {
   final String department;
@@ -215,6 +216,31 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     });
   }
 
+  // Period lock helper
+  Future<bool> _acquirePeriodLock() async {
+    if (selectedSection == null || selectedPeriod == null) return false;
+    try {
+      final supabase = Supabase.instance.client;
+      final dateStr = selectedDate.toIso8601String().split('T')[0];
+      final userId = supabase.auth.currentUser?.id;
+      await supabase.from('attendance_period_lock').insert({
+        'department': widget.department,
+        'semester': widget.semester,
+        'section': selectedSection,
+        'date': dateStr,
+        'period': selectedPeriod,
+        'taken_by': userId,
+      });
+      return true; // lock acquired
+    } on PostgrestException catch (e) {
+      if (e.code == '23505') {
+        // unique violation => already taken
+        return false;
+      }
+      rethrow;
+    }
+  }
+
   Future<void> _submitAttendance() async {
     // Validation based on attendance mode
     if (_attendanceMode == 'period') {
@@ -227,7 +253,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         return;
       }
     } else {
-      // Day attendance validation
       if (students.isEmpty) {
         ScaffoldMessenger.of(
           context,
@@ -236,21 +261,31 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       }
     }
 
+    // NEW: acquire period lock BEFORE marking individual student attendance
+    if (_attendanceMode == 'period') {
+      final gotLock = await _acquirePeriodLock();
+      if (!gotLock) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Attendance already submitted for Period $selectedPeriod today (any subject).',
+            ),
+          ),
+        );
+        return; // do not proceed
+      }
+    }
+
     setState(() {
       isLoading = true;
     });
-
     try {
       bool success = true;
-
       for (final student in students) {
         final reg = student['registration_no'] as String;
         final present = attendance[reg] ?? true;
-
         dynamic result;
-
         if (_attendanceMode == 'period') {
-          // Period-wise attendance
           result = await _attendanceService.markPeriodAttendance(
             registrationNo: reg,
             subjectCode: selectedSubject!,
@@ -259,20 +294,17 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             date: selectedDate,
           );
         } else {
-          // Day attendance
           result = await _attendanceService.markDayAttendance(
             registrationNo: reg,
             isPresent: present,
             date: selectedDate,
           );
         }
-
         if (!result) {
           success = false;
           break;
         }
       }
-
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -715,7 +747,18 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   _generateStudentName(reg, idx);
 
                               return ListTile(
+                                onTap: () {
+                                  setState(() {
+                                    attendance[reg] = !present;
+                                  });
+                                },
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                minVerticalPadding: 12,
                                 leading: CircleAvatar(
+                                  radius: 20,
                                   backgroundColor:
                                       present
                                           ? Colors.green[100]
@@ -728,12 +771,13 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                               ? Colors.green[800]
                                               : Colors.red[800],
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 13,
                                     ),
                                   ),
                                 ),
                                 title: Text(
                                   studentName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
                                   ),
@@ -745,18 +789,28 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     color: Colors.grey[600],
                                   ),
                                 ),
-                                trailing: Switch(
-                                  value: present,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      attendance[reg] = val;
-                                    });
-                                  },
-                                  activeColor: Colors.green,
-                                  inactiveThumbColor: Colors.red,
+                                trailing: Transform.scale(
+                                  scale: 1.25, // enlarge switch for easier tap
+                                  child: Switch(
+                                    value: present,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        attendance[reg] = val;
+                                      });
+                                    },
+                                    activeColor: Colors.white,
+                                    activeTrackColor: Colors.green,
+                                    inactiveThumbColor: Colors.white,
+                                    inactiveTrackColor: Colors.red,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
                                 ),
                                 tileColor:
                                     present ? Colors.green[50] : Colors.red[50],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               );
                             },
                           ),
