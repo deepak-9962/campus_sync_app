@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
@@ -110,7 +111,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Roboto', // Set Roboto as the default font
+        fontFamily: 'Roboto', // Default font
+        textTheme:
+            GoogleFonts.notoSansTextTheme(), // Fallback for missing glyphs
         // Color Scheme
         colorScheme: ColorScheme.light(
           primary: const Color(0xFF1976D2), // Blue 700 (Accent)
@@ -156,26 +159,7 @@ class MyApp extends StatelessWidget {
           ), // Default card margin
         ),
 
-        // Text Theme
-        textTheme: TextTheme(
-          displayLarge: TextStyle(color: const Color(0xFF212121)),
-          displayMedium: TextStyle(color: const Color(0xFF212121)),
-          displaySmall: TextStyle(color: const Color(0xFF212121)),
-          headlineMedium: TextStyle(color: const Color(0xFF212121)),
-          headlineSmall: TextStyle(color: const Color(0xFF212121)),
-          titleLarge: TextStyle(
-            color: const Color(0xFF212121),
-            fontWeight: FontWeight.bold,
-          ),
-          bodyLarge: TextStyle(color: const Color(0xFF212121)),
-          bodyMedium: TextStyle(
-            color: const Color(0xFF757575),
-          ), // Secondary text
-          labelLarge: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ), // For buttons
-        ),
+        // Text Theme is provided above via GoogleFonts.notoSansTextTheme()
 
         // ElevatedButton Theme
         elevatedButtonTheme: ElevatedButtonThemeData(

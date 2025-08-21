@@ -292,6 +292,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             periodNumber: selectedPeriod!,
             isPresent: present,
             date: selectedDate,
+            department: widget.department,
+            semester: widget.semester,
+            section: selectedSection,
           );
         } else {
           result = await _attendanceService.markDayAttendance(
@@ -525,25 +528,28 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 8),
-                  Row(
-                    children:
-                        periods.map((period) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text('Period $period'),
-                              selected: selectedPeriod == period,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setState(() {
-                                    selectedPeriod = period;
-                                  });
-                                }
-                              },
-                              selectedColor: Colors.orange[200],
-                            ),
-                          );
-                        }).toList(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children:
+                          periods.map((period) {
+                            return Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text('Period $period'),
+                                selected: selectedPeriod == period,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() {
+                                      selectedPeriod = period;
+                                    });
+                                  }
+                                },
+                                selectedColor: Colors.orange[200],
+                              ),
+                            );
+                          }).toList(),
+                    ),
                   ),
 
                   SizedBox(height: 12),

@@ -23,7 +23,7 @@ class _AllStudentsAttendanceScreenState
   bool _isLoading = true;
   String _errorMessage = '';
   String _searchQuery = '';
-  String _sortBy = 'registration_no'; // registration_no, percentage, name
+  String _sortBy = 'registration_no'; // registration_no, percentage
   bool _sortAscending = true;
   bool _showTodayAttendance =
       false; // Toggle between today's and overall attendance
@@ -100,9 +100,10 @@ class _AllStudentsAttendanceScreenState
 
     return _allStudentsAttendance.where((student) {
       final regNo = student['registration_no'].toString().toLowerCase();
+      final name = (student['student_name'] ?? '').toString().toLowerCase();
       final query = _searchQuery.toLowerCase();
 
-      return regNo.contains(query);
+      return regNo.contains(query) || name.contains(query);
     }).toList();
   }
 
@@ -500,6 +501,7 @@ class _AllStudentsAttendanceScreenState
     final attendedClasses = student['attended_classes'] ?? 0;
     final totalClasses = student['total_classes'] ?? 0;
     final registrationNo = student['registration_no'] ?? '';
+    final studentName = student['student_name'] ?? '';
     final status = student['status'] ?? '';
 
     return Card(
@@ -557,12 +559,19 @@ class _AllStudentsAttendanceScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    registrationNo,
+                    studentName.isNotEmpty ? studentName : registrationNo,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
+                  if (studentName.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      registrationNo,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     _showTodayAttendance

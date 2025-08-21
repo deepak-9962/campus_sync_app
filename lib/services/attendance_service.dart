@@ -1,7 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class AttendanceService {
   final _supabase = Supabase.instance.client;
+  // Toggle for verbose attendance logs
+  static const bool _verboseAttendanceLogs = false;
 
   Future<Map<String, dynamic>?> getAttendanceByRegistrationNo(
     String registrationNo,
@@ -23,8 +26,22 @@ class AttendanceService {
 
       if (summaryResponse.isNotEmpty) {
         final s = summaryResponse.first;
+        // Enrich with student name
+        String studentName = '';
+        try {
+          final studentResp = await _supabase
+              .from('students')
+              .select('student_name')
+              .eq('registration_no', cleanedRegNo)
+              .limit(1);
+          if (studentResp.isNotEmpty) {
+            studentName = studentResp.first['student_name'] ?? '';
+          }
+        } catch (_) {}
+
         return {
           'registration_no': s['registration_no'],
+          'student_name': studentName,
           'department': s['department'],
           // Map schema's semester to expected current_semester field
           'current_semester': s['semester'],
@@ -248,9 +265,12 @@ class AttendanceService {
             'registration_no, department, semester, section, total_periods, attended_periods, overall_percentage, last_updated',
           );
 
-      // Apply filters if provided
+      // Apply filters if provided (case-insensitive for department)
       if (department != null && department.isNotEmpty) {
-        query = query.eq('department', department);
+        query = query.ilike(
+          'department',
+          department,
+        ); // ILIKE matches ignoring case
       }
       if (semester != null) {
         query = query.eq('semester', semester);
@@ -262,10 +282,22 @@ class AttendanceService {
 
       if (attendanceResponse.isEmpty) {
         print('No attendance records found in summary table');
+        try {
+          final depts = await _supabase
+              .from('overall_attendance_summary')
+              .select('department')
+              .order('department');
+          final distinct = {
+            for (final d in depts) (d['department'] ?? '').toString(),
+          }..removeWhere((e) => e.isEmpty);
+          print('Existing departments in summary table: $distinct');
+        } catch (e2) {
+          print('Could not fetch existing departments: $e2');
+        }
         return [];
       }
 
-      // Get student names from students table
+      // Build registration list and resolve names (prefer users.name via students.user_id)
       final registrationNumbers =
           attendanceResponse
               .map((record) => record['registration_no'] as String)
@@ -273,14 +305,36 @@ class AttendanceService {
 
       final studentsResponse = await _supabase
           .from('students')
-          .select('registration_no, student_name')
+          .select('registration_no, student_name, user_id')
           .inFilter('registration_no', registrationNumbers);
 
-      // Create a map for quick name lookup
+      // Fetch user names for linked user_ids
+      final userIds =
+          studentsResponse
+              .map((s) => s['user_id'])
+              .where((id) => id != null)
+              .toSet()
+              .toList();
+      Map<String, String> userNameById = {};
+      if (userIds.isNotEmpty) {
+        final usersResp = await _supabase
+            .from('users')
+            .select('id, name')
+            .inFilter('id', userIds);
+        for (final u in usersResp) {
+          if (u['id'] != null) userNameById[u['id']] = u['name'] ?? '';
+        }
+      }
+
+      // Create a map for quick name lookup (prefer users.name)
       final studentNamesMap = <String, String>{};
       for (final student in studentsResponse) {
-        studentNamesMap[student['registration_no']] =
-            student['student_name'] ?? '';
+        final reg = student['registration_no'];
+        final uid = student['user_id'];
+        final usersName = uid != null ? (userNameById[uid] ?? '') : '';
+        final fallback = student['student_name'] ?? '';
+        studentNamesMap[reg] =
+            usersName.toString().trim().isNotEmpty ? usersName : fallback;
       }
 
       // Format the response
@@ -298,6 +352,43 @@ class AttendanceService {
       }).toList();
     } catch (e) {
       print('Error in getAllStudentsAttendance: $e');
+      return [];
+    }
+  }
+
+  // New: fetch overall analytics from attendance_analytics view (includes names already)
+  Future<List<Map<String, dynamic>>> getOverallAttendanceAnalytics({
+    String? department,
+    int? semester,
+  }) async {
+    try {
+      print('Fetching analytics view for dept=$department sem=$semester');
+      var query = _supabase.from('attendance_analytics').select();
+      if (department != null && department.isNotEmpty) {
+        query = query.ilike('department', department);
+      }
+      if (semester != null) {
+        query = query.eq('semester', semester);
+      }
+      final resp = await query.order('registration_no');
+      print('Analytics view returned ${resp.length} rows');
+      return List<Map<String, dynamic>>.from(
+        resp.map(
+          (r) => {
+            'registration_no': r['registration_no'],
+            'student_name': r['student_name'],
+            // unify field names expected by UI
+            'percentage': r['overall_percentage'] ?? r['percentage'] ?? 0.0,
+            'total_classes': r['total_periods'] ?? 0,
+            'attended_classes': r['attended_periods'] ?? 0,
+            'status': r['attendance_status'],
+            'department': r['department'],
+            'semester': r['semester'],
+          },
+        ),
+      );
+    } catch (e) {
+      print('Error loading attendance_analytics view: $e');
       return [];
     }
   }
@@ -352,99 +443,98 @@ class AttendanceService {
         'After deduplication: ${deduplicatedList.length} unique today\'s records',
       );
 
-      // If we need to filter by department or semester, try to join with students table
-      if (department != null || semester != null) {
-        try {
-          print('Attempting to filter today\'s data by department/semester...');
+      // Build a list of registration numbers to enrich with student names and metadata
+      final registrationNumbers =
+          deduplicatedList
+              .map((record) => record['registration_no'] as String)
+              .toList();
 
-          // Try to get students that match the criteria
-          var studentsQuery = _supabase
-              .from('students')
-              .select('registration_no, department, current_semester');
+      Map<String, Map<String, dynamic>> studentMap = {};
+      // Enrich with names: prefer users.name via students.user_id, fallback to students.student_name
+      try {
+        final studentsResponse = await _supabase
+            .from('students')
+            .select(
+              'registration_no, student_name, user_id, department, current_semester',
+            )
+            .inFilter('registration_no', registrationNumbers);
 
-          final studentsResponse = await studentsQuery;
-          print('Found ${studentsResponse.length} students in students table');
-
-          if (studentsResponse.isNotEmpty) {
-            // Filter attendance based on students table data
-            final filteredAttendance =
-                deduplicatedList.where((attendance) {
-                  final regNo = attendance['registration_no'];
-
-                  // Find matching student record
-                  final studentRecord = studentsResponse.firstWhere(
-                    (student) => student['registration_no'] == regNo,
-                    orElse: () => <String, dynamic>{},
-                  );
-
-                  if (studentRecord.isEmpty) {
-                    print('No student record found for $regNo');
-                    return false;
-                  }
-
-                  // Apply filters
-                  if (department != null && department.isNotEmpty) {
-                    if (studentRecord['department'] != department) {
-                      print(
-                        'Department mismatch for $regNo: ${studentRecord['department']} != $department',
-                      );
-                      return false;
-                    }
-                  }
-
-                  if (semester != null) {
-                    if (studentRecord['current_semester'] != semester) {
-                      print(
-                        'Semester mismatch for $regNo: ${studentRecord['current_semester']} != $semester',
-                      );
-                      return false;
-                    }
-                  }
-
-                  return true;
-                }).toList();
-
-            print(
-              'After filtering: ${filteredAttendance.length} today\'s records match criteria',
-            );
-
-            if (filteredAttendance.isNotEmpty) {
-              return filteredAttendance.map<Map<String, dynamic>>((item) {
-                return {
-                  'registration_no': item['registration_no'],
-                  'percentage': item['percentage'] ?? 0.0,
-                  'total_classes': item['total_classes'] ?? 0,
-                  'attended_classes': item['attended_classes'] ?? 0,
-                  'status': item['status'],
-                  'student_name': '', // No name column available
-                  'department': department ?? '',
-                  'semester': semester ?? 0,
-                };
-              }).toList();
-            }
+        // Map students and collect user_ids
+        final Set<String> userIds = {};
+        for (final s in studentsResponse) {
+          studentMap[s['registration_no']] = s;
+          final uid = s['user_id'];
+          if (uid != null && uid.toString().trim().isNotEmpty) {
+            userIds.add(uid as String);
           }
+        }
 
-          print(
-            'No matching students found in students table, returning all today\'s attendance data',
-          );
-        } catch (e) {
-          print(
-            'Error filtering today\'s data by students table: $e, returning all today\'s attendance data',
-          );
+        // Fetch user names
+        final Map<String, String> userNameById = {};
+        if (userIds.isNotEmpty) {
+          final usersResp = await _supabase
+              .from('users')
+              .select('id, name')
+              .inFilter('id', userIds.toList());
+          for (final u in usersResp) {
+            final id = u['id'] as String?;
+            if (id != null) userNameById[id] = (u['name'] ?? '').toString();
+          }
+        }
+
+        // Attach resolved names onto studentMap entries for easy access later
+        for (final entry in studentMap.entries) {
+          final uid = entry.value['user_id'] as String?;
+          final usersName = uid != null ? (userNameById[uid] ?? '') : '';
+          final fallback = (entry.value['student_name'] ?? '').toString();
+          entry.value['resolved_name'] =
+              usersName.trim().isNotEmpty ? usersName : fallback;
+        }
+      } catch (e) {
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('Name enrichment failed for today list: $e');
         }
       }
 
-      // Return all today's attendance data if no filtering or filtering failed
-      return deduplicatedList.map<Map<String, dynamic>>((item) {
+      // If we need to filter by department or semester, filter based on students table
+      List<Map<String, dynamic>> workingList = deduplicatedList;
+      if (department != null || semester != null) {
+        workingList =
+            deduplicatedList.where((attendance) {
+              final regNo = attendance['registration_no'] as String;
+              final student = studentMap[regNo];
+              if (student == null) return false; // cannot determine cohort
+              if (department != null && department.isNotEmpty) {
+                if (student['department'] != department) return false;
+              }
+              if (semester != null) {
+                if (student['current_semester'] != semester) return false;
+              }
+              return true;
+            }).toList();
+      }
+
+      // Return enriched list (with names)
+      return workingList.map<Map<String, dynamic>>((item) {
+        final regNo = item['registration_no'] as String;
+        final student = studentMap[regNo];
         return {
-          'registration_no': item['registration_no'],
+          'registration_no': regNo,
           'percentage': item['percentage'] ?? 0.0,
           'total_classes': item['total_classes'] ?? 0,
           'attended_classes': item['attended_classes'] ?? 0,
           'status': item['status'],
-          'student_name': '', // No name column available
-          'department': department ?? '',
-          'semester': semester ?? 0,
+          'student_name':
+              student != null
+                  ? ((student['resolved_name'] ?? student['student_name'] ?? '')
+                      .toString())
+                  : '',
+          'department':
+              department ??
+              (student != null ? (student['department'] ?? '') : ''),
+          'semester':
+              semester ??
+              (student != null ? (student['current_semester'] ?? 0) : 0),
         };
       }).toList();
     } catch (error) {
@@ -472,38 +562,82 @@ class AttendanceService {
     required int periodNumber,
     required bool isPresent,
     DateTime? date,
+    String? department,
+    int? semester,
+    String? section,
   }) async {
     try {
       final today = date ?? DateTime.now();
       final dateStr = today.toIso8601String().split('T')[0];
 
-      print(
-        'Marking period attendance: $registrationNo, Subject: $subjectCode, Period: $periodNumber, Present: $isPresent',
-      );
+      if (kDebugMode && _verboseAttendanceLogs) {
+        print(
+          'Marking period attendance: $registrationNo, Subject: $subjectCode, Period: $periodNumber, Present: $isPresent',
+        );
+      }
 
       final currentUserId = _supabase.auth.currentUser?.id;
 
       // Insert or update attendance record
-      final response =
-          await _supabase.from('attendance').upsert({
-            'registration_no': registrationNo,
-            'date': dateStr,
-            'subject_code': subjectCode,
-            'period_number': periodNumber,
-            'is_present': isPresent,
-            'marked_at': DateTime.now().toIso8601String(),
-            'marked_by': currentUserId,
-          }).select();
+      final Map<String, dynamic> payload = {
+        'registration_no': registrationNo,
+        'date': dateStr,
+        'subject_code': subjectCode,
+        'period_number': periodNumber,
+        'is_present': isPresent,
+        'marked_at': DateTime.now().toIso8601String(),
+        'marked_by': currentUserId,
+      };
 
-      if (response.isNotEmpty) {
-        print('Period attendance marked successfully');
+      // Include class metadata when available to avoid NULLs downstream
+      if (department != null) payload['department'] = department;
+      if (semester != null) payload['semester'] = semester;
+      if (section != null) payload['section'] = section;
+
+      try {
+        // First, check if student exists in the proper department and semester
+        await _supabase
+            .from('students')
+            .select('registration_no')
+            .eq('registration_no', registrationNo)
+            .single();
+
+        // Now insert/update the attendance record
+        await _supabase
+            .from('attendance')
+            .upsert({
+              'registration_no': registrationNo,
+              'date': dateStr,
+              'subject_code': subjectCode,
+              'period_number': periodNumber,
+              'is_present': isPresent,
+              'marked_at': DateTime.now().toIso8601String(),
+              'marked_by': currentUserId,
+              'department': department,
+              'semester': semester,
+              'section': section,
+            })
+            .select()
+            .single();
+
+        if (kDebugMode && _verboseAttendanceLogs) {
+          print('Period attendance marked successfully');
+        }
         return true;
-      } else {
-        print('Failed to mark period attendance');
+      } on PostgrestException catch (e) {
+        if (kDebugMode) {
+          if (e.code == 'PGRST116') {
+            print('Student not found: $registrationNo');
+          } else {
+            print('Failed to mark period attendance: ${e.message}');
+          }
+        }
         return false;
       }
     } catch (e) {
-      print('Error marking period attendance: $e');
+      if (kDebugMode) {
+        print('Error marking period attendance: $e');
+      }
       return false;
     }
   }
@@ -518,9 +652,11 @@ class AttendanceService {
     try {
       final today = DateTime.now().toIso8601String().split('T')[0];
 
-      print(
-        'Fetching today\'s period attendance for Subject: $subjectCode, Period: $periodNumber',
-      );
+      if (kDebugMode && _verboseAttendanceLogs) {
+        debugPrint(
+          'Fetching today\'s period attendance for Subject: $subjectCode, Period: $periodNumber',
+        );
+      }
 
       var query = _supabase
           .from('attendance')
@@ -532,7 +668,9 @@ class AttendanceService {
       final attendanceResponse = await query;
 
       if (attendanceResponse.isEmpty) {
-        print('No period attendance records found');
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('No period attendance records found');
+        }
         return [];
       }
 
@@ -544,15 +682,10 @@ class AttendanceService {
 
       var studentQuery = _supabase
           .from('students')
-          .select('registration_no, student_name, department, semester')
+          .select(
+            'registration_no, student_name, department, semester, current_semester, section',
+          )
           .inFilter('registration_no', registrationNumbers);
-
-      if (department != null && department.isNotEmpty) {
-        studentQuery = studentQuery.eq('department', department);
-      }
-      if (semester != null) {
-        studentQuery = studentQuery.eq('semester', semester);
-      }
 
       final studentsResponse = await studentQuery;
 
@@ -562,27 +695,37 @@ class AttendanceService {
         studentMap[student['registration_no']] = student;
       }
 
-      // Combine attendance and student data
-      return attendanceResponse
-          .where(
-            (attendance) =>
-                studentMap.containsKey(attendance['registration_no']),
-          )
-          .map<Map<String, dynamic>>((attendance) {
-            final regNo = attendance['registration_no'];
-            final student = studentMap[regNo]!;
+      // Combine attendance and student data without dropping records
+      final List<Map<String, dynamic>> combined = [];
+      for (final a in attendanceResponse) {
+        final regNo = a['registration_no'] as String;
+        final student = studentMap[regNo];
 
-            return {
-              'registration_no': regNo,
-              'student_name': student['student_name'] ?? '',
-              'department': student['department'] ?? '',
-              'semester': student['semester'] ?? 0,
-              'is_present': attendance['is_present'] ?? false,
-              'subject_code': subjectCode,
-              'period_number': periodNumber,
-            };
-          })
-          .toList();
+        // Apply optional filters when we have student metadata
+        if (semester != null && student != null) {
+          final sem = student['semester'] ?? student['current_semester'];
+          if (sem != semester) continue;
+        }
+        // If semester filter provided but no student metadata, keep the record (do not drop silently)
+
+        combined.add({
+          'registration_no': regNo,
+          'student_name':
+              student != null ? (student['student_name'] ?? '') : '',
+          'department':
+              student != null
+                  ? (student['department'] ?? '')
+                  : (department ?? ''),
+          'semester':
+              student != null
+                  ? (student['semester'] ?? student['current_semester'] ?? 0)
+                  : (semester ?? 0),
+          'is_present': a['is_present'] ?? false,
+          'subject_code': subjectCode,
+          'period_number': periodNumber,
+        });
+      }
+      return combined;
     } catch (e) {
       print('Error fetching today\'s period attendance: $e');
       return [];
@@ -647,6 +790,70 @@ class AttendanceService {
     } catch (e) {
       print('Error fetching class schedule: $e');
       return [];
+    }
+  }
+
+  // New: Resolve the class (subject + staff) scheduled for a specific date & period
+  Future<Map<String, dynamic>?> getPeriodClassInfo({
+    required String department,
+    required int semester,
+    required String section,
+    required DateTime date,
+    required int periodNumber,
+  }) async {
+    try {
+      final weekday = _weekdayString(date).toLowerCase();
+      // Query class_schedule join subjects for name + faculty
+      final resp =
+          await _supabase
+              .from('class_schedule')
+              .select(
+                'subject_code, faculty_name, subjects(subject_name, faculty_name)',
+              )
+              .eq('department', department)
+              .eq('semester', semester)
+              .eq('section', section)
+              .eq('day_of_week', weekday)
+              .eq('period_number', periodNumber)
+              .maybeSingle();
+      if (resp == null) return null;
+      String? subjectName;
+      String? staffName;
+      if (resp['subjects'] != null) {
+        subjectName = resp['subjects']['subject_name'];
+        staffName = resp['subjects']['faculty_name'];
+      }
+      // Prefer explicit faculty_name stored on class_schedule row
+      if ((resp['faculty_name'] ?? '').toString().trim().isNotEmpty) {
+        staffName = resp['faculty_name'];
+      }
+      return {
+        'subject_code': resp['subject_code'],
+        'subject_name': subjectName ?? resp['subject_code'],
+        'staff_name': staffName,
+      };
+    } catch (e) {
+      print('Error resolving period class info: $e');
+      return null;
+    }
+  }
+
+  String _weekdayString(DateTime d) {
+    switch (d.weekday) {
+      case DateTime.monday:
+        return 'monday';
+      case DateTime.tuesday:
+        return 'tuesday';
+      case DateTime.wednesday:
+        return 'wednesday';
+      case DateTime.thursday:
+        return 'thursday';
+      case DateTime.friday:
+        return 'friday';
+      case DateTime.saturday:
+        return 'saturday';
+      default:
+        return 'sunday';
     }
   }
 
@@ -759,26 +966,175 @@ class AttendanceService {
           .eq('date', dateStr)
           .order('registration_no');
 
-      // Add student names
-      List<Map<String, dynamic>> attendanceWithNames = [];
-      for (var record in response) {
-        final studentResponse = await _supabase
-            .from('students')
-            .select('student_name')
-            .eq('registration_no', record['registration_no'])
-            .limit(1);
+      if (response.isEmpty) return [];
 
-        final studentName =
-            studentResponse.isNotEmpty
-                ? studentResponse.first['student_name']
-                : 'Unknown';
-
-        attendanceWithNames.add({...record, 'student_name': studentName});
+      // Build list of registration numbers and a normalized (trimmed, upper) index
+      final regs = <String>[];
+      for (final r in response) {
+        final reg = (r['registration_no'] as String?)?.trim() ?? '';
+        if (reg.isNotEmpty) regs.add(reg);
       }
 
-      return attendanceWithNames;
+      Map<String, String> nameMap = {};
+      if (regs.isNotEmpty) {
+        try {
+          final students = await _supabase
+              .from('students')
+              .select('registration_no, student_name, user_id')
+              .inFilter('registration_no', regs);
+
+          // Collect user_ids
+          final Set<String> userIds = {};
+          for (final s in students) {
+            final uid = s['user_id'];
+            if (uid != null && uid.toString().trim().isNotEmpty) {
+              userIds.add(uid as String);
+            }
+          }
+
+          // Fetch users
+          final Map<String, String> userNameById = {};
+          if (userIds.isNotEmpty) {
+            final usersResp = await _supabase
+                .from('users')
+                .select('id, name')
+                .inFilter('id', userIds.toList());
+            for (final u in usersResp) {
+              final id = u['id'] as String?;
+              if (id != null) userNameById[id] = (u['name'] ?? '').toString();
+            }
+          }
+
+          for (final s in students) {
+            final key = (s['registration_no'] as String?)?.trim() ?? '';
+            if (key.isNotEmpty) {
+              final uid = s['user_id'] as String?;
+              final usersName = uid != null ? (userNameById[uid] ?? '') : '';
+              final fallback = (s['student_name'] ?? '').toString();
+              final resolved =
+                  usersName.trim().isNotEmpty ? usersName : fallback;
+              nameMap[key.toUpperCase()] = resolved;
+            }
+          }
+        } catch (e) {
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint('Daily name enrichment failed: $e');
+          }
+        }
+      }
+
+      // Merge names into attendance list
+      final enriched =
+          response.map<Map<String, dynamic>>((rec) {
+            final reg = ((rec['registration_no'] as String?) ?? '').trim();
+            final name = nameMap[reg.toUpperCase()] ?? '';
+            return {...rec, 'registration_no': reg, 'student_name': name};
+          }).toList();
+
+      return enriched;
     } catch (e) {
       print('Error getting daily attendance for date: $e');
+      return [];
+    }
+  }
+
+  // Fallback: derive daily attendance from period records for a date
+  Future<List<Map<String, dynamic>>> getDerivedDailyFromPeriods({
+    required String department,
+    required int semester,
+    required String section,
+    required DateTime date,
+  }) async {
+    try {
+      final dateStr = date.toIso8601String().split('T')[0];
+
+      // Fetch period records for the date
+      final periodRows = await _supabase
+          .from('attendance')
+          .select('registration_no, is_present')
+          .eq('date', dateStr);
+
+      if (periodRows.isEmpty) return [];
+
+      // Group by student and compute totals
+      final Map<String, Map<String, int>> agg = {};
+      for (final row in periodRows) {
+        final reg = row['registration_no'] as String;
+        final present = (row['is_present'] as bool?) ?? false;
+        final entry = agg.putIfAbsent(reg, () => {'total': 0, 'present': 0});
+        entry['total'] = (entry['total'] ?? 0) + 1;
+        if (present) entry['present'] = (entry['present'] ?? 0) + 1;
+      }
+
+      final regs = agg.keys.toList();
+      if (regs.isEmpty) return [];
+
+      // Join with students to filter by sem/section and get names
+      final students = await _supabase
+          .from('students')
+          .select(
+            'registration_no, student_name, user_id, department, semester, current_semester, section',
+          )
+          .inFilter('registration_no', regs);
+
+      // Fetch user names for linked accounts
+      final Set<String> userIds = {
+        for (final s in students)
+          if (s['user_id'] != null && s['user_id'].toString().trim().isNotEmpty)
+            s['user_id'] as String,
+      };
+      final Map<String, String> userNameById = {};
+      if (userIds.isNotEmpty) {
+        final usersResp = await _supabase
+            .from('users')
+            .select('id, name')
+            .inFilter('id', userIds.toList());
+        for (final u in usersResp) {
+          final id = u['id'] as String?;
+          if (id != null) userNameById[id] = (u['name'] ?? '').toString();
+        }
+      }
+
+      final Map<String, Map<String, dynamic>> studentMap = {
+        for (final s in students)
+          s['registration_no'] as String: {
+            ...s,
+            'resolved_name': () {
+              final uid = s['user_id'] as String?;
+              final usersName = uid != null ? (userNameById[uid] ?? '') : '';
+              final fallback = (s['student_name'] ?? '').toString();
+              return usersName.trim().isNotEmpty ? usersName : fallback;
+            }(),
+          },
+      };
+
+      final List<Map<String, dynamic>> results = [];
+      for (final reg in regs) {
+        final s = studentMap[reg];
+        if (s == null) continue; // require metadata to place in a section
+        // Filter by semester and section
+        final sem = s['semester'] ?? s['current_semester'];
+        if (sem != semester) continue;
+        final sec = (s['section'] as String?)?.toUpperCase();
+        if (sec != section.toUpperCase()) continue;
+
+        final counts = agg[reg]!;
+        final total = counts['total'] ?? 0;
+        final present = counts['present'] ?? 0;
+
+        results.add({
+          'registration_no': reg,
+          'student_name':
+              (s['resolved_name'] ?? s['student_name'] ?? '').toString(),
+          'is_present': present >= (total / 2), // simple majority heuristic
+          'marked_at': null,
+          'marked_by': null,
+        });
+      }
+
+      return results;
+    } catch (e) {
+      print('Error deriving daily from periods: $e');
       return [];
     }
   }
@@ -794,20 +1150,30 @@ class AttendanceService {
   }) async {
     try {
       final dateStr = date.toIso8601String().split('T')[0];
-      print(
-        'Fetching period attendance for Subject: $subjectCode, Period: $periodNumber, Date: $dateStr',
-      );
+      if (kDebugMode && _verboseAttendanceLogs) {
+        debugPrint(
+          'Fetching period attendance for Subject: $subjectCode, Period: $periodNumber, Date: $dateStr',
+        );
+      }
 
-      var query = _supabase
+      // First check if attendance exists for this subject and period
+      final attendanceResponse = await _supabase
           .from('attendance')
-          .select('registration_no, is_present')
+          .select('''
+            registration_no,
+            is_present,
+            date,
+            subject_code,
+            period_number
+          ''')
           .eq('date', dateStr)
           .eq('subject_code', subjectCode)
           .eq('period_number', periodNumber);
 
-      final attendanceResponse = await query;
       if (attendanceResponse.isEmpty) {
-        print('No period attendance records found for $dateStr');
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('No period attendance records found for $dateStr');
+        }
         return [];
       }
 
@@ -819,60 +1185,85 @@ class AttendanceService {
       var studentQuery = _supabase
           .from('students')
           .select(
-            'registration_no, student_name, department, semester, current_semester, section',
+            'registration_no, student_name, user_id, department, semester, current_semester, section',
           )
           .inFilter('registration_no', registrationNumbers);
-
-      if (department != null && department.isNotEmpty) {
-        studentQuery = studentQuery.eq('department', department);
-      }
       // Avoid filtering by semester at SQL level due to schema variations; filter in Dart below
 
       final studentsResponse = await studentQuery;
-      final studentMap = <String, Map<String, dynamic>>{};
-      for (final student in studentsResponse) {
-        studentMap[student['registration_no']] = student;
+
+      // Fetch user names for linked user_ids
+      final Set<String> userIds = {
+        for (final s in studentsResponse)
+          if (s['user_id'] != null && s['user_id'].toString().trim().isNotEmpty)
+            s['user_id'] as String,
+      };
+      final Map<String, String> userNameById = {};
+      if (userIds.isNotEmpty) {
+        final usersResp = await _supabase
+            .from('users')
+            .select('id, name')
+            .inFilter('id', userIds.toList());
+        for (final u in usersResp) {
+          final id = u['id'] as String?;
+          if (id != null) userNameById[id] = (u['name'] ?? '').toString();
+        }
       }
 
-      return attendanceResponse
-          .where((a) {
-            final regNo = a['registration_no'] as String;
-            final student = studentMap[regNo];
-            if (student == null) return false;
-            // Filter by semester if provided, supporting both semester/current_semester fields
-            if (semester != null) {
-              final sem = student['semester'];
-              final currSem = student['current_semester'];
-              final matchesSemester =
-                  (sem == semester) || (currSem == semester);
-              if (!matchesSemester) return false;
-            }
-            // Filter by section if provided
-            if (section != null && section.isNotEmpty) {
-              if ((student['section'] as String?)?.toUpperCase() !=
-                  section.toUpperCase()) {
-                return false;
-              }
-            }
-            return true;
-          })
-          .map<Map<String, dynamic>>((attendance) {
-            final regNo = attendance['registration_no'] as String;
-            final student = studentMap[regNo]!;
-            return {
-              'registration_no': regNo,
-              'student_name': student['student_name'] ?? '',
-              'department': student['department'] ?? '',
-              'semester':
-                  student['semester'] ?? student['current_semester'] ?? 0,
-              'section': student['section'] ?? '',
-              'is_present': attendance['is_present'] ?? false,
-              'subject_code': subjectCode,
-              'period_number': periodNumber,
-              'date': dateStr,
-            };
-          })
-          .toList();
+      final studentMap = <String, Map<String, dynamic>>{};
+      for (final student in studentsResponse) {
+        final uid = student['user_id'] as String?;
+        final usersName = uid != null ? (userNameById[uid] ?? '') : '';
+        final fallback = (student['student_name'] ?? '').toString();
+        studentMap[student['registration_no']] = {
+          ...student,
+          'resolved_name': usersName.trim().isNotEmpty ? usersName : fallback,
+        };
+      }
+
+      final List<Map<String, dynamic>> results = [];
+      for (final attendance in attendanceResponse) {
+        final regNo = attendance['registration_no'] as String;
+        final student = studentMap[regNo];
+
+        // Apply filters when metadata exists; if missing, don't drop the record
+        if (student != null) {
+          if (semester != null) {
+            final sem = student['semester'];
+            final currSem = student['current_semester'];
+            final matchesSemester = (sem == semester) || (currSem == semester);
+            if (!matchesSemester) continue;
+          }
+          if (section != null && section.isNotEmpty) {
+            final sec = (student['section'] as String?)?.toUpperCase();
+            if (sec != section.toUpperCase()) continue;
+          }
+        }
+
+        results.add({
+          'registration_no': regNo,
+          'student_name':
+              student != null
+                  ? ((student['resolved_name'] ?? student['student_name'] ?? '')
+                      .toString())
+                  : '',
+          'department':
+              student != null
+                  ? (student['department'] ?? '')
+                  : (department ?? ''),
+          'semester':
+              student != null
+                  ? (student['semester'] ?? student['current_semester'] ?? 0)
+                  : (semester ?? 0),
+          'section':
+              student != null ? (student['section'] ?? '') : (section ?? ''),
+          'is_present': attendance['is_present'] ?? false,
+          'subject_code': subjectCode,
+          'period_number': periodNumber,
+          'date': dateStr,
+        });
+      }
+      return results;
     } catch (e) {
       print('Error fetching period attendance for date: $e');
       return [];
