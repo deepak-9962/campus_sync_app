@@ -463,39 +463,6 @@ class _HomeScreenState extends State<HomeScreen>
               padding: EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _buildFeatureListItem(
-                    title: 'View Today\'s Schedule',
-                    description: 'Check classes for today',
-                    icon: Icons.today,
-                    onTap: () {
-                      bool isCSESem4 =
-                          (selectedDepartment ?? widget.department).contains(
-                            'Computer Science',
-                          ) &&
-                          (selectedSemester ?? widget.semester.toString()) ==
-                              '4';
-                      if (isCSESem4) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => TimetableScreen(
-                                  department: selectedDepartment!,
-                                  semester: int.parse(selectedSemester!),
-                                ),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Detailed timetable is only available for Computer Science Engineering Semester 4',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
                   // Edit Timetable for Staff/Admin
                   if (_isStaff || _isAdmin)
                     _buildFeatureListItem(

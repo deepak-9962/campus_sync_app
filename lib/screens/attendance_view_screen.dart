@@ -414,7 +414,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     if (_resolvedSubjectCode == null) {
       return Column(
         children: [
-          _buildSummaryBar(total: 0, present: 0, absent: 0),
+          _buildSummaryBar(total: 0, present: 0, absent: 0, attendanceData: []),
           Expanded(
             child: Center(
               child: Text(
@@ -436,7 +436,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     if (_periodAttendance.isEmpty) {
       return Column(
         children: [
-          _buildSummaryBar(total: total, present: present, absent: absent),
+          _buildSummaryBar(
+            total: total,
+            present: present,
+            absent: absent,
+            attendanceData: _periodAttendance,
+          ),
           Expanded(
             child: Center(
               child: Column(
@@ -486,7 +491,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               ],
             ),
           ),
-        _buildSummaryBar(total: total, present: present, absent: absent),
+        _buildSummaryBar(
+          total: total,
+          present: present,
+          absent: absent,
+          attendanceData: _periodAttendance,
+        ),
         Expanded(
           child: ListView.builder(
             padding: EdgeInsets.all(16),
@@ -565,7 +575,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     if (_dailyAttendance.isEmpty) {
       return Column(
         children: [
-          _buildSummaryBar(total: total, present: present, absent: absent),
+          _buildSummaryBar(
+            total: total,
+            present: present,
+            absent: absent,
+            attendanceData: _dailyAttendance,
+          ),
           Expanded(
             child: Center(
               child: Column(
@@ -588,7 +603,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
 
     return Column(
       children: [
-        _buildSummaryBar(total: total, present: present, absent: absent),
+        _buildSummaryBar(
+          total: total,
+          present: present,
+          absent: absent,
+          attendanceData: _dailyAttendance,
+        ),
         Expanded(
           child: ListView.builder(
             padding: EdgeInsets.all(16),
@@ -662,35 +682,47 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     required int total,
     required int present,
     required int absent,
+    List<Map<String, dynamic>>? attendanceData,
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: 12,
+        runSpacing: 12,
         children: [
           _summaryChip(
             label: 'Total',
             value: total.toString(),
             color: Colors.grey[700]!,
             bg: Colors.grey[200]!,
+            onTap: null,
           ),
           _summaryChip(
             label: 'Present',
             value: present.toString(),
             color: Colors.green[800]!,
             bg: Colors.green[100]!,
+            onTap:
+                attendanceData != null
+                    ? () =>
+                        _showFilteredAttendance('Present', attendanceData, true)
+                    : null,
           ),
           _summaryChip(
             label: 'Absent',
             value: absent.toString(),
             color: Colors.red[800]!,
             bg: Colors.red[100]!,
+            onTap:
+                attendanceData != null
+                    ? () =>
+                        _showFilteredAttendance('Absent', attendanceData, false)
+                    : null,
           ),
         ],
       ),
@@ -702,26 +734,190 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     required String value,
     required Color color,
     required Color bg,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    Widget child = Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '$label: ',
-            style: TextStyle(fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: color,
+              fontSize: 16,
+            ),
           ),
           Text(
             value,
-            style: TextStyle(fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 18,
+            ),
           ),
         ],
       ),
+    );
+
+    if (onTap != null) {
+      return GestureDetector(onTap: onTap, child: child);
+    }
+    return child;
+  }
+
+  void _showFilteredAttendance(
+    String title,
+    List<Map<String, dynamic>> attendanceData,
+    bool isPresent,
+  ) {
+    final filteredData =
+        attendanceData
+            .where((record) => (record['is_present'] ?? false) == isPresent)
+            .toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            maxChildSize: 0.9,
+            minChildSize: 0.3,
+            builder:
+                (context, scrollController) => Container(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Icon(
+                            isPresent ? Icons.check_circle : Icons.cancel,
+                            color: isPresent ? Colors.green : Colors.red,
+                            size: 24,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '$title Students (${filteredData.length})',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      Expanded(
+                        child:
+                            filteredData.isEmpty
+                                ? Center(
+                                  child: Text(
+                                    'No $title students',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                )
+                                : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filteredData.length,
+                                  itemBuilder: (context, index) {
+                                    final record = filteredData[index];
+                                    return Card(
+                                      margin: EdgeInsets.only(bottom: 8),
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor:
+                                              isPresent
+                                                  ? Colors.green[100]
+                                                  : Colors.red[100],
+                                          child: Icon(
+                                            isPresent
+                                                ? Icons.check
+                                                : Icons.close,
+                                            color:
+                                                isPresent
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                          ),
+                                        ),
+                                        title: Builder(
+                                          builder: (context) {
+                                            final rn =
+                                                (record['registration_no'] ??
+                                                        '')
+                                                    .toString();
+                                            final nm =
+                                                ((record['student_name'] ?? '')
+                                                        as String)
+                                                    .trim();
+                                            final showName =
+                                                nm.isNotEmpty &&
+                                                nm.toUpperCase() !=
+                                                    rn.toUpperCase();
+                                            final text =
+                                                showName ? '$nm ($rn)' : rn;
+                                            return Text(
+                                              text,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        subtitle: Text(
+                                          'Reg No: ${record['registration_no']}',
+                                        ),
+                                        trailing: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                isPresent
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            isPresent ? 'Present' : 'Absent',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+          ),
     );
   }
 }

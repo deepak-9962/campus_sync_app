@@ -27,17 +27,37 @@ class TimetableManagementService {
       print('Subject: $subjectCode');
       print('Faculty: $facultyName');
 
-      // Check if record exists
-      final existingRecord =
-          await _supabase
-              .from('class_schedule')
-              .select()
-              .eq('department', department)
-              .eq('semester', semester)
-              .eq('section', section)
-              .eq('day_of_week', dayOfWeek.toLowerCase())
-              .eq('period_number', periodNumber)
-              .maybeSingle();
+      // Check if record exists - handle case where multiple records might exist
+      final existingRecords = await _supabase
+          .from('class_schedule')
+          .select()
+          .eq('department', department)
+          .eq('semester', semester)
+          .eq('section', section)
+          .eq('day_of_week', dayOfWeek.toLowerCase())
+          .eq('period_number', periodNumber);
+
+      // If multiple records exist, we'll update the first one and delete the rest
+      Map<String, dynamic>? existingRecord;
+      if (existingRecords.isNotEmpty) {
+        existingRecord = existingRecords.first;
+
+        // If there are duplicates, delete them
+        if (existingRecords.length > 1) {
+          print(
+            'DEBUG: Found ${existingRecords.length} duplicate records, cleaning up...',
+          );
+          for (int i = 1; i < existingRecords.length; i++) {
+            await _supabase
+                .from('class_schedule')
+                .delete()
+                .eq('id', existingRecords[i]['id']);
+          }
+          print(
+            'DEBUG: Cleaned up ${existingRecords.length - 1} duplicate records',
+          );
+        }
+      }
 
       final insertData = {
         'department': department,
@@ -316,8 +336,8 @@ class TimetableManagementService {
           roomQuery = roomQuery.neq('id', excludeRecordId);
         }
 
-        final roomConflict = await roomQuery.maybeSingle();
-        if (roomConflict != null) {
+        final roomConflicts = await roomQuery;
+        if (roomConflicts.isNotEmpty) {
           return true; // Room is already booked
         }
       }
@@ -336,8 +356,8 @@ class TimetableManagementService {
           facultyQuery = facultyQuery.neq('id', excludeRecordId);
         }
 
-        final facultyConflict = await facultyQuery.maybeSingle();
-        if (facultyConflict != null) {
+        final facultyConflicts = await facultyQuery;
+        if (facultyConflicts.isNotEmpty) {
           return true; // Faculty is already assigned
         }
       }
