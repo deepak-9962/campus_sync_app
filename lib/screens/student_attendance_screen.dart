@@ -26,6 +26,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   String? _errorMessage;
   String? _studentRegNo;
   Map<String, dynamic>? _studentInfo;
+  DateTime? _lastRefreshTime;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         setState(() {
           _attendanceData = emailBasedAttendance;
           _studentRegNo = emailBasedAttendance['registration_no'];
+          _lastRefreshTime = DateTime.now();
           _isLoading = false;
         });
         return;
@@ -88,6 +90,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
 
         setState(() {
           _attendanceData = attendanceResult;
+          _lastRefreshTime = DateTime.now();
           _isLoading = false;
         });
       } else {
@@ -149,6 +152,13 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         title: Text('My Attendance'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _loadStudentAttendance,
+            tooltip: 'Refresh Data',
+          ),
+        ],
       ),
       body:
           _isLoading
@@ -265,8 +275,12 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
       double.parse(attendancePercentage),
     );
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
+    return RefreshIndicator(
+      onRefresh: _loadStudentAttendance,
+      color: Colors.blue,
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -297,8 +311,56 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                     _studentInfo?['section'] ?? 'Unknown',
                   ),
                   _buildInfoRow('Batch:', _studentInfo?['batch'] ?? 'Unknown'),
+                  if (_lastRefreshTime != null) ...[
+                    SizedBox(height: 8),
+                    Divider(),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Last updated: ${_formatRefreshTime(_lastRefreshTime!)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
+            ),
+          ),
+
+          SizedBox(height: 8),
+
+          // Helpful instruction for pull-to-refresh
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Pull down to refresh or tap the refresh button to get the latest attendance data',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -521,6 +583,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -625,6 +688,21 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
       return 'Your attendance is average. Try to attend more classes to improve.';
     } else {
       return 'Your attendance is below requirements. Please attend more classes regularly.';
+    }
+  }
+
+  String _formatRefreshTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''} ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+    } else {
+      return '${dateTime.day}/${dateTime.month} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
   }
 }

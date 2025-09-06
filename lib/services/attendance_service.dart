@@ -7,8 +7,9 @@ class AttendanceService {
   static const bool _verboseAttendanceLogs = false;
 
   Future<Map<String, dynamic>?> getAttendanceByRegistrationNo(
-    String registrationNo,
-  ) async {
+    String registrationNo, {
+    bool forceRefresh = false,
+  }) async {
     try {
       // Clean up input - remove whitespace and # symbol if present
       final cleanedRegNo = registrationNo.trim().replaceAll('#', '');
@@ -23,6 +24,12 @@ class AttendanceService {
           )
           .eq('registration_no', cleanedRegNo)
           .limit(1);
+
+      // Force refresh bypasses any client-side caching
+      if (forceRefresh) {
+        // Add a small delay to ensure any pending database updates are complete
+        await Future.delayed(Duration(milliseconds: 100));
+      }
 
       if (summaryResponse.isNotEmpty) {
         final s = summaryResponse.first;
@@ -106,7 +113,7 @@ class AttendanceService {
           studentInfo is List &&
           studentInfo.isNotEmpty) {
         final regNo = studentInfo.first['registration_no'];
-        return await getAttendanceByRegistrationNo(regNo);
+        return await getAttendanceByRegistrationNo(regNo, forceRefresh: true);
       }
 
       return null;
@@ -143,7 +150,7 @@ class AttendanceService {
       );
 
       // Get attendance using the extracted registration number
-      return await getAttendanceByRegistrationNo(registrationNo);
+      return await getAttendanceByRegistrationNo(registrationNo, forceRefresh: true);
     } catch (error) {
       print('Error getting attendance from email: $error');
       return null;
