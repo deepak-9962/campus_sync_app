@@ -38,30 +38,25 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     });
 
     try {
-      // Load TODAY'S department summary (instead of overall)
-      final summary = await _attendanceService.getTodayDepartmentSummary(
+      // Load OVERALL department summary (instead of today-only)
+      final summary = await _attendanceService.getDepartmentSummary(
         widget.department,
       );
 
       // Load TODAY'S semester-wise data
       final semesterData = await _loadTodaySemesterWiseData();
 
-      // Load students with low attendance TODAY
+      // Load students with low attendance (overall)
       final lowAttendance = await _attendanceService
-          .getTodayLowAttendanceStudents(
+          .getAllStudentsAttendance(
             department: widget.department,
-            threshold: 75.0,
+            semester: widget.selectedSemester,
           );
 
-      // Filter low attendance by semester if specified
-      final filteredLowAttendance =
-          widget.selectedSemester != null
-              ? lowAttendance
-                  .where(
-                    (student) => student['semester'] == widget.selectedSemester,
-                  )
-                  .toList()
-              : lowAttendance;
+      // Filter low attendance students (below 75%)
+      final filteredLowAttendance = lowAttendance
+          .where((student) => (student['overall_percentage'] ?? 0.0) < 75.0)
+          .toList();
 
       setState(() {
         departmentSummary = summary;
@@ -268,8 +263,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryCard(
-                  'Today\'s Avg Attendance',
-                  '${(departmentSummary['today_percentage'] ?? 0).toStringAsFixed(1)}%',
+                  'Overall Avg Attendance',
+                  '${(departmentSummary['avg_attendance'] ?? 0).toStringAsFixed(1)}%',
                   Icons.trending_up,
                   Colors.green,
                 ),
@@ -300,8 +295,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           ),
           const SizedBox(height: 16),
           _buildSummaryCard(
-            'Low Attendance Today (<75%)',
-            '${departmentSummary['low_attendance_today'] ?? 0}',
+            'Low Attendance Students (<75%)',
+            '${departmentSummary['low_attendance_students'] ?? 0}',
             Icons.warning,
             Colors.orange,
             isFullWidth: true,
