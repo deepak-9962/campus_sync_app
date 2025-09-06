@@ -47,15 +47,21 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       final semesterData = await _loadTodaySemesterWiseData();
 
       // Load students with low attendance TODAY
-      final lowAttendance = await _attendanceService.getTodayLowAttendanceStudents(
-        department: widget.department,
-        threshold: 75.0,
-      );
+      final lowAttendance = await _attendanceService
+          .getTodayLowAttendanceStudents(
+            department: widget.department,
+            threshold: 75.0,
+          );
 
       // Filter low attendance by semester if specified
-      final filteredLowAttendance = widget.selectedSemester != null
-          ? lowAttendance.where((student) => student['semester'] == widget.selectedSemester).toList()
-          : lowAttendance;
+      final filteredLowAttendance =
+          widget.selectedSemester != null
+              ? lowAttendance
+                  .where(
+                    (student) => student['semester'] == widget.selectedSemester,
+                  )
+                  .toList()
+              : lowAttendance;
 
       setState(() {
         departmentSummary = summary;
@@ -77,9 +83,10 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     List<Map<String, dynamic>> data = [];
 
     // If a specific semester is selected, only load that semester
-    final semestersToLoad = widget.selectedSemester != null 
-        ? [widget.selectedSemester!] 
-        : [1, 2, 3, 4, 5, 6, 7, 8]; // Load all semesters if none selected
+    final semestersToLoad =
+        widget.selectedSemester != null
+            ? [widget.selectedSemester!]
+            : [1, 2, 3, 4, 5, 6, 7, 8]; // Load all semesters if none selected
 
     // Load TODAY'S data for specified semesters
     for (int semester in semestersToLoad) {
@@ -89,10 +96,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         );
 
         // Get today's attendance data for this semester
-        final semesterTodayData = await _attendanceService.getTodaySemesterAttendance(
-          department: widget.department,
-          semester: semester,
-        );
+        final semesterTodayData = await _attendanceService
+            .getTodaySemesterAttendance(
+              department: widget.department,
+              semester: semester,
+            );
 
         print(
           'HOD Dashboard: Semester $semester TODAY - ${semesterTodayData['total_students']} total students, ${semesterTodayData['today_present']} present, ${semesterTodayData['today_absent']} absent',
@@ -122,9 +130,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.selectedSemester != null 
-          ? 'HOD Dashboard - ${widget.department} - Semester ${widget.selectedSemester}'
-          : 'HOD Dashboard - ${widget.department}'),
+        title: Text(
+          widget.selectedSemester != null
+              ? 'HOD Dashboard - ${widget.department} - Semester ${widget.selectedSemester}'
+              : 'HOD Dashboard - ${widget.department}',
+        ),
         backgroundColor: Colors.indigo[700],
         foregroundColor: Colors.white,
         actions: [
@@ -428,7 +438,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             ),
             title: Text('Semester ${semester['semester']}'),
             subtitle: Text(
-              'Students: ${semester['total_students']} | Today: ${semester['today_present'] ?? 0}P/${semester['today_absent'] ?? 0}A | Today\'s Avg: ${(semester['today_percentage'] ?? 0.0).toStringAsFixed(1)}%'
+              'Students: ${semester['total_students']} | Today: ${semester['today_present'] ?? 0}P/${semester['today_absent'] ?? 0}A | Today\'s Avg: ${(semester['today_percentage'] ?? 0.0).toStringAsFixed(1)}%',
             ),
             children: [
               Container(
@@ -468,7 +478,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                             color:
                                 (semester['today_percentage'] ?? 0.0) >= 75.0
                                     ? Colors.green
-                                    : (semester['today_percentage'] ?? 0.0) >= 50.0
+                                    : (semester['today_percentage'] ?? 0.0) >=
+                                        50.0
                                     ? Colors.orange
                                     : Colors.red,
                           ),

@@ -91,7 +91,10 @@ class StudentDataService {
             'department',
             department,
           ) // Use ilike for case-insensitive match
-          .eq('current_semester', semester) // Use 'current_semester' field - the correct field name
+          .eq(
+            'current_semester',
+            semester,
+          ) // Use 'current_semester' field - the correct field name
           .eq('section', section);
 
       print(

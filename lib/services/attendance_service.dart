@@ -1029,6 +1029,42 @@ class AttendanceService {
       final dateStr =
           '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
+      // First, get the students for the specific department, semester, and section
+      var studentsQuery = _supabase
+          .from('students')
+          .select(
+            'registration_no, student_name, user_id, department, current_semester, section',
+          );
+
+      // Apply department filter with pattern matching
+      if (department.toLowerCase().contains('computer science')) {
+        studentsQuery = studentsQuery.ilike(
+          'department',
+          '%computer science%engineering%',
+        );
+      } else {
+        studentsQuery = studentsQuery.ilike('department', department);
+      }
+
+      // Filter by semester and section
+      studentsQuery = studentsQuery
+          .eq('current_semester', semester)
+          .eq('section', section.toUpperCase());
+
+      final students = await studentsQuery;
+
+      if (students.isEmpty) return [];
+
+      // Get registration numbers for these students
+      final regs =
+          students
+              .map((s) => (s['registration_no'] as String?)?.trim() ?? '')
+              .where((reg) => reg.isNotEmpty)
+              .toList();
+
+      if (regs.isEmpty) return [];
+
+      // Now get daily attendance records for these specific students
       final response = await _supabase
           .from('daily_attendance')
           .select('''
@@ -1038,25 +1074,12 @@ class AttendanceService {
             marked_by
           ''')
           .eq('date', dateStr)
+          .inFilter('registration_no', regs)
           .order('registration_no');
-
-      if (response.isEmpty) return [];
-
-      // Build list of registration numbers and a normalized (trimmed, upper) index
-      final regs = <String>[];
-      for (final r in response) {
-        final reg = (r['registration_no'] as String?)?.trim() ?? '';
-        if (reg.isNotEmpty) regs.add(reg);
-      }
 
       Map<String, String> nameMap = {};
       if (regs.isNotEmpty) {
         try {
-          final students = await _supabase
-              .from('students')
-              .select('registration_no, student_name, user_id')
-              .inFilter('registration_no', regs);
-
           // Collect user_ids
           final Set<String> userIds = {};
           for (final s in students) {
@@ -1347,27 +1370,32 @@ class AttendanceService {
   // HOD Dashboard Methods
 
   /// Get today's attendance summary for HOD dashboard - department wide
-  Future<Map<String, dynamic>> getTodayDepartmentSummary(String department) async {
+  Future<Map<String, dynamic>> getTodayDepartmentSummary(
+    String department,
+  ) async {
     try {
       print('Getting today\'s department summary for: $department');
-      
+
       final today = DateTime.now().toIso8601String().split('T')[0];
-      
+
       // Get all students in the department
       var studentsQuery = _supabase
           .from('students')
           .select('registration_no, semester, student_name');
-      
+
       // Apply department filter with pattern matching
       if (department.toLowerCase().contains('computer science')) {
-        studentsQuery = studentsQuery.ilike('department', '%computer science%engineering%');
+        studentsQuery = studentsQuery.ilike(
+          'department',
+          '%computer science%engineering%',
+        );
       } else {
         studentsQuery = studentsQuery.ilike('department', department);
       }
-      
+
       final allStudents = await studentsQuery;
       final totalStudents = allStudents.length;
-      
+
       if (totalStudents == 0) {
         return {
           'total_students': 0,
@@ -1377,54 +1405,58 @@ class AttendanceService {
           'low_attendance_today': 0,
         };
       }
-      
-      final registrationNumbers = allStudents.map((s) => s['registration_no'] as String).toList();
-      
+
+      final registrationNumbers =
+          allStudents.map((s) => s['registration_no'] as String).toList();
+
       // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')
           .eq('date', today)
           .inFilter('registration_no', registrationNumbers);
-      
+
       // Calculate today's metrics
       int todayPresent = 0;
       int todayAbsent = 0;
       double totalPercentage = 0.0;
       int lowAttendanceToday = 0;
-      
+
       // Create a map for quick lookup
       final attendanceMap = <String, Map<String, dynamic>>{};
       for (final record in todayAttendance) {
         attendanceMap[record['registration_no']] = record;
-        
+
         final isPresent = record['is_present'] ?? false;
-        final percentage = isPresent ? 100.0 : 0.0; // Calculate percentage based on presence
-        
+        final percentage =
+            isPresent ? 100.0 : 0.0; // Calculate percentage based on presence
+
         if (isPresent) {
           todayPresent++;
         } else {
           todayAbsent++;
         }
-        
+
         totalPercentage += percentage;
-        
+
         // Count low attendance (less than 75%)
         if (percentage < 75.0) {
           lowAttendanceToday++;
         }
       }
-      
+
       // Count students with no attendance record today as absent
       final studentsWithNoRecord = totalStudents - todayAttendance.length;
       todayAbsent += studentsWithNoRecord;
-      lowAttendanceToday += studentsWithNoRecord; // Students with no record are considered low attendance
-      
+      lowAttendanceToday +=
+          studentsWithNoRecord; // Students with no record are considered low attendance
+
       // Calculate average percentage for students who attended
-      final avgTodayPercentage = todayAttendance.isNotEmpty 
-          ? totalPercentage / todayAttendance.length 
-          : 0.0;
-      
+      final avgTodayPercentage =
+          todayAttendance.isNotEmpty
+              ? totalPercentage / todayAttendance.length
+              : 0.0;
+
       return {
         'total_students': totalStudents,
         'today_present': todayPresent,
@@ -1614,27 +1646,32 @@ class AttendanceService {
     required int semester,
   }) async {
     try {
-      print('Getting today\'s attendance for department: $department, semester: $semester');
-      
+      print(
+        'Getting today\'s attendance for department: $department, semester: $semester',
+      );
+
       final today = DateTime.now().toIso8601String().split('T')[0];
-      
+
       // Get all students in the department and semester
       var studentsQuery = _supabase
           .from('students')
           .select('registration_no, student_name, section');
-      
+
       // Apply department filter with pattern matching
       if (department.toLowerCase().contains('computer science')) {
-        studentsQuery = studentsQuery.ilike('department', '%computer science%engineering%');
+        studentsQuery = studentsQuery.ilike(
+          'department',
+          '%computer science%engineering%',
+        );
       } else {
         studentsQuery = studentsQuery.ilike('department', department);
       }
-      
+
       studentsQuery = studentsQuery.eq('current_semester', semester);
-      
+
       final allStudents = await studentsQuery;
       final totalStudents = allStudents.length;
-      
+
       if (totalStudents == 0) {
         return {
           'semester': semester,
@@ -1645,45 +1682,47 @@ class AttendanceService {
           'students': [],
         };
       }
-      
-      final registrationNumbers = allStudents.map((s) => s['registration_no'] as String).toList();
-      
+
+      final registrationNumbers =
+          allStudents.map((s) => s['registration_no'] as String).toList();
+
       // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')
           .eq('date', today)
           .inFilter('registration_no', registrationNumbers);
-      
+
       // Create attendance map for quick lookup
       final attendanceMap = <String, Map<String, dynamic>>{};
       for (final record in todayAttendance) {
         attendanceMap[record['registration_no']] = record;
       }
-      
+
       // Build student list with today's attendance status
       final List<Map<String, dynamic>> studentsWithAttendance = [];
       int todayPresent = 0;
       int todayAbsent = 0;
       double totalPercentage = 0.0;
-      
+
       for (final student in allStudents) {
         final regNo = student['registration_no'] as String;
         final attendance = attendanceMap[regNo];
-        
+
         final isPresent = attendance?['is_present'] ?? false;
-        final percentage = isPresent ? 100.0 : 0.0; // Calculate percentage based on presence
-        
+        final percentage =
+            isPresent ? 100.0 : 0.0; // Calculate percentage based on presence
+
         if (isPresent) {
           todayPresent++;
         } else {
           todayAbsent++;
         }
-        
+
         if (attendance != null) {
           totalPercentage += percentage;
         }
-        
+
         studentsWithAttendance.add({
           'registration_no': regNo,
           'student_name': student['student_name'] ?? '',
@@ -1693,11 +1732,12 @@ class AttendanceService {
           'status': isPresent ? 'Present' : 'Absent',
         });
       }
-      
-      final avgTodayPercentage = todayAttendance.isNotEmpty 
-          ? totalPercentage / todayAttendance.length 
-          : 0.0;
-      
+
+      final avgTodayPercentage =
+          todayAttendance.isNotEmpty
+              ? totalPercentage / todayAttendance.length
+              : 0.0;
+
       return {
         'semester': semester,
         'total_students': totalStudents,
@@ -1726,55 +1766,64 @@ class AttendanceService {
     double threshold = 75.0,
   }) async {
     try {
-      print('Getting today\'s low attendance students for department: $department, semester: $semester');
-      
+      print(
+        'Getting today\'s low attendance students for department: $department, semester: $semester',
+      );
+
       final today = DateTime.now().toIso8601String().split('T')[0];
-      
+
       // Get all students in the department
       var studentsQuery = _supabase
           .from('students')
           .select('registration_no, student_name, semester, section');
-      
+
       // Apply department filter with pattern matching
       if (department.toLowerCase().contains('computer science')) {
-        studentsQuery = studentsQuery.ilike('department', '%computer science%engineering%');
+        studentsQuery = studentsQuery.ilike(
+          'department',
+          '%computer science%engineering%',
+        );
       } else {
         studentsQuery = studentsQuery.ilike('department', department);
       }
-      
+
       if (semester != null) {
         studentsQuery = studentsQuery.eq('current_semester', semester);
       }
-      
+
       final allStudents = await studentsQuery;
-      
+
       if (allStudents.isEmpty) {
         return [];
       }
-      
-      final registrationNumbers = allStudents.map((s) => s['registration_no'] as String).toList();
-      
+
+      final registrationNumbers =
+          allStudents.map((s) => s['registration_no'] as String).toList();
+
       // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')
           .eq('date', today)
           .inFilter('registration_no', registrationNumbers);
-      
+
       // Create student map for quick lookup
       final studentMap = <String, Map<String, dynamic>>{};
       for (final student in allStudents) {
         studentMap[student['registration_no']] = student;
       }
-      
+
       final List<Map<String, dynamic>> lowAttendanceStudents = [];
-      
+
       // Process students with attendance records
       for (final record in todayAttendance) {
         final regNo = record['registration_no'] as String;
-        final percentage = (record['is_present'] ?? false) ? 100.0 : 0.0; // Calculate percentage based on presence
+        final percentage =
+            (record['is_present'] ?? false)
+                ? 100.0
+                : 0.0; // Calculate percentage based on presence
         final isPresent = record['is_present'] ?? false;
-        
+
         if (percentage < threshold) {
           final student = studentMap[regNo];
           if (student != null) {
@@ -1790,9 +1839,10 @@ class AttendanceService {
           }
         }
       }
-      
+
       // Add students with no attendance record today (considered low attendance)
-      final attendedRegNos = todayAttendance.map((a) => a['registration_no'] as String).toSet();
+      final attendedRegNos =
+          todayAttendance.map((a) => a['registration_no'] as String).toSet();
       for (final student in allStudents) {
         final regNo = student['registration_no'] as String;
         if (!attendedRegNos.contains(regNo)) {
@@ -1807,11 +1857,14 @@ class AttendanceService {
           });
         }
       }
-      
+
       // Sort by percentage (lowest first)
-      lowAttendanceStudents.sort((a, b) => 
-        (a['today_percentage'] as double).compareTo(b['today_percentage'] as double));
-      
+      lowAttendanceStudents.sort(
+        (a, b) => (a['today_percentage'] as double).compareTo(
+          b['today_percentage'] as double,
+        ),
+      );
+
       return lowAttendanceStudents;
     } catch (e) {
       print('Error getting today\'s low attendance students: $e');
