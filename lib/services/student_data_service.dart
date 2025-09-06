@@ -85,13 +85,13 @@ class StudentDataService {
       final response = await _supabase
           .from('students')
           .select(
-            'registration_no,student_name,user_id,year_of_joining,current_year_of_study,current_semester,section,department,batch,status',
+            'registration_no,student_name,user_id,year_of_joining,current_year_of_study,semester,current_semester,section,department,batch,status',
           )
           .ilike(
             'department',
             department,
           ) // Use ilike for case-insensitive match
-          .eq('current_semester', semester)
+          .eq('current_semester', semester) // Use 'current_semester' field - the correct field name
           .eq('section', section);
 
       print(

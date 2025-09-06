@@ -13,9 +13,11 @@ import 'about_us_screen.dart'; // Added for About Us
 import 'dbms_marks_screen.dart'; // Added for DBMS marks
 import 'my_marks_screen.dart'; // Added for student individual marks
 import 'faculty_dashboard_screen.dart'; // Added for Faculty Dashboard
+import 'hod_dashboard_screen.dart'; // Added for HOD Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'staff_attendance_screen.dart';
 import '../services/auth_service.dart';
+import '../services/hod_service.dart'; // Added for HOD service
 import 'role_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,9 +43,12 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animationController;
   bool _isStaff = false;
   bool _isAdmin = false;
+  bool _isHOD = false;
   String _userRole = 'student';
+  String? _assignedDepartment;
   bool _isLoadingRole = true;
   final AuthService _authService = AuthService();
+  final HODService _hodService = HODService();
 
   final List<String> semesters = ['1', '2', '3', '4', '5', '6', '7', '8'];
   final List<String> departments = [
@@ -81,10 +86,15 @@ class _HomeScreenState extends State<HomeScreen>
       final isStaff = await _authService.isStaff();
       final isAdmin = await _authService.isAdmin();
 
+      // Check HOD status and get role info
+      final hodInfo = await _hodService.getUserRoleInfo();
+
       setState(() {
         _userRole = role;
         _isStaff = isStaff;
         _isAdmin = isAdmin;
+        _isHOD = hodInfo['isHOD'] ?? false;
+        _assignedDepartment = hodInfo['assignedDepartment'];
         _isLoadingRole = false;
       });
     } catch (e) {
@@ -418,6 +428,27 @@ class _HomeScreenState extends State<HomeScreen>
                                   userName: widget.userName,
                                   department: selectedDepartment!,
                                   semester: int.parse(selectedSemester!),
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                  // HOD Dashboard for HOD users
+                  if (_isHOD)
+                    _buildFeatureListItem(
+                      title: 'HOD Dashboard',
+                      description:
+                          'Department-wide attendance monitoring and analytics',
+                      icon: Icons.analytics_outlined,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => HODDashboardScreen(
+                                  department:
+                                      _assignedDepartment ?? widget.department,
+                                  hodName: widget.userName,
                                 ),
                           ),
                         );
@@ -758,6 +789,26 @@ class _HomeScreenState extends State<HomeScreen>
               },
             ),
           ],
+          if (_isHOD) ...[
+            Divider(color: Colors.grey[300]),
+            _buildDrawerItem(
+              icon: Icons.dashboard_outlined,
+              title: 'HOD Dashboard',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => HODDashboardScreen(
+                          department: _assignedDepartment ?? widget.department,
+                          hodName: widget.userName,
+                        ),
+                  ),
+                );
+              },
+            ),
+          ],
           Divider(color: Colors.grey[300]),
           _buildDrawerItem(
             icon: Icons.logout,
@@ -814,6 +865,8 @@ class _HomeScreenState extends State<HomeScreen>
         return Colors.blue[700]!;
       case 'admin':
         return Colors.purple[700]!;
+      case 'hod':
+        return Colors.indigo[700]!;
       default:
         throw Exception("Unknown role: $role");
     }
@@ -827,6 +880,8 @@ class _HomeScreenState extends State<HomeScreen>
         return Icons.school;
       case 'admin':
         return Icons.admin_panel_settings;
+      case 'hod':
+        return Icons.dashboard_outlined;
       default:
         throw Exception("Unknown role: $role");
     }

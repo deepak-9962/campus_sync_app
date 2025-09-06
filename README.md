@@ -159,13 +159,13 @@ Campus Sync is a comprehensive Flutter-based application designed to address cri
 3. **Configure Supabase**
    - Create a new project at [supabase.com](https://supabase.com)
    - Copy your project URL and anon key
-   - Update `lib/main.dart` with your credentials:
-   ```dart
-   await Supabase.initialize(
-     url: 'YOUR_SUPABASE_URL',
-     anonKey: 'YOUR_SUPABASE_ANON_KEY',
-   );
+   - Create a `.env` file in the root directory:
+   ```env
+   SUPABASE_URL=your_supabase_url_here
+   SUPABASE_ANON_KEY=your_supabase_anon_key_here
    ```
+   - **Important**: Never commit the `.env` file to version control
+   - The `.env` file is already included in `.gitignore` for security
 
 4. **Setup Database**
    - Navigate to your Supabase SQL Editor
