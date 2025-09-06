@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/attendance_service.dart';
+import 'attendance_view_screen.dart';
 
 class HODDashboardScreen extends StatefulWidget {
   final String department;
@@ -47,16 +48,16 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       final semesterData = await _loadTodaySemesterWiseData();
 
       // Load students with low attendance (overall)
-      final lowAttendance = await _attendanceService
-          .getAllStudentsAttendance(
-            department: widget.department,
-            semester: widget.selectedSemester,
-          );
+      final lowAttendance = await _attendanceService.getAllStudentsAttendance(
+        department: widget.department,
+        semester: widget.selectedSemester,
+      );
 
       // Filter low attendance students (below 75%)
-      final filteredLowAttendance = lowAttendance
-          .where((student) => (student['overall_percentage'] ?? 0.0) < 75.0)
-          .toList();
+      final filteredLowAttendance =
+          lowAttendance
+              .where((student) => (student['overall_percentage'] ?? 0.0) < 75.0)
+              .toList();
 
       setState(() {
         departmentSummary = summary;
@@ -616,57 +617,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       context,
       MaterialPageRoute(
         builder:
-            (context) => Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  '${widget.department} - Semester ${semester['semester']}',
-                ),
-                backgroundColor: Colors.indigo[700],
-                foregroundColor: Colors.white,
-              ),
-              body: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: semester['students'].length,
-                itemBuilder: (context, index) {
-                  final student = semester['students'][index];
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getAttendanceColor(
-                          student['percentage'] ?? 0,
-                        ),
-                        child: Text(
-                          '${student['percentage']?.toStringAsFixed(0) ?? '0'}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      title: Text(student['student_name'] ?? 'Unknown'),
-                      subtitle: Text(
-                        'Registration: ${student['registration_no']}',
-                      ),
-                      trailing: Text(
-                        'Section ${student['section']}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+            (context) => AttendanceViewScreen(
+              department: widget.department,
+              semester: semester['semester'] as int,
             ),
       ),
     );
-  }
-
-  Color _getAttendanceColor(double percentage) {
-    if (percentage >= 85) return Colors.green;
-    if (percentage >= 75) return Colors.orange;
-    return Colors.red;
   }
 }

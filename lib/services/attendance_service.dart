@@ -150,7 +150,10 @@ class AttendanceService {
       );
 
       // Get attendance using the extracted registration number
-      return await getAttendanceByRegistrationNo(registrationNo, forceRefresh: true);
+      return await getAttendanceByRegistrationNo(
+        registrationNo,
+        forceRefresh: true,
+      );
     } catch (error) {
       print('Error getting attendance from email: $error');
       return null;

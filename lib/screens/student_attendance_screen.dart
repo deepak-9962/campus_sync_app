@@ -281,309 +281,326 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Student Info Card
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Student Information',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 12),
-                  _buildInfoRow('Registration No:', _studentRegNo ?? 'Unknown'),
-                  _buildInfoRow(
-                    'Department:',
-                    _studentInfo?['department'] ?? widget.department,
-                  ),
-                  _buildInfoRow(
-                    'Semester:',
-                    _studentInfo?['current_semester']?.toString() ??
-                        widget.semester.toString(),
-                  ),
-                  _buildInfoRow(
-                    'Section:',
-                    _studentInfo?['section'] ?? 'Unknown',
-                  ),
-                  _buildInfoRow('Batch:', _studentInfo?['batch'] ?? 'Unknown'),
-                  if (_lastRefreshTime != null) ...[
-                    SizedBox(height: 8),
-                    Divider(),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Last updated: ${_formatRefreshTime(_lastRefreshTime!)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Student Info Card
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Student Information',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          SizedBox(height: 8),
-
-          // Helpful instruction for pull-to-refresh
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Pull down to refresh or tap the refresh button to get the latest attendance data',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue[700],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Enhanced Attendance Summary Card
-          Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Attendance Summary',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-
-                  // Enhanced Percentage Circle with gradient
-                  Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                percentageColor.withOpacity(0.1),
-                                percentageColor.withOpacity(0.05),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 120,
-                          height: 120,
-                          child: CircularProgressIndicator(
-                            value: double.parse(attendancePercentage) / 100,
-                            strokeWidth: 10,
-                            backgroundColor: Colors.grey.shade300,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              percentageColor,
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '$attendancePercentage%',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: percentageColor,
-                              ),
-                            ),
-                            Text(
-                              'Attendance',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: percentageColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                status,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: percentageColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // Enhanced Statistics Cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Total Classes',
-                          totalClasses.toString(),
-                          Icons.school,
-                          Colors.blue,
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Present',
-                          presentClasses.toString(),
-                          Icons.check_circle,
-                          Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Absent',
-                          (totalClasses - presentClasses).toString(),
-                          Icons.cancel,
-                          Colors.red,
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Required',
-                          '75%',
-                          Icons.track_changes,
-                          Colors.purple,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Enhanced Status Card with more details
-          Card(
-            color: _getStatusCardColor(double.parse(attendancePercentage)),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        _getStatusIcon(double.parse(attendancePercentage)),
-                        color: percentageColor,
-                        size: 32,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getStatusTitle(
-                                double.parse(attendancePercentage),
-                              ),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: percentageColor,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              _getStatusMessage(
-                                double.parse(attendancePercentage),
-                              ),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (double.parse(attendancePercentage) < 75) ...[
                     SizedBox(height: 12),
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
+                    _buildInfoRow(
+                      'Registration No:',
+                      _studentRegNo ?? 'Unknown',
+                    ),
+                    _buildInfoRow(
+                      'Department:',
+                      _studentInfo?['department'] ?? widget.department,
+                    ),
+                    _buildInfoRow(
+                      'Semester:',
+                      _studentInfo?['current_semester']?.toString() ??
+                          widget.semester.toString(),
+                    ),
+                    _buildInfoRow(
+                      'Section:',
+                      _studentInfo?['section'] ?? 'Unknown',
+                    ),
+                    _buildInfoRow(
+                      'Batch:',
+                      _studentInfo?['batch'] ?? 'Unknown',
+                    ),
+                    if (_lastRefreshTime != null) ...[
+                      SizedBox(height: 8),
+                      Divider(),
+                      Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.red, size: 16),
+                          Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'You need ${(75 - double.parse(attendancePercentage)).toStringAsFixed(1)}% more attendance to meet requirements.',
+                              'Last updated: ${_formatRefreshTime(_lastRefreshTime!)}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.red.shade700,
-                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            // Helpful instruction for pull-to-refresh
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Pull down to refresh or tap the refresh button to get the latest attendance data',
+                      style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            SizedBox(height: 16),
+
+            // Enhanced Attendance Summary Card
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Attendance Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+
+                    // Enhanced Percentage Circle with gradient
+                    Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  percentageColor.withOpacity(0.1),
+                                  percentageColor.withOpacity(0.05),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 120,
+                            height: 120,
+                            child: CircularProgressIndicator(
+                              value: double.parse(attendancePercentage) / 100,
+                              strokeWidth: 10,
+                              backgroundColor: Colors.grey.shade300,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                percentageColor,
+                              ),
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$attendancePercentage%',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: percentageColor,
+                                ),
+                              ),
+                              Text(
+                                'Attendance',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: percentageColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: percentageColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Enhanced Statistics Cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Total Classes',
+                            totalClasses.toString(),
+                            Icons.school,
+                            Colors.blue,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Present',
+                            presentClasses.toString(),
+                            Icons.check_circle,
+                            Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Absent',
+                            (totalClasses - presentClasses).toString(),
+                            Icons.cancel,
+                            Colors.red,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Required',
+                            '75%',
+                            Icons.track_changes,
+                            Colors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            // Enhanced Status Card with more details
+            Card(
+              color: _getStatusCardColor(double.parse(attendancePercentage)),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _getStatusIcon(double.parse(attendancePercentage)),
+                          color: percentageColor,
+                          size: 32,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getStatusTitle(
+                                  double.parse(attendancePercentage),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: percentageColor,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                _getStatusMessage(
+                                  double.parse(attendancePercentage),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (double.parse(attendancePercentage) < 75) ...[
+                      SizedBox(height: 12),
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.red,
+                              size: 16,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'You need ${(75 - double.parse(attendancePercentage)).toStringAsFixed(1)}% more attendance to meet requirements.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -694,7 +711,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   String _formatRefreshTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inMinutes < 60) {
