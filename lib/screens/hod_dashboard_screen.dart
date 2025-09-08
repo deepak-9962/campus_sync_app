@@ -63,7 +63,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     });
 
     try {
-      // Load TODAY'S department summary using HOD service
+      // Use direct table access method (RPC function doesn't exist)
+      print(
+        'HOD Dashboard: Loading attendance data using direct table access...',
+      );
+
       final summary = await _hodService.getDepartmentAttendanceSummary(
         widget.department,
         date: currentDate,
@@ -73,11 +77,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       if (summary.containsKey('error')) {
         print('HOD Dashboard: Service returned error - ${summary['error']}');
         print('HOD Dashboard: Error message - ${summary['error_message']}');
-        
+
         setState(() {
           isLoading = false;
         });
-        
+
         // Show detailed error message to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,33 +127,34 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       print(
         'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present, attendance_taken: ${summary['attendance_taken']}',
       );
-      
+
       // ENHANCED: Log detailed state for debugging
-      print('HOD Dashboard: Final departmentSummary state - $departmentSummary');
-      
+      print(
+        'HOD Dashboard: Final departmentSummary state - $departmentSummary',
+      );
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      
+
       print('HOD Dashboard: CRITICAL ERROR during data loading - $e');
       print('HOD Dashboard: Error type - ${e.runtimeType}');
-      
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Critical Error Loading Data'),
-            Text('Error: $e'),
-            const Text('Please contact your administrator.'),
-          ],
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Critical Error Loading Data'),
+              Text('Error: $e'),
+              const Text('Please contact your administrator.'),
+            ],
+          ),
+          duration: const Duration(seconds: 10),
+          backgroundColor: Colors.red,
         ),
-        duration: const Duration(seconds: 10),
-        backgroundColor: Colors.red,
-      ));
+      );
     }
   }
 

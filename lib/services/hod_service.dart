@@ -238,7 +238,103 @@ class HODService {
     }
   }
 
-  /// Get today's department attendance summary with live data
+  /// RPC function method disabled - function doesn't exist in database
+  /*
+  /// Get today's department attendance summary using RPC function with enhanced error handling
+  Future<Map<String, dynamic>> getDepartmentAttendanceSummaryRPC(
+    String department, {
+    DateTime? date,
+  }) async {
+    try {
+      final targetDate = date ?? DateTime.now();
+      final dateStr = targetDate.toIso8601String().split('T')[0];
+
+      print(
+        'HOD Service: Calling RPC get_department_attendance_summary for $department on $dateStr',
+      );
+
+      // ENHANCED ERROR HANDLING: Wrap RPC call in try-catch
+      try {
+        final response = await _supabase.rpc(
+          'get_department_attendance_summary',
+          params: {'dept_name': department, 'target_date': dateStr},
+        );
+
+        print('HOD Service: RPC response - $response');
+
+        if (response == null || response.isEmpty) {
+          print('HOD Service: RPC returned null or empty response');
+          return {
+            'total_students': 0,
+            'today_present': 0,
+            'today_absent': 0,
+            'today_percentage': 0.0,
+            'low_attendance_today': 0,
+            'date': dateStr,
+            'attendance_taken': false,
+            'error': 'RPC_NO_DATA',
+            'error_message': 'RPC function returned no data',
+          };
+        }
+
+        return response;
+      } catch (rpcError) {
+        print('HOD Service: CRITICAL RPC ERROR - $rpcError');
+        print('HOD Service: Error type - ${rpcError.runtimeType}');
+
+        // Check if it's a permissions error
+        final errorMessage = rpcError.toString().toLowerCase();
+        if (errorMessage.contains('permission') ||
+            errorMessage.contains('rls') ||
+            errorMessage.contains('policy') ||
+            errorMessage.contains('access')) {
+          print('HOD Service: This appears to be an RLS/permissions issue');
+          return {
+            'total_students': 0,
+            'today_present': 0,
+            'today_absent': 0,
+            'today_percentage': 0.0,
+            'low_attendance_today': 0,
+            'date': dateStr,
+            'attendance_taken': false,
+            'error': 'RPC_PERMISSION_DENIED',
+            'error_message': 'RPC function access denied: $rpcError',
+          };
+        }
+
+        // For other RPC errors
+        return {
+          'total_students': 0,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'low_attendance_today': 0,
+          'date': dateStr,
+          'attendance_taken': false,
+          'error': 'RPC_ERROR',
+          'error_message': 'RPC function error: $rpcError',
+        };
+      }
+    } catch (e) {
+      print(
+        'HOD Service: GENERAL ERROR in getDepartmentAttendanceSummaryRPC: $e',
+      );
+      return {
+        'total_students': 0,
+        'today_present': 0,
+        'today_absent': 0,
+        'today_percentage': 0.0,
+        'low_attendance_today': 0,
+        'date': DateTime.now().toIso8601String().split('T')[0],
+        'attendance_taken': false,
+        'error': 'GENERAL_ERROR',
+        'error_message': e.toString(),
+      };
+    }
+  }
+  */
+
+  /// Get today's department attendance summary with live data (Enhanced with better error handling)
   Future<Map<String, dynamic>> getDepartmentAttendanceSummary(
     String department, {
     DateTime? date,
@@ -254,20 +350,27 @@ class HODService {
       // ENHANCED DEBUGGING: Check current user and permissions
       try {
         final user = _supabase.auth.currentUser;
-        print('HOD Service: Current user - ${user?.email ?? "Not authenticated"}');
-        
+        print(
+          'HOD Service: Current user - ${user?.email ?? "Not authenticated"}',
+        );
+
         if (user?.email != null) {
           // Check user role
-          final userRoleQuery = await _supabase
-              .from('users')
-              .select('role, assigned_department, name')
-              .eq('id', user!.id)
-              .maybeSingle();
-          
+          final userRoleQuery =
+              await _supabase
+                  .from('users')
+                  .select('role, assigned_department, name')
+                  .eq('id', user!.id)
+                  .maybeSingle();
+
           if (userRoleQuery != null) {
-            print('HOD Service: User role - ${userRoleQuery['role']}, Department - ${userRoleQuery['assigned_department']}');
+            print(
+              'HOD Service: User role - ${userRoleQuery['role']}, Department - ${userRoleQuery['assigned_department']}',
+            );
           } else {
-            print('HOD Service: WARNING - No user role found for ${user.email}');
+            print(
+              'HOD Service: WARNING - No user role found for ${user.email}',
+            );
           }
         }
       } catch (roleError) {
@@ -282,15 +385,21 @@ class HODService {
             .select('id, date, registration_no, is_present')
             .eq('date', dateStr)
             .limit(5);
-        
-        print('HOD Service: Direct daily_attendance test - Found ${testQuery.length} records');
+
+        print(
+          'HOD Service: Direct daily_attendance test - Found ${testQuery.length} records',
+        );
         if (testQuery.isNotEmpty) {
           print('HOD Service: Sample records - ${testQuery.first}');
         }
       } catch (testError) {
-        print('HOD Service: CRITICAL - Cannot access daily_attendance table: $testError');
-        print('HOD Service: This indicates an RLS (Row Level Security) policy issue');
-        
+        print(
+          'HOD Service: CRITICAL - Cannot access daily_attendance table: $testError',
+        );
+        print(
+          'HOD Service: This indicates an RLS (Row Level Security) policy issue',
+        );
+
         // Return error state with detailed message
         return {
           'total_students': 0,
@@ -301,11 +410,13 @@ class HODService {
           'date': dateStr,
           'attendance_taken': false,
           'error': 'RLS_ACCESS_DENIED',
-          'error_message': 'HOD role cannot access daily_attendance table. Check RLS policies.',
+          'error_message':
+              'HOD role cannot access daily_attendance table. Check RLS policies.',
         };
       }
 
-      // Get all students in the department
+      // Get all students in the department with enhanced error handling
+      print('HOD Service: Testing students table access...');
       var studentsQuery = _supabase
           .from('students')
           .select('registration_no, current_semester, section, student_name');
@@ -320,7 +431,68 @@ class HODService {
         studentsQuery = studentsQuery.ilike('department', department);
       }
 
-      final allStudents = await studentsQuery;
+      List<Map<String, dynamic>> allStudents;
+      try {
+        allStudents = await studentsQuery;
+        print(
+          'HOD Service: Successfully accessed students table - found ${allStudents.length} students',
+        );
+
+        // ENHANCED DEBUGGING: Show sample students and department info
+        if (allStudents.isNotEmpty) {
+          print('HOD Service: Sample students found:');
+          for (int i = 0; i < allStudents.length && i < 3; i++) {
+            final student = allStudents[i];
+            print(
+              '  - ${student['student_name']} (${student['registration_no']})',
+            );
+          }
+        } else {
+          print(
+            'HOD Service: WARNING - No students found for department pattern matching',
+          );
+          print('HOD Service: Department filter used: $department');
+          final pattern =
+              department.toLowerCase().contains('computer science')
+                  ? '%computer science%engineering%'
+                  : department;
+          print('HOD Service: ILIKE pattern used: $pattern');
+
+          // Additional debug: Try to understand why no students found
+          try {
+            final allDepts = await _supabase
+                .from('students')
+                .select('department')
+                .limit(5);
+            print('HOD Service: Sample department names in students table:');
+            for (final dept in allDepts) {
+              print('  - "${dept['department']}"');
+            }
+          } catch (e) {
+            print('HOD Service: Could not fetch sample departments: $e');
+          }
+        }
+      } catch (studentsError) {
+        print(
+          'HOD Service: CRITICAL - Cannot access students table: $studentsError',
+        );
+        print(
+          'HOD Service: This indicates missing RLS policy for students table',
+        );
+
+        return {
+          'total_students': 0,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'low_attendance_today': 0,
+          'date': dateStr,
+          'attendance_taken': false,
+          'error': 'STUDENTS_ACCESS_DENIED',
+          'error_message':
+              'HOD role cannot access students table. Check RLS policies: $studentsError',
+        };
+      }
       final totalStudents = allStudents.length;
 
       if (totalStudents == 0) {
@@ -361,12 +533,57 @@ class HODService {
         };
       }
 
-      // Get today's attendance from daily_attendance table
+      // Get today's attendance from daily_attendance table with enhanced debugging
+      print(
+        'HOD Service: Querying attendance for ${registrationNumbers.length} students on $dateStr',
+      );
+
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')
           .eq('date', dateStr)
           .inFilter('registration_no', registrationNumbers);
+
+      print(
+        'HOD Service: Found ${todayAttendance.length} attendance records for department students on $dateStr',
+      );
+
+      // Show sample attendance records
+      if (todayAttendance.isNotEmpty) {
+        print('HOD Service: Sample attendance records:');
+        for (int i = 0; i < todayAttendance.length && i < 3; i++) {
+          final record = todayAttendance[i];
+          print(
+            '  - ${record['registration_no']}: ${record['is_present'] ? 'Present' : 'Absent'}',
+          );
+        }
+      } else {
+        print(
+          'HOD Service: No attendance records found - checking if any exist for today at all...',
+        );
+        try {
+          final anyTodayAttendance = await _supabase
+              .from('daily_attendance')
+              .select('registration_no, is_present')
+              .eq('date', dateStr)
+              .limit(5);
+          print(
+            'HOD Service: Total attendance records for $dateStr: ${anyTodayAttendance.length}',
+          );
+          if (anyTodayAttendance.isNotEmpty) {
+            print(
+              'HOD Service: Sample attendance records from any department:',
+            );
+            for (final record in anyTodayAttendance) {
+              print(
+                '  - ${record['registration_no']}: ${record['is_present'] ? 'Present' : 'Absent'}',
+              );
+            }
+          }
+        } catch (e) {
+          print('HOD Service: Error checking total attendance: $e');
+        }
+      }
 
       // Calculate today's metrics
       int todayPresent = 0;
