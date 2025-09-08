@@ -1755,6 +1755,42 @@ class AttendanceService {
       final registrationNumbers =
           allStudents.map((s) => s['registration_no'] as String).toList();
 
+      // First, check if ANY attendance records exist for this semester on this date
+      final attendanceCheckQuery = await _supabase
+          .from('daily_attendance')
+          .select('registration_no')
+          .eq('date', today)
+          .inFilter('registration_no', registrationNumbers)
+          .limit(1);
+
+      // If no attendance records exist at all for this date, return zeros
+      if (attendanceCheckQuery.isEmpty) {
+        print(
+          'No attendance records found for semester $semester on $today - returning zeros',
+        );
+        return {
+          'semester': semester,
+          'total_students': totalStudents,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'students':
+              allStudents
+                  .map(
+                    (student) => {
+                      'registration_no': student['registration_no'],
+                      'student_name': student['student_name'] ?? '',
+                      'section': student['section'] ?? '',
+                      'is_present': false,
+                      'today_percentage': 0.0,
+                      'status': 'Not Taken',
+                    },
+                  )
+                  .toList(),
+          'attendance_taken': false,
+        };
+      }
+
       // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
@@ -1778,28 +1814,39 @@ class AttendanceService {
         final regNo = student['registration_no'] as String;
         final attendance = attendanceMap[regNo];
 
-        final isPresent = attendance?['is_present'] ?? false;
-        final percentage =
-            isPresent ? 100.0 : 0.0; // Calculate percentage based on presence
-
-        if (isPresent) {
-          todayPresent++;
-        } else {
-          todayAbsent++;
-        }
-
+        // FIXED LOGIC: Only count students with actual attendance records
+        // Students without records are not counted as absent when some attendance exists
         if (attendance != null) {
-          totalPercentage += percentage;
-        }
+          final isPresent = attendance['is_present'] ?? false;
+          final percentage = isPresent ? 100.0 : 0.0;
 
-        studentsWithAttendance.add({
-          'registration_no': regNo,
-          'student_name': student['student_name'] ?? '',
-          'section': student['section'] ?? '',
-          'is_present': isPresent,
-          'today_percentage': percentage,
-          'status': isPresent ? 'Present' : 'Absent',
-        });
+          if (isPresent) {
+            todayPresent++;
+          } else {
+            todayAbsent++;
+          }
+
+          totalPercentage += percentage;
+
+          studentsWithAttendance.add({
+            'registration_no': regNo,
+            'student_name': student['student_name'] ?? '',
+            'section': student['section'] ?? '',
+            'is_present': isPresent,
+            'today_percentage': percentage,
+            'status': isPresent ? 'Present' : 'Absent',
+          });
+        } else {
+          // Student has no attendance record - don't count as absent
+          studentsWithAttendance.add({
+            'registration_no': regNo,
+            'student_name': student['student_name'] ?? '',
+            'section': student['section'] ?? '',
+            'is_present': false,
+            'today_percentage': 0.0,
+            'status': 'No Record',
+          });
+        }
       }
 
       final avgTodayPercentage =
@@ -1814,6 +1861,9 @@ class AttendanceService {
         'today_absent': todayAbsent,
         'today_percentage': avgTodayPercentage,
         'students': studentsWithAttendance,
+        'attendance_taken':
+            todayAttendance
+                .isNotEmpty, // Flag to indicate if attendance was taken
       };
     } catch (e) {
       print('Error getting today\'s semester attendance: $e');
@@ -1824,6 +1874,7 @@ class AttendanceService {
         'today_absent': 0,
         'today_percentage': 0.0,
         'students': [],
+        'attendance_taken': false, // Flag for error state
       };
     }
   }

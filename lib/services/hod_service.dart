@@ -283,6 +283,30 @@ class HODService {
       final registrationNumbers =
           allStudents.map((s) => s['registration_no'] as String).toList();
 
+      // First, check if ANY attendance records exist for this department on this date
+      final attendanceCheckQuery = await _supabase
+          .from('daily_attendance')
+          .select('registration_no')
+          .eq('date', dateStr)
+          .inFilter('registration_no', registrationNumbers)
+          .limit(1);
+
+      // If no attendance records exist at all for this date, return zeros
+      if (attendanceCheckQuery.isEmpty) {
+        print(
+          'HOD Service: No attendance records found for $department on $dateStr - returning zeros',
+        );
+        return {
+          'total_students': totalStudents,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'low_attendance_today': 0,
+          'date': dateStr,
+          'attendance_taken': false, // Flag to indicate no attendance was taken
+        };
+      }
+
       // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
@@ -308,16 +332,24 @@ class HODService {
         }
       }
 
-      // Count students with no attendance record as absent
+      // FIXED LOGIC: Only count students with actual absence records as absent
+      // Students without records are not counted as absent when attendance exists for others
+      // This prevents the "all students absent" issue when attendance is partially taken
       final studentsWithoutRecord = totalStudents - todayAttendance.length;
-      todayAbsent += studentsWithoutRecord;
+
+      // Only add students without records to absent count if attendance was partially taken
+      // The logic is: if some students have attendance records, then students without records
+      // are considered absent (they weren't marked but others were)
+      if (todayAttendance.isNotEmpty) {
+        todayAbsent += studentsWithoutRecord;
+      }
 
       // Calculate percentage
       final todayPercentage =
           totalStudents > 0 ? (todayPresent / totalStudents) * 100 : 0.0;
 
       print(
-        'HOD Service: Department $department - Total: $totalStudents, Present: $todayPresent, Absent: $todayAbsent',
+        'HOD Service: Department $department - Total: $totalStudents, Present: $todayPresent, Absent: $todayAbsent, Records: ${todayAttendance.length}',
       );
 
       return {
@@ -325,8 +357,9 @@ class HODService {
         'today_present': todayPresent,
         'today_absent': todayAbsent,
         'today_percentage': todayPercentage,
-        'low_attendance_today': todayAbsent + studentsWithoutRecord,
+        'low_attendance_today': todayAbsent,
         'date': dateStr,
+        'attendance_taken': true, // Flag to indicate attendance was taken
       };
     } catch (e) {
       print('Error getting department attendance summary: $e');
@@ -337,6 +370,7 @@ class HODService {
         'today_percentage': 0.0,
         'low_attendance_today': 0,
         'date': DateTime.now().toIso8601String().split('T')[0],
+        'attendance_taken': false, // Flag to indicate error state
       };
     }
   }

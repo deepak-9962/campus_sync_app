@@ -38,7 +38,15 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
 
   void _clearData() {
     setState(() {
-      departmentSummary = {};
+      // Initialize with proper zero state for attendance counts
+      departmentSummary = {
+        'total_students': 0,
+        'today_present': 0,
+        'today_absent': 0,
+        'today_percentage': 0.0,
+        'low_attendance_today': 0,
+        'attendance_taken': false,
+      };
       semesterWiseData = [];
       lowAttendanceStudents = [];
       isLoading = true;
@@ -283,18 +291,26 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
               Expanded(
                 child: _buildSummaryCard(
                   'Today Present',
-                  '${departmentSummary['today_present'] ?? 0}',
+                  departmentSummary['attendance_taken'] == false
+                      ? 'Not Taken'
+                      : '${departmentSummary['today_present'] ?? 0}',
                   Icons.check_circle,
-                  Colors.green,
+                  departmentSummary['attendance_taken'] == false
+                      ? Colors.grey
+                      : Colors.green,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryCard(
                   'Today Absent',
-                  '${departmentSummary['today_absent'] ?? 0}',
+                  departmentSummary['attendance_taken'] == false
+                      ? 'Not Taken'
+                      : '${departmentSummary['today_absent'] ?? 0}',
                   Icons.cancel,
-                  Colors.red,
+                  departmentSummary['attendance_taken'] == false
+                      ? Colors.grey
+                      : Colors.red,
                 ),
               ),
             ],
@@ -458,17 +474,27 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         Expanded(
                           child: _buildMiniStat(
                             'Today Present',
-                            '${semester['today_present'] ?? 0}',
+                            semester['attendance_taken'] == false
+                                ? 'Not Taken'
+                                : '${semester['today_present'] ?? 0}',
                             Icons.check_circle,
-                            color: Colors.green,
+                            color:
+                                semester['attendance_taken'] == false
+                                    ? Colors.grey
+                                    : Colors.green,
                           ),
                         ),
                         Expanded(
                           child: _buildMiniStat(
                             'Today Absent',
-                            '${semester['today_absent'] ?? 0}',
+                            semester['attendance_taken'] == false
+                                ? 'Not Taken'
+                                : '${semester['today_absent'] ?? 0}',
                             Icons.cancel,
-                            color: Colors.red,
+                            color:
+                                semester['attendance_taken'] == false
+                                    ? Colors.grey
+                                    : Colors.red,
                           ),
                         ),
                         Expanded(
