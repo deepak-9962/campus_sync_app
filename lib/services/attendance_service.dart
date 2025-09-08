@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+// ignore: unused_import
+import '../types/types.dart'; // Provides type definitions for AI assistance
 
 class AttendanceService {
   final _supabase = Supabase.instance.client;

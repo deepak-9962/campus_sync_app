@@ -39,6 +39,7 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
+  supabase_gen: ^1.6.1
 
 # Configuration for the flutter_launcher_icons package
 flutter_launcher_icons:
@@ -74,3 +75,12 @@ flutter:
           weight: 500
         - asset: assets/fonts/Roboto-Bold.ttf
           weight: 700
+
+# Supabase type generation configuration
+# Note: Manual type definitions are used instead of supabase_gen due to connection issues
+# See lib/types/supabase_types.dart for manually created type definitions
+# See SUPABASE_TYPES_GUIDE.md for usage documentation
+supabase_gen:
+  output_path: "lib/supabase_types.dart"
+  supabase_url: "https://hgzhfqvjsyszwtdeaifx.supabase.co"
+  supabase_anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnemhmcXZqc3lzend0ZGVhaWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzYyMzcsImV4cCI6MjA1NzIxMjIzN30.wdt6RGZFO4uz5P39UEHmfQtOW1OR7q4utyUGJ8qvxhk"
