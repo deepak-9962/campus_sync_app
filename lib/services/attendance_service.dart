@@ -1379,6 +1379,64 @@ class AttendanceService {
     }
   }
 
+  // Get existing attendance map for staff attendance screen initialization
+  Future<Map<String, bool>> getExistingAttendanceMap({
+    required String department,
+    required int semester,
+    required String section,
+    required DateTime date,
+    required String mode, // 'daily' or 'period'
+    String? subjectCode,
+    int? periodNumber,
+  }) async {
+    try {
+      if (mode == 'daily') {
+        // Get daily attendance for the specified class
+        final attendanceData = await getDailyAttendanceForDate(
+          department,
+          semester,
+          section,
+          date,
+        );
+        
+        // Convert to map format
+        final Map<String, bool> attendanceMap = {};
+        for (final record in attendanceData) {
+          final regNo = record['registration_no'] as String;
+          final isPresent = record['is_present'] as bool? ?? false;
+          attendanceMap[regNo] = isPresent;
+        }
+        
+        return attendanceMap;
+      } else if (mode == 'period' && subjectCode != null && periodNumber != null) {
+        // Get period attendance for the specified subject and period
+        final attendanceData = await getPeriodAttendanceForDate(
+          subjectCode: subjectCode,
+          periodNumber: periodNumber,
+          date: date,
+          department: department,
+          semester: semester,
+          section: section,
+        );
+        
+        // Convert to map format
+        final Map<String, bool> attendanceMap = {};
+        for (final record in attendanceData) {
+          final regNo = record['registration_no'] as String;
+          final isPresent = record['is_present'] as bool? ?? false;
+          attendanceMap[regNo] = isPresent;
+        }
+        
+        return attendanceMap;
+      }
+      
+      return {};
+    } catch (e) {
+      print('Error getting existing attendance map: $e');
+      return {};
+    }
+  }
+
   // HOD Dashboard Methods
 
   /// Get today's attendance summary for HOD dashboard - department wide
@@ -1511,12 +1569,9 @@ class AttendanceService {
   }
 
   /// Fallback method to calculate department summary
-  /// Accepts an optional [semester] to be compatible with call sites,
-  /// but currently computes department-wide values irrespective of semester.
   Future<Map<String, dynamic>> _calculateDepartmentSummaryFallback(
-    String department, {
-    int? semester,
-  }) async {
+    String department,
+  ) async {
     try {
       final today = DateTime.now().toIso8601String().split('T')[0];
       final normalizedDept = _normalizeDepartmentName(department);

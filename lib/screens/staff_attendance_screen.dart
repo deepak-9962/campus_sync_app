@@ -110,10 +110,31 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
       print('Loaded ${students.length} students: $students');
 
+      // Load existing attendance data for the selected date
+      Map<String, bool> existingAttendance = {};
+      try {
+        existingAttendance = await _attendanceService.getExistingAttendanceMap(
+          department: widget.department,
+          semester: widget.semester,
+          section: selectedSection!,
+          date: selectedDate,
+          mode: _attendanceMode == 'day' ? 'daily' : 'period',
+          subjectCode: _attendanceMode == 'day' ? null : selectedSubject,
+          periodNumber: _attendanceMode == 'day' ? null : selectedPeriod,
+        );
+        print('Loaded existing attendance for ${existingAttendance.length} students');
+      } catch (e) {
+        print('Error loading existing attendance: $e');
+        // Continue with empty map if loading fails
+      }
+
       setState(() {
         this.students = students;
+        // Initialize attendance map with existing data or default to false (absent)
         attendance = {
-          for (var s in students) s['registration_no'] as String: true,
+          for (var s in students) 
+            s['registration_no'] as String: 
+              existingAttendance[s['registration_no'] as String] ?? false,
         };
         isLoading = false;
       });
@@ -205,6 +226,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       setState(() {
         selectedDate = picked;
       });
+      // Reload students with fresh attendance data for the new date
+      _loadStudents();
     }
   }
 
@@ -433,6 +456,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             selectedSubject = null;
                             selectedPeriod = null;
                           });
+                          // Reload students with fresh attendance data for the new mode
+                          _loadStudents();
                         }
                       },
                       selectedColor: Colors.blue[200],
@@ -446,6 +471,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           setState(() {
                             _attendanceMode = 'period';
                           });
+                          // Reload students with fresh attendance data for the new mode
+                          _loadStudents();
                         }
                       },
                       selectedColor: Colors.green[200],
@@ -509,6 +536,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                         selectedSubject =
                                             subject['subject_code'];
                                       });
+                                      // Reload students with fresh attendance data for the new subject
+                                      _loadStudents();
                                     }
                                   },
                                   selectedColor: Colors.green[200],
@@ -543,6 +572,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     setState(() {
                                       selectedPeriod = period;
                                     });
+                                    // Reload students with fresh attendance data for the new period
+                                    _loadStudents();
                                   }
                                 },
                                 selectedColor: Colors.orange[200],
