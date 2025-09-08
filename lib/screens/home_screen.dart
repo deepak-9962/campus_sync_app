@@ -14,6 +14,7 @@ import 'dbms_marks_screen.dart'; // Added for DBMS marks
 import 'my_marks_screen.dart'; // Added for student individual marks
 import 'faculty_dashboard_screen.dart'; // Added for Faculty Dashboard
 import 'hod_dashboard_screen.dart'; // Added for HOD Dashboard
+import 'admin_dashboard_screen.dart'; // Added for Admin Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'staff_attendance_screen.dart';
 import '../services/auth_service.dart';
@@ -454,6 +455,25 @@ class _HomeScreenState extends State<HomeScreen>
                         );
                       },
                     ),
+                  // Admin Dashboard for Admin users
+                  if (_isAdmin)
+                    _buildFeatureListItem(
+                      title: 'Admin Dashboard',
+                      description:
+                          'System-wide management and department oversight',
+                      icon: Icons.admin_panel_settings,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AdminDashboardScreen(
+                                  userName: widget.userName,
+                                ),
+                          ),
+                        );
+                      },
+                    ),
                   // Marks feature
                   _buildFeatureListItem(
                     title:
@@ -779,12 +799,16 @@ class _HomeScreenState extends State<HomeScreen>
             Divider(color: Colors.grey[300]),
             _buildDrawerItem(
               icon: Icons.admin_panel_settings,
-              title: 'Admin Tools',
+              title: 'Admin Dashboard',
               onTap: () {
                 Navigator.pop(context);
-                // Add admin-specific functionality here
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Admin tools coming soon!')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            AdminDashboardScreen(userName: widget.userName),
+                  ),
                 );
               },
             ),

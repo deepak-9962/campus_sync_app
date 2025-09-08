@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'admin_dashboard_screen.dart';
+import '../services/auth_service.dart';
 // import 'dart:math' as math; // WavesPainter removed
 
 class SemScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _SemScreenState extends State<SemScreen>
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   bool _isLoading = false;
+  final AuthService _authService = AuthService();
 
   final List<String> departments = [
     'Artificial Intelligence & Data Science',
@@ -37,6 +40,11 @@ class _SemScreenState extends State<SemScreen>
   @override
   void initState() {
     super.initState();
+    _checkUserRoleAndNavigate();
+    _initAnimations();
+  }
+
+  void _initAnimations() {
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -57,6 +65,33 @@ class _SemScreenState extends State<SemScreen>
     );
 
     _animationController.forward();
+  }
+
+  Future<void> _checkUserRoleAndNavigate() async {
+    try {
+      // Check if user is admin
+      final isAdmin = await _authService.isAdmin();
+
+      if (isAdmin) {
+        // Admin users skip department/semester selection and go directly to admin dashboard
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        AdminDashboardScreen(userName: widget.userName),
+              ),
+            );
+          }
+        });
+      }
+      // Non-admin users continue with normal flow (department/semester selection)
+    } catch (e) {
+      print('Error checking user role: $e');
+      // Continue with normal flow if role check fails
+    }
   }
 
   @override
