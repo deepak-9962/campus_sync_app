@@ -251,6 +251,60 @@ class HODService {
         'HOD Service: Fetching attendance summary for $department on $dateStr',
       );
 
+      // ENHANCED DEBUGGING: Check current user and permissions
+      try {
+        final user = _supabase.auth.currentUser;
+        print('HOD Service: Current user - ${user?.email ?? "Not authenticated"}');
+        
+        if (user?.email != null) {
+          // Check user role
+          final userRoleQuery = await _supabase
+              .from('users')
+              .select('role, assigned_department, name')
+              .eq('id', user!.id)
+              .maybeSingle();
+          
+          if (userRoleQuery != null) {
+            print('HOD Service: User role - ${userRoleQuery['role']}, Department - ${userRoleQuery['assigned_department']}');
+          } else {
+            print('HOD Service: WARNING - No user role found for ${user.email}');
+          }
+        }
+      } catch (roleError) {
+        print('HOD Service: Error checking user role - $roleError');
+      }
+
+      // ENHANCED: Test direct daily_attendance access
+      print('HOD Service: Testing direct access to daily_attendance table...');
+      try {
+        final testQuery = await _supabase
+            .from('daily_attendance')
+            .select('id, date, registration_no, is_present')
+            .eq('date', dateStr)
+            .limit(5);
+        
+        print('HOD Service: Direct daily_attendance test - Found ${testQuery.length} records');
+        if (testQuery.isNotEmpty) {
+          print('HOD Service: Sample records - ${testQuery.first}');
+        }
+      } catch (testError) {
+        print('HOD Service: CRITICAL - Cannot access daily_attendance table: $testError');
+        print('HOD Service: This indicates an RLS (Row Level Security) policy issue');
+        
+        // Return error state with detailed message
+        return {
+          'total_students': 0,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'low_attendance_today': 0,
+          'date': dateStr,
+          'attendance_taken': false,
+          'error': 'RLS_ACCESS_DENIED',
+          'error_message': 'HOD role cannot access daily_attendance table. Check RLS policies.',
+        };
+      }
+
       // Get all students in the department
       var studentsQuery = _supabase
           .from('students')

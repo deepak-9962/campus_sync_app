@@ -69,6 +69,36 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         date: currentDate,
       );
 
+      // ENHANCED DEBUGGING: Check for error states
+      if (summary.containsKey('error')) {
+        print('HOD Dashboard: Service returned error - ${summary['error']}');
+        print('HOD Dashboard: Error message - ${summary['error_message']}');
+        
+        setState(() {
+          isLoading = false;
+        });
+        
+        // Show detailed error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Data Access Error: ${summary['error']}'),
+                Text('Details: ${summary['error_message']}'),
+                const Text('Please check with your administrator.'),
+              ],
+            ),
+            duration: const Duration(seconds: 10),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      print('HOD Dashboard: Service returned data - $summary');
+
       // Load TODAY'S semester-wise data using HOD service
       final semesterData = await _hodService.getTodaySemesterWiseData(
         widget.department,
@@ -91,15 +121,35 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       });
 
       print(
-        'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present',
+        'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present, attendance_taken: ${summary['attendance_taken']}',
       );
+      
+      // ENHANCED: Log detailed state for debugging
+      print('HOD Dashboard: Final departmentSummary state - $departmentSummary');
+      
     } catch (e) {
       setState(() {
         isLoading = false;
       });
+      
+      print('HOD Dashboard: CRITICAL ERROR during data loading - $e');
+      print('HOD Dashboard: Error type - ${e.runtimeType}');
+      
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error loading fresh data: $e')));
+      ).showSnackBar(SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Critical Error Loading Data'),
+            Text('Error: $e'),
+            const Text('Please contact your administrator.'),
+          ],
+        ),
+        duration: const Duration(seconds: 10),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
