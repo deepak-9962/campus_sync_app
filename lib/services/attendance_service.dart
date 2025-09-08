@@ -1398,7 +1398,7 @@ class AttendanceService {
           section,
           date,
         );
-        
+
         // Convert to map format
         final Map<String, bool> attendanceMap = {};
         for (final record in attendanceData) {
@@ -1406,9 +1406,11 @@ class AttendanceService {
           final isPresent = record['is_present'] as bool? ?? false;
           attendanceMap[regNo] = isPresent;
         }
-        
+
         return attendanceMap;
-      } else if (mode == 'period' && subjectCode != null && periodNumber != null) {
+      } else if (mode == 'period' &&
+          subjectCode != null &&
+          periodNumber != null) {
         // Get period attendance for the specified subject and period
         final attendanceData = await getPeriodAttendanceForDate(
           subjectCode: subjectCode,
@@ -1418,7 +1420,7 @@ class AttendanceService {
           semester: semester,
           section: section,
         );
-        
+
         // Convert to map format
         final Map<String, bool> attendanceMap = {};
         for (final record in attendanceData) {
@@ -1426,10 +1428,10 @@ class AttendanceService {
           final isPresent = record['is_present'] as bool? ?? false;
           attendanceMap[regNo] = isPresent;
         }
-        
+
         return attendanceMap;
       }
-      
+
       return {};
     } catch (e) {
       print('Error getting existing attendance map: $e');

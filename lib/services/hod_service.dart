@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'attendance_service.dart';
 
 class HODService {
   final _supabase = Supabase.instance.client;
+  final _attendanceService = AttendanceService();
 
   /// Check if the current user is an HOD
   Future<bool> isUserHOD() async {
@@ -233,6 +235,202 @@ class HODService {
         'isHOD': false,
         'assignedDepartment': null,
       };
+    }
+  }
+
+  /// Get today's department attendance summary with live data
+  Future<Map<String, dynamic>> getDepartmentAttendanceSummary(
+    String department, {
+    DateTime? date,
+  }) async {
+    try {
+      final targetDate = date ?? DateTime.now();
+      final dateStr = targetDate.toIso8601String().split('T')[0];
+
+      print(
+        'HOD Service: Fetching attendance summary for $department on $dateStr',
+      );
+
+      // Get all students in the department
+      var studentsQuery = _supabase
+          .from('students')
+          .select('registration_no, current_semester, section, student_name');
+
+      // Apply department filter with pattern matching
+      if (department.toLowerCase().contains('computer science')) {
+        studentsQuery = studentsQuery.ilike(
+          'department',
+          '%computer science%engineering%',
+        );
+      } else {
+        studentsQuery = studentsQuery.ilike('department', department);
+      }
+
+      final allStudents = await studentsQuery;
+      final totalStudents = allStudents.length;
+
+      if (totalStudents == 0) {
+        return {
+          'total_students': 0,
+          'today_present': 0,
+          'today_absent': 0,
+          'today_percentage': 0.0,
+          'low_attendance_today': 0,
+          'date': dateStr,
+        };
+      }
+
+      final registrationNumbers =
+          allStudents.map((s) => s['registration_no'] as String).toList();
+
+      // Get today's attendance from daily_attendance table
+      final todayAttendance = await _supabase
+          .from('daily_attendance')
+          .select('registration_no, is_present')
+          .eq('date', dateStr)
+          .inFilter('registration_no', registrationNumbers);
+
+      // Calculate today's metrics
+      int todayPresent = 0;
+      int todayAbsent = 0;
+
+      // Create a map for quick lookup
+      final attendanceMap = <String, bool>{};
+      for (final record in todayAttendance) {
+        final regNo = record['registration_no'] as String;
+        final isPresent = record['is_present'] as bool? ?? false;
+        attendanceMap[regNo] = isPresent;
+
+        if (isPresent) {
+          todayPresent++;
+        } else {
+          todayAbsent++;
+        }
+      }
+
+      // Count students with no attendance record as absent
+      final studentsWithoutRecord = totalStudents - todayAttendance.length;
+      todayAbsent += studentsWithoutRecord;
+
+      // Calculate percentage
+      final todayPercentage =
+          totalStudents > 0 ? (todayPresent / totalStudents) * 100 : 0.0;
+
+      print(
+        'HOD Service: Department $department - Total: $totalStudents, Present: $todayPresent, Absent: $todayAbsent',
+      );
+
+      return {
+        'total_students': totalStudents,
+        'today_present': todayPresent,
+        'today_absent': todayAbsent,
+        'today_percentage': todayPercentage,
+        'low_attendance_today': todayAbsent + studentsWithoutRecord,
+        'date': dateStr,
+      };
+    } catch (e) {
+      print('Error getting department attendance summary: $e');
+      return {
+        'total_students': 0,
+        'today_present': 0,
+        'today_absent': 0,
+        'today_percentage': 0.0,
+        'low_attendance_today': 0,
+        'date': DateTime.now().toIso8601String().split('T')[0],
+      };
+    }
+  }
+
+  /// Get semester-wise attendance data for today
+  Future<List<Map<String, dynamic>>> getTodaySemesterWiseData(
+    String department, {
+    int? selectedSemester,
+    DateTime? date,
+  }) async {
+    try {
+      final targetDate = date ?? DateTime.now();
+
+      List<Map<String, dynamic>> data = [];
+
+      // If a specific semester is selected, only load that semester
+      final semestersToLoad =
+          selectedSemester != null
+              ? [selectedSemester]
+              : [1, 2, 3, 4, 5, 6, 7, 8]; // Load all semesters if none selected
+
+      // Load TODAY'S data for specified semesters
+      for (int semester in semestersToLoad) {
+        try {
+          print(
+            'HOD Service: Loading TODAY\'S data for semester $semester for department: $department',
+          );
+
+          // Get today's attendance data for this semester using AttendanceService
+          final semesterTodayData = await _attendanceService
+              .getTodaySemesterAttendance(
+                department: department,
+                semester: semester,
+              );
+
+          print(
+            'HOD Service: Semester $semester TODAY - ${semesterTodayData['total_students']} total students, ${semesterTodayData['today_present']} present, ${semesterTodayData['today_absent']} absent',
+          );
+
+          if (semesterTodayData['total_students'] > 0) {
+            data.add({
+              'semester': semester,
+              'total_students': semesterTodayData['total_students'],
+              'today_present': semesterTodayData['today_present'],
+              'today_absent': semesterTodayData['today_absent'],
+              'today_percentage': semesterTodayData['today_percentage'],
+              'students': semesterTodayData['students'],
+              'date': targetDate.toIso8601String().split('T')[0],
+            });
+          } else {
+            print('HOD Service: No students found for semester $semester');
+          }
+        } catch (e) {
+          print('HOD Service: Error loading semester $semester: $e');
+        }
+      }
+
+      return data;
+    } catch (e) {
+      print('Error getting today\'s semester-wise data: $e');
+      return [];
+    }
+  }
+
+  /// Get students with low attendance for today
+  Future<List<Map<String, dynamic>>> getTodayLowAttendanceStudents(
+    String department, {
+    int? selectedSemester,
+    DateTime? date,
+    double threshold = 75.0,
+  }) async {
+    try {
+      final targetDate = date ?? DateTime.now();
+
+      // Use AttendanceService to get low attendance students
+      final lowAttendanceStudents = await _attendanceService
+          .getTodayLowAttendanceStudents(
+            department: department,
+            semester: selectedSemester,
+            threshold: threshold,
+          );
+
+      // Add date information
+      return lowAttendanceStudents
+          .map(
+            (student) => {
+              ...student,
+              'date': targetDate.toIso8601String().split('T')[0],
+            },
+          )
+          .toList();
+    } catch (e) {
+      print('Error getting today\'s low attendance students: $e');
+      return [];
     }
   }
 }

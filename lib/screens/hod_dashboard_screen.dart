@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/attendance_service.dart';
+import '../services/hod_service.dart';
 import 'attendance_view_screen.dart';
 
 class HODDashboardScreen extends StatefulWidget {
@@ -19,123 +19,128 @@ class HODDashboardScreen extends StatefulWidget {
 }
 
 class _HODDashboardScreenState extends State<HODDashboardScreen> {
-  final AttendanceService _attendanceService = AttendanceService();
+  final HODService _hodService = HODService();
 
   Map<String, dynamic> departmentSummary = {};
   List<Map<String, dynamic>> semesterWiseData = [];
   List<Map<String, dynamic>> lowAttendanceStudents = [];
   bool isLoading = true;
   String selectedView = 'summary'; // summary, semester-wise, low-attendance
+  DateTime currentDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    // Clear any stale data and fetch fresh data
+    _clearData();
     _loadDepartmentData();
   }
 
+  void _clearData() {
+    setState(() {
+      departmentSummary = {};
+      semesterWiseData = [];
+      lowAttendanceStudents = [];
+      isLoading = true;
+    });
+  }
+
   Future<void> _loadDepartmentData() async {
+    print(
+      'HOD Dashboard: Loading fresh data for ${currentDate.toIso8601String().split('T')[0]}',
+    );
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      // Load OVERALL department summary (instead of today-only)
-      final summary = await _attendanceService.getDepartmentSummary(
+      // Load TODAY'S department summary using HOD service
+      final summary = await _hodService.getDepartmentAttendanceSummary(
         widget.department,
+        date: currentDate,
       );
 
-      // Load TODAY'S semester-wise data
-      final semesterData = await _loadTodaySemesterWiseData();
-
-      // Load students with low attendance (overall)
-      final lowAttendance = await _attendanceService.getAllStudentsAttendance(
-        department: widget.department,
-        semester: widget.selectedSemester,
+      // Load TODAY'S semester-wise data using HOD service
+      final semesterData = await _hodService.getTodaySemesterWiseData(
+        widget.department,
+        selectedSemester: widget.selectedSemester,
+        date: currentDate,
       );
 
-      // Filter low attendance students (below 75%)
-      final filteredLowAttendance =
-          lowAttendance
-              .where((student) => (student['overall_percentage'] ?? 0.0) < 75.0)
-              .toList();
+      // Load students with low attendance TODAY using HOD service
+      final lowAttendance = await _hodService.getTodayLowAttendanceStudents(
+        widget.department,
+        selectedSemester: widget.selectedSemester,
+        date: currentDate,
+      );
 
       setState(() {
         departmentSummary = summary;
         semesterWiseData = semesterData;
-        lowAttendanceStudents = filteredLowAttendance;
+        lowAttendanceStudents = lowAttendance;
         isLoading = false;
       });
+
+      print(
+        'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present',
+      );
     } catch (e) {
       setState(() {
         isLoading = false;
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error loading fresh data: $e')));
     }
-  }
-
-  Future<List<Map<String, dynamic>>> _loadTodaySemesterWiseData() async {
-    List<Map<String, dynamic>> data = [];
-
-    // If a specific semester is selected, only load that semester
-    final semestersToLoad =
-        widget.selectedSemester != null
-            ? [widget.selectedSemester!]
-            : [1, 2, 3, 4, 5, 6, 7, 8]; // Load all semesters if none selected
-
-    // Load TODAY'S data for specified semesters
-    for (int semester in semestersToLoad) {
-      try {
-        print(
-          'HOD Dashboard: Loading TODAY\'S data for semester $semester for department: ${widget.department}',
-        );
-
-        // Get today's attendance data for this semester
-        final semesterTodayData = await _attendanceService
-            .getTodaySemesterAttendance(
-              department: widget.department,
-              semester: semester,
-            );
-
-        print(
-          'HOD Dashboard: Semester $semester TODAY - ${semesterTodayData['total_students']} total students, ${semesterTodayData['today_present']} present, ${semesterTodayData['today_absent']} absent',
-        );
-
-        if (semesterTodayData['total_students'] > 0) {
-          data.add({
-            'semester': semester,
-            'total_students': semesterTodayData['total_students'],
-            'today_present': semesterTodayData['today_present'],
-            'today_absent': semesterTodayData['today_absent'],
-            'today_percentage': semesterTodayData['today_percentage'],
-            'students': semesterTodayData['students'],
-          });
-        } else {
-          print('HOD Dashboard: No students found for semester $semester');
-        }
-      } catch (e) {
-        print('HOD Dashboard: Error loading semester $semester: $e');
-      }
-    }
-
-    return data;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.selectedSemester != null
-              ? 'HOD Dashboard - ${widget.department} - Semester ${widget.selectedSemester}'
-              : 'HOD Dashboard - ${widget.department}',
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.selectedSemester != null
+                  ? 'HOD Dashboard - ${widget.department} - Semester ${widget.selectedSemester}'
+                  : 'HOD Dashboard - ${widget.department}',
+              style: const TextStyle(fontSize: 18),
+            ),
+            Text(
+              'Date: ${currentDate.day}/${currentDate.month}/${currentDate.year}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.indigo[700],
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.calendar_today),
+            tooltip: 'Select Date',
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: currentDate,
+                firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null && picked != currentDate) {
+                setState(() {
+                  currentDate = picked;
+                });
+                _loadDepartmentData();
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Data',
             onPressed: _loadDepartmentData,
           ),
         ],

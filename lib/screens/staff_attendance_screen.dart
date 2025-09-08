@@ -122,7 +122,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
           subjectCode: _attendanceMode == 'day' ? null : selectedSubject,
           periodNumber: _attendanceMode == 'day' ? null : selectedPeriod,
         );
-        print('Loaded existing attendance for ${existingAttendance.length} students');
+        print(
+          'Loaded existing attendance for ${existingAttendance.length} students',
+        );
       } catch (e) {
         print('Error loading existing attendance: $e');
         // Continue with empty map if loading fails
@@ -132,9 +134,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         this.students = students;
         // Initialize attendance map with existing data or default to false (absent)
         attendance = {
-          for (var s in students) 
-            s['registration_no'] as String: 
-              existingAttendance[s['registration_no'] as String] ?? false,
+          for (var s in students)
+            s['registration_no'] as String:
+                existingAttendance[s['registration_no'] as String] ?? false,
         };
         isLoading = false;
       });
