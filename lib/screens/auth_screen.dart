@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'sem_screen.dart';
+import 'home_screen.dart';
 // import 'dart:math' as math; // BubblesPainter removed
 
 class AuthScreen extends StatefulWidget {
@@ -68,7 +68,11 @@ class _AuthScreenState extends State<AuthScreen>
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder:
-                  (context) => SemScreen(userName: session.user?.email ?? ''),
+                  (context) => HomeScreen(
+                    userName: session.user?.email ?? '',
+                    department: 'Computer Science and Engineering', // Default
+                    semester: 5, // Default
+                  ),
             ),
           );
         }
@@ -114,8 +118,12 @@ class _AuthScreenState extends State<AuthScreen>
                 context,
                 PageRouteBuilder(
                   pageBuilder:
-                      (context, animation, secondaryAnimation) =>
-                          SemScreen(userName: _emailController.text.trim()),
+                      (context, animation, secondaryAnimation) => HomeScreen(
+                        userName: _emailController.text.trim(),
+                        department:
+                            'Computer Science and Engineering', // Default
+                        semester: 5, // Default
+                      ),
                   transitionsBuilder: (
                     context,
                     animation,
@@ -203,7 +211,11 @@ class _AuthScreenState extends State<AuthScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (context, animation, secondaryAnimation) =>
-                        const SemScreen(userName: 'demo.user@example.com'),
+                        const HomeScreen(
+                          userName: 'demo.user@example.com',
+                          department: 'Computer Science and Engineering',
+                          semester: 5,
+                        ),
                 transitionsBuilder: (
                   context,
                   animation,

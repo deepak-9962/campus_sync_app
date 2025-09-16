@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'auth_screen.dart';
-import 'sem_screen.dart';
+import 'home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   // Key to store login status
   static const String _firstTimeKey = 'first_time_open';
 
@@ -43,14 +43,14 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToNextScreen() async {
     // Wait for animation to play
     await Future.delayed(const Duration(seconds: 2));
-    
+
     // Check if this is the first time opening the app
     final prefs = await SharedPreferences.getInstance();
     final isFirstTime = prefs.getBool(_firstTimeKey) ?? true;
-    
+
     // Get current authentication session
     final session = Supabase.instance.client.auth.currentSession;
-    
+
     // Begin reverse animation before navigation
     _controller.reverse().then((_) {
       // If it's first time or user is not logged in, go to auth screen
@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
         if (isFirstTime) {
           prefs.setBool(_firstTimeKey, false);
         }
-        
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const AuthScreen()),
@@ -69,9 +69,12 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SemScreen(
-              userName: session.user.email ?? '',
-            ),
+            builder:
+                (context) => HomeScreen(
+                  userName: session.user.email ?? '',
+                  department: 'Computer Science and Engineering',
+                  semester: 5,
+                ),
           ),
         );
       }
@@ -86,11 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A237E),
-              Color(0xFF4A148C),
-              Color(0xFF311B92),
-            ],
+            colors: [Color(0xFF1A237E), Color(0xFF4A148C), Color(0xFF311B92)],
           ),
         ),
         child: FadeTransition(
@@ -130,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    
+
                     letterSpacing: 1.2,
                   ),
                 ),

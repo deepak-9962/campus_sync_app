@@ -664,22 +664,6 @@ class AttendanceService {
 
       final currentUserId = _supabase.auth.currentUser?.id;
 
-      // Insert or update attendance record
-      final Map<String, dynamic> payload = {
-        'registration_no': registrationNo,
-        'date': dateStr,
-        'subject_code': subjectCode,
-        'period_number': periodNumber,
-        'is_present': isPresent,
-        'marked_at': DateTime.now().toIso8601String(),
-        'marked_by': currentUserId,
-      };
-
-      // Include class metadata when available to avoid NULLs downstream
-      if (department != null) payload['department'] = department;
-      if (semester != null) payload['semester'] = semester;
-      if (section != null) payload['section'] = section;
-
       try {
         // First, check if student exists in the proper department and semester
         await _supabase
@@ -688,26 +672,72 @@ class AttendanceService {
             .eq('registration_no', registrationNo)
             .single();
 
-        // Now insert/update the attendance record
+        // Get student details to determine department/semester if not provided
+        String studentDept = department ?? '';
+        int studentSem = semester ?? 0;
+        String studentSec = section ?? '';
+
+        if (department == null || semester == null || section == null) {
+          final studentData = await _supabase
+              .from('students')
+              .select('department, semester, section')
+              .eq('registration_no', registrationNo)
+              .single();
+
+          studentDept = studentData['department'] ?? '';
+          studentSem = studentData['semester'] ?? 0;
+          studentSec = studentData['section'] ?? '';
+        }
+
+        // Look up subject_id from subjects table using subject_code
+        String? subjectId;
+        
+        final subjectResponse = await _supabase
+            .from('subjects')
+            .select('id')
+            .eq('subject_code', subjectCode)
+            .eq('department', studentDept)
+            .eq('semester', studentSem)
+            .limit(1);
+
+        if (subjectResponse.isNotEmpty) {
+          subjectId = subjectResponse.first['id'];
+        } else {
+          // If subject doesn't exist, create it
+          final newSubject = await _supabase
+              .from('subjects')
+              .insert({
+                'subject_code': subjectCode,
+                'subject_name': subjectCode, // Use code as name for now
+                'department': studentDept,
+                'semester': studentSem,
+                'credits': 4, // Default credits
+              })
+              .select('id')
+              .single();
+          subjectId = newSubject['id'];
+        }
+
+        // Now insert/update the attendance record with subject_id
         await _supabase
             .from('attendance')
             .upsert({
               'registration_no': registrationNo,
               'date': dateStr,
-              'subject_code': subjectCode,
+              'subject_id': subjectId,
               'period_number': periodNumber,
               'is_present': isPresent,
               'marked_at': DateTime.now().toIso8601String(),
               'marked_by': currentUserId,
-              'department': department,
-              'semester': semester,
-              'section': section,
-            }, onConflict: 'registration_no,date,subject_code,period_number')
+              'department': studentDept,
+              'semester': studentSem,
+              'section': studentSec,
+            }, onConflict: 'registration_no,date,subject_id,period_number')
             .select()
             .single();
 
         if (kDebugMode && _verboseAttendanceLogs) {
-          print('Period attendance marked successfully');
+          print('Period attendance marked successfully with subject_id: $subjectId');
         }
         return true;
       } on PostgrestException catch (e) {
@@ -744,11 +774,36 @@ class AttendanceService {
         );
       }
 
+      // First, get the subject_id from the subjects table
+      String? subjectId;
+      
+      var subjectQuery = _supabase
+          .from('subjects')
+          .select('id')
+          .eq('subject_code', subjectCode);
+
+      if (department != null && semester != null) {
+        subjectQuery = subjectQuery
+            .eq('department', department)
+            .eq('semester', semester);
+      }
+
+      final subjectData = await subjectQuery.limit(1);
+
+      if (subjectData.isEmpty) {
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('Subject not found: $subjectCode');
+        }
+        return [];
+      }
+
+      subjectId = subjectData.first['id'];
+
       var query = _supabase
           .from('attendance')
           .select('registration_no, is_present')
           .eq('date', today)
-          .eq('subject_code', subjectCode)
+          .eq('subject_id', subjectId)
           .eq('period_number', periodNumber);
 
       final attendanceResponse = await query;
@@ -1265,6 +1320,31 @@ class AttendanceService {
         );
       }
 
+      // First, get the subject_id from the subjects table
+      String? subjectId;
+      
+      var subjectQuery = _supabase
+          .from('subjects')
+          .select('id')
+          .eq('subject_code', subjectCode);
+
+      if (department != null && semester != null) {
+        subjectQuery = subjectQuery
+            .eq('department', department)
+            .eq('semester', semester);
+      }
+
+      final subjectData = await subjectQuery.limit(1);
+
+      if (subjectData.isEmpty) {
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('Subject not found: $subjectCode');
+        }
+        return [];
+      }
+
+      subjectId = subjectData.first['id'];
+
       // First check if attendance exists for this subject and period
       final attendanceResponse = await _supabase
           .from('attendance')
@@ -1272,11 +1352,11 @@ class AttendanceService {
             registration_no,
             is_present,
             date,
-            subject_code,
+            subject_id,
             period_number
           ''')
           .eq('date', dateStr)
-          .eq('subject_code', subjectCode)
+          .eq('subject_id', subjectId!)
           .eq('period_number', periodNumber);
 
       if (attendanceResponse.isEmpty) {

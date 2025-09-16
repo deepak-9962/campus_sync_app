@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 import 'timetable_screen.dart';
 import 'resource_hub_screen.dart';
 import 'announcements_screen.dart';
+import 'library_screen.dart';
 import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
-import 'regulation_selection_screen.dart';
-import 'lost_and_found_screen.dart';
-import 'about_us_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'attendance_screen.dart';
-import 'staff_attendance_screen.dart';
-import 'faculty_dashboard_screen.dart';
-import 'timetable_editor_screen.dart';
 import 'exams_screen.dart';
-import 'attendance_view_screen.dart';
-import 'all_students_attendance_screen.dart';
+import 'attendance_screen.dart';
+import 'regulation_selection_screen.dart';
+import 'lost_and_found_screen.dart'; // Added for Lost and Found
+import 'about_us_screen.dart'; // Added for About Us
+import 'dart:math' as math;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'daily_attendance_screen.dart';
+import 'staff_attendance_screen.dart';
 import '../services/auth_service.dart';
 import 'role_test_screen.dart';
 
@@ -110,13 +108,17 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
-        elevation: 0.5,
+        elevation: 0.5, // Subtle elevation for light theme
         centerTitle: true,
         iconTheme: IconThemeData(color: colorScheme.onSurface),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.school, color: colorScheme.primary, size: 24),
+            Icon(
+              Icons.school,
+              color: colorScheme.primary,
+              size: 24,
+            ), // Accent color for app icon
             SizedBox(width: 8),
             Text(
               'Campus Sync',
@@ -261,28 +263,6 @@ class _HomeScreenState extends State<HomeScreen>
               padding: EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // Faculty Dashboard for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'Faculty Dashboard',
-                      description: 'Access faculty tools and overview',
-                      icon: Icons.dashboard,
-                      iconColor: Colors.orange[700],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => FacultyDashboardScreen(
-                                  userName: widget.userName,
-                                  department: selectedDepartment!,
-                                  semester: int.parse(selectedSemester!),
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-
                   _buildFeatureListItem(
                     title: 'Timetable',
                     description: 'View your class schedule',
@@ -300,24 +280,6 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   ),
-
-                  // Timetable Editor for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'Edit Timetable',
-                      description: 'Manage and edit class schedules',
-                      icon: Icons.edit_calendar,
-                      iconColor: Colors.purple[700],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TimetableEditorScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
                   _buildFeatureListItem(
                     title: 'Resource Hub',
                     description: 'Access learning materials',
@@ -335,7 +297,6 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   ),
-
                   _buildFeatureListItem(
                     title: 'Announcements',
                     description: 'Latest news and updates',
@@ -349,28 +310,6 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   ),
-
-                  // Exam Management for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'Manage Exams',
-                      description: 'Schedule and manage examinations',
-                      icon: Icons.quiz,
-                      iconColor: Colors.red[700],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ExamsScreen(
-                                  department: selectedDepartment!,
-                                  semester: int.parse(selectedSemester!),
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-
                   _buildFeatureListItem(
                     title: 'GPA/CGPA Calculator',
                     description: 'Calculate your grades',
@@ -388,11 +327,11 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   ),
-
                   _buildFeatureListItem(
                     title: 'Lost and Found',
                     description: 'Report or find lost items',
-                    icon: Icons.find_in_page_outlined,
+                    icon:
+                        Icons.find_in_page_outlined, // Icon for Lost and Found
                     onTap: () {
                       Navigator.push(
                         context,
@@ -402,7 +341,6 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   ),
-
                   _buildFeatureListItem(
                     title:
                         _isStaff || _isAdmin
@@ -418,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen>
                             : Icons.visibility,
                     onTap: () async {
                       if (_isStaff || _isAdmin) {
+                        // Staff and Admin can take attendance
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -429,6 +368,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         );
                       } else {
+                        // Students can only view attendance
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -442,18 +382,6 @@ class _HomeScreenState extends State<HomeScreen>
                       }
                     },
                   ),
-
-                  // View Attendance for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'View Attendance',
-                      description: 'Monitor attendance records and statistics',
-                      icon: Icons.analytics,
-                      iconColor: Colors.teal[700],
-                      onTap: () {
-                        _showAttendanceViewOptions();
-                      },
-                    ),
                 ]),
               ),
             ),
@@ -463,28 +391,6 @@ class _HomeScreenState extends State<HomeScreen>
               padding: EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // Faculty Quick Access for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'Faculty Dashboard',
-                      description: 'Quick access to faculty tools',
-                      icon: Icons.dashboard_outlined,
-                      iconColor: Colors.orange[600],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => FacultyDashboardScreen(
-                                  userName: widget.userName,
-                                  department: selectedDepartment!,
-                                  semester: int.parse(selectedSemester!),
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-
                   _buildFeatureListItem(
                     title: 'View Today\'s Schedule',
                     description: 'Check classes for today',
@@ -518,28 +424,6 @@ class _HomeScreenState extends State<HomeScreen>
                       }
                     },
                   ),
-
-                  // Today's Attendance for Staff/Admin
-                  if (_isStaff || _isAdmin)
-                    _buildFeatureListItem(
-                      title: 'Today\'s Attendance',
-                      description: 'View and manage today\'s attendance',
-                      icon: Icons.today_outlined,
-                      iconColor: Colors.green[600],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => StaffAttendanceScreen(
-                                  department: selectedDepartment!,
-                                  semester: int.parse(selectedSemester!),
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-
                   _buildFeatureListItem(
                     title: 'Profile Settings',
                     description: 'Manage your account',
@@ -556,6 +440,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ]),
               ),
             ),
+            // About Us Section
             _buildSectionTitle("Information", Icons.info_outline),
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -583,7 +468,9 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       drawer: _buildDrawer(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // TODO: Add action
+        },
         backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
         child: Icon(Icons.chat_bubble_outline),
@@ -597,7 +484,9 @@ class _HomeScreenState extends State<HomeScreen>
     Widget chipContent = Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.08),
+        color: colorScheme.primary.withOpacity(
+          0.08,
+        ), // Subtle accent background
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -619,7 +508,8 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
-    return chipContent;
+    // return isExpanded ? Expanded(child: chipContent) : chipContent; // Remove Expanded from here
+    return chipContent; // Always return just the chip content
   }
 
   Widget _buildSectionTitle(String title, IconData icon) {
@@ -778,65 +668,7 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
-          if (_isStaff || _isAdmin) ...[
-            Divider(color: Colors.grey[300]),
-            _buildDrawerItem(
-              icon: Icons.dashboard,
-              title: 'Faculty Dashboard',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => FacultyDashboardScreen(
-                          userName: widget.userName,
-                          department: selectedDepartment!,
-                          semester: int.parse(selectedSemester!),
-                        ),
-                  ),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.edit_calendar,
-              title: 'Edit Timetable',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TimetableEditorScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.quiz,
-              title: 'Manage Exams',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => ExamsScreen(
-                          department: selectedDepartment!,
-                          semester: int.parse(selectedSemester!),
-                        ),
-                  ),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.analytics,
-              title: 'View Attendance',
-              onTap: () {
-                Navigator.pop(context);
-                _showAttendanceViewOptions();
-              },
-            ),
-          ],
+          // Temporarily show test screen to all users for debugging
           Divider(color: Colors.grey[300]),
           _buildDrawerItem(
             icon: Icons.bug_report_outlined,
@@ -856,6 +688,7 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'Admin Tools',
               onTap: () {
                 Navigator.pop(context);
+                // Add admin-specific functionality here
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Admin tools coming soon!')),
                 );
@@ -910,180 +743,29 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showAttendanceViewOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                'View Attendance',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 20),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.today, color: Colors.blue[700]),
-                ),
-                title: Text('Today\'s Attendance'),
-                subtitle: Text('View attendance records for today'),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => AttendanceViewScreen(
-                            department: selectedDepartment!,
-                            semester: int.parse(selectedSemester!),
-                          ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.analytics, color: Colors.green[700]),
-                ),
-                title: Text('Overall Attendance'),
-                subtitle: Text('View overall attendance statistics'),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => AllStudentsAttendanceScreen(
-                            department: selectedDepartment!,
-                            semester: int.parse(selectedSemester!),
-                          ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.calendar_month, color: Colors.orange[700]),
-                ),
-                title: Text('Daily Attendance'),
-                subtitle: Text('View day-wise attendance records'),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSectionSelector();
-                },
-              ),
-              SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showSectionSelector() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Select Section'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children:
-                ['A', 'B', 'C'].map((section) {
-                  return ListTile(
-                    title: Text('Section $section'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => DailyAttendanceScreen(
-                                department: selectedDepartment!,
-                                semester: int.parse(selectedSemester!),
-                                section: section,
-                              ),
-                        ),
-                      );
-                    },
-                  );
-                }).toList(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Color _getRoleColor(String role) {
-    switch (role.toLowerCase()) {
+    switch (role) {
       case 'student':
         return Colors.green[700]!;
       case 'staff':
-      case 'faculty':
-      case 'hod':
         return Colors.blue[700]!;
       case 'admin':
         return Colors.purple[700]!;
       default:
-        return Colors.grey[700]!;
+        throw Exception("Unknown role: $role");
     }
   }
 
   IconData _getRoleIcon(String role) {
-    switch (role.toLowerCase()) {
+    switch (role) {
       case 'student':
         return Icons.person;
       case 'staff':
-      case 'faculty':
-      case 'hod':
         return Icons.school;
       case 'admin':
         return Icons.admin_panel_settings;
       default:
-        return Icons.person_outline;
+        throw Exception("Unknown role: $role");
     }
   }
 }

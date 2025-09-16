@@ -27,6 +27,57 @@ class TimetableManagementService {
       print('Subject: $subjectCode');
       print('Faculty: $facultyName');
 
+      // First, get the subject_id from the subject_code
+      String? subjectId;
+      try {
+        final subjectResponse =
+            await _supabase
+                .from('subjects')
+                .select('id')
+                .eq('subject_code', subjectCode)
+                .eq('department', department)
+                .eq('semester', semester)
+                .maybeSingle();
+
+        if (subjectResponse != null) {
+          subjectId = subjectResponse['id'];
+          print(
+            'DEBUG: Found subject_id: $subjectId for subject_code: $subjectCode',
+          );
+        } else {
+          print(
+            'DEBUG: No subject found for subject_code: $subjectCode, department: $department, semester: $semester',
+          );
+
+          // Create the subject if it doesn't exist
+          final newSubjectResponse =
+              await _supabase
+                  .from('subjects')
+                  .insert({
+                    'subject_code': subjectCode,
+                    'subject_name':
+                        subjectCode, // Use subject_code as default name
+                    'department': department,
+                    'semester': semester,
+                    'credits': 3, // Default credits
+                    'faculty_name': facultyName ?? 'Faculty',
+                  })
+                  .select('id')
+                  .single();
+
+          subjectId = newSubjectResponse['id'];
+          print('DEBUG: Created new subject with id: $subjectId');
+        }
+      } catch (subjectError) {
+        print('ERROR: Failed to get/create subject: $subjectError');
+        return false;
+      }
+
+      if (subjectId == null) {
+        print('ERROR: Could not get subject_id for subject_code: $subjectCode');
+        return false;
+      }
+
       // Check if record exists - handle case where multiple records might exist
       final existingRecords = await _supabase
           .from('class_schedule')
@@ -68,6 +119,7 @@ class TimetableManagementService {
         'start_time': startTime,
         'end_time': endTime,
         'subject_code': subjectCode,
+        'subject_id': subjectId, // Add the required subject_id
         'room': room ?? '',
         'faculty_name': facultyName ?? '',
         'batch': batch ?? '',
@@ -83,6 +135,7 @@ class TimetableManagementService {
         'start_time': startTime,
         'end_time': endTime,
         'subject_code': subjectCode,
+        'subject_id': subjectId, // Add the required subject_id
         'room': room ?? '',
         'faculty_name': facultyName ?? '',
         'batch': batch ?? '',

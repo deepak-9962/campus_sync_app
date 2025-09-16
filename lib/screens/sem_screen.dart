@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'admin_dashboard_screen.dart';
 import '../services/auth_service.dart';
 // import 'dart:math' as math; // WavesPainter removed
 
@@ -73,15 +72,19 @@ class _SemScreenState extends State<SemScreen>
       final isAdmin = await _authService.isAdmin();
 
       if (isAdmin) {
-        // Admin users skip department/semester selection and go directly to admin dashboard
+        // Admin users skip department/semester selection and go directly to unified dashboard
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder:
-                    (context) =>
-                        AdminDashboardScreen(userName: widget.userName),
+                    (context) => HomeScreen(
+                      userName: widget.userName,
+                      department:
+                          "Computer Science and Engineering", // Default department for admin
+                      semester: 1, // Default semester for admin
+                    ),
               ),
             );
           }
@@ -112,9 +115,9 @@ class _SemScreenState extends State<SemScreen>
             PageRouteBuilder(
               pageBuilder:
                   (context, animation, secondaryAnimation) => HomeScreen(
+                    userName: widget.userName,
                     department: selectedDepartment!,
                     semester: selectedSemester!,
-                    userName: widget.userName,
                   ),
               transitionsBuilder: (
                 context,

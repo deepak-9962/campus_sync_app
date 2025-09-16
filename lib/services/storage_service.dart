@@ -249,6 +249,58 @@ class StorageService {
   String getPublicUrl(String bucketName, String filePath) {
     return _supabase.storage.from(bucketName).getPublicUrl(filePath);
   }
+
+  // Compatibility helper used by PdfResourceService
+  // Ensure the 'resource_files' bucket exists and is public
+  Future<bool> ensurePdfResourcesBucketExists() async {
+    const bucket = 'resource_files';
+    final ok = await ensureBucketExists(bucket);
+    if (ok) {
+      try {
+        await updateBucketPermissions(bucket);
+      } catch (_) {
+        // Best-effort; continue even if permission update fails
+      }
+    }
+    return ok;
+  }
+
+  // Compatibility helper used by PdfResourceService to upload PDF documents
+  Future<Map<String, dynamic>> uploadPdfDocument({
+    required XFile pdfFile,
+    required String bucketName,
+    String? folder,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      final url = await uploadFile(
+        bucketName: bucketName,
+        file: pdfFile,
+        folder: folder,
+      );
+      if (url == null) {
+        return {
+          'success': false,
+          'error': 'Upload failed',
+        };
+      }
+
+      final fileName = path.basename(pdfFile.path);
+      final filePath = folder != null ? '$folder/$fileName' : fileName;
+      final sizeBytes = (await pdfFile.readAsBytes()).length;
+      return {
+        'success': true,
+        'url': url,
+        'path': filePath,
+        'size': sizeBytes,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
   
   // Delete a file
   Future<bool> deleteFile(String bucketName, String filePath) async {
