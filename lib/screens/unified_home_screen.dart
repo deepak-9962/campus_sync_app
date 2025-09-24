@@ -55,8 +55,16 @@ class _HomeScreenState extends State<HomeScreen>
       final role = await _authService.getUserRole();
       final hodInfo = await _hodService.getUserRoleInfo();
 
+      // Determine effective role: treat admins with an assigned department as HOD too
+      final bool isHOD =
+          hodInfo['isHOD'] == true ||
+          (role.toLowerCase() == 'admin' &&
+              (hodInfo['assignedDepartment'] != null &&
+                  (hodInfo['assignedDepartment'] as String).isNotEmpty));
+      final String effectiveRole = isHOD ? 'hod' : role.toLowerCase();
+
       setState(() {
-        _userRole = role;
+        _userRole = effectiveRole;
         _assignedDepartment = hodInfo['assignedDepartment'];
         _isLoadingRole = false;
       });
@@ -78,8 +86,15 @@ class _HomeScreenState extends State<HomeScreen>
       role: _userRole,
       context: context,
       userName: widget.userName,
-      department: widget.department,
-      semester: widget.semester,
+      department:
+          _userRole == 'hod'
+              ? (_assignedDepartment ?? '')
+              : (widget.department ??
+                  ''), // Ensure department is non-null string
+      semester:
+          _userRole == 'hod'
+              ? 1 // HOD dashboard might not be semester-specific, or default to 1
+              : (widget.semester ?? 1), // Use assignedDepartment for HOD
       assignedDepartment: _assignedDepartment,
     );
 
@@ -135,10 +150,15 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       drawer: _buildSimpleDrawer(),
       body: SafeArea(
-        child:
-            _isLoadingRole
-                ? _buildLoadingState(colorScheme)
-                : _buildDashboard(colorScheme, textTheme),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _loadUserDataAndFeatures();
+          },
+          child:
+              _isLoadingRole
+                  ? _buildLoadingState(colorScheme)
+                  : _buildDashboard(colorScheme, textTheme),
+        ),
       ),
     );
   }

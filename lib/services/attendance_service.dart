@@ -6,7 +6,7 @@ import '../types/types.dart'; // Provides type definitions for AI assistance
 class AttendanceService {
   final _supabase = Supabase.instance.client;
   // Toggle for verbose attendance logs
-  static const bool _verboseAttendanceLogs = false;
+  static const bool _verboseAttendanceLogs = true;
 
   Future<Map<String, dynamic>?> getAttendanceByRegistrationNo(
     String registrationNo, {
@@ -487,9 +487,7 @@ class AttendanceService {
       // Use daily_attendance table for optimized today's attendance data
       var query = _supabase
           .from('daily_attendance')
-          .select(
-            'registration_no, date, total_periods, attended_periods, attendance_percentage, department, semester',
-          )
+          .select('registration_no, date, is_present, department, semester')
           .eq('date', today);
 
       // Apply department filter if provided
@@ -572,14 +570,19 @@ class AttendanceService {
       return attendanceResponse.map<Map<String, dynamic>>((item) {
         final regNo = item['registration_no'] as String;
         final student = studentMap[regNo];
-        final percentage = item['attendance_percentage'] ?? 0.0;
+        final isPresent = item['is_present'] ?? false;
+        // For today's attendance, we'll calculate percentage from overall summary
+        final percentage =
+            0.0; // Will be updated from overall_attendance_summary if needed
 
         return {
           'registration_no': regNo,
           'percentage': percentage,
-          'total_classes': item['total_periods'] ?? 0,
-          'attended_classes': item['attended_periods'] ?? 0,
-          'status': _getAttendanceStatus(percentage),
+          'total_classes': 0, // Will be updated from overall summary if needed
+          'attended_classes':
+              0, // Will be updated from overall summary if needed
+          'status': isPresent ? 'Present' : 'Absent',
+          'is_present': isPresent,
           'student_name':
               student != null
                   ? ((student['resolved_name'] ?? student['student_name'] ?? '')
@@ -678,11 +681,12 @@ class AttendanceService {
         String studentSec = section ?? '';
 
         if (department == null || semester == null || section == null) {
-          final studentData = await _supabase
-              .from('students')
-              .select('department, semester, section')
-              .eq('registration_no', registrationNo)
-              .single();
+          final studentData =
+              await _supabase
+                  .from('students')
+                  .select('department, semester, section')
+                  .eq('registration_no', registrationNo)
+                  .single();
 
           studentDept = studentData['department'] ?? '';
           studentSem = studentData['semester'] ?? 0;
@@ -691,7 +695,7 @@ class AttendanceService {
 
         // Look up subject_id from subjects table using subject_code
         String? subjectId;
-        
+
         final subjectResponse = await _supabase
             .from('subjects')
             .select('id')
@@ -700,28 +704,85 @@ class AttendanceService {
             .eq('semester', studentSem)
             .limit(1);
 
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint(
+            'markPeriodAttendance: Subject lookup for $subjectCode in $studentDept, sem $studentSem: $subjectResponse',
+          );
+        }
+
         if (subjectResponse.isNotEmpty) {
           subjectId = subjectResponse.first['id'];
         } else {
           // If subject doesn't exist, create it
-          final newSubject = await _supabase
-              .from('subjects')
-              .insert({
-                'subject_code': subjectCode,
-                'subject_name': subjectCode, // Use code as name for now
-                'department': studentDept,
-                'semester': studentSem,
-                'credits': 4, // Default credits
-              })
-              .select('id')
-              .single();
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint(
+              'markPeriodAttendance: Subject $subjectCode not found, creating new subject.',
+            );
+          }
+          final newSubject =
+              await _supabase
+                  .from('subjects')
+                  .insert({
+                    'subject_code': subjectCode,
+                    'subject_name': subjectCode, // Use code as name for now
+                    'department': studentDept,
+                    'semester': studentSem,
+                    'credits': 4, // Default credits
+                  })
+                  .select('id')
+                  .single();
           subjectId = newSubject['id'];
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint(
+              'markPeriodAttendance: New subject created with ID: $subjectId',
+            );
+          }
+        }
+        if (kDebugMode && _verboseAttendanceLogs) {
+          debugPrint('markPeriodAttendance: Resolved subjectId: $subjectId');
         }
 
         // Now insert/update the attendance record with subject_id
-        await _supabase
-            .from('attendance')
-            .upsert({
+        try {
+          // First, try to check if record exists
+          final existingRecord =
+              await _supabase
+                  .from('attendance')
+                  .select('id')
+                  .eq('registration_no', registrationNo)
+                  .eq('date', dateStr)
+                  .eq('subject_id', subjectId!)
+                  .eq('period_number', periodNumber)
+                  .maybeSingle();
+
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint(
+              'markPeriodAttendance: Existing record check: $existingRecord',
+            );
+          }
+
+          if (existingRecord != null) {
+            // Update existing record
+            final updateResponse = await _supabase
+                .from('attendance')
+                .update({
+                  'is_present': isPresent,
+                  'marked_at': DateTime.now().toIso8601String(),
+                  'marked_by': currentUserId,
+                  'department': studentDept,
+                  'semester': studentSem,
+                  'section': studentSec,
+                  'subject_code': subjectCode, // ADDED
+                })
+                .eq('id', existingRecord['id']);
+            if (kDebugMode && _verboseAttendanceLogs) {
+              debugPrint(
+                'markPeriodAttendance: Update response: $updateResponse',
+              );
+            }
+          } else {
+            // Insert new record
+            final insertResponse = await _supabase.from('attendance').insert({
               'registration_no': registrationNo,
               'date': dateStr,
               'subject_id': subjectId,
@@ -732,12 +793,45 @@ class AttendanceService {
               'department': studentDept,
               'semester': studentSem,
               'section': studentSec,
-            }, onConflict: 'registration_no,date,subject_id,period_number')
-            .select()
-            .single();
+              'subject_code': subjectCode, // ADDED
+            });
+            if (kDebugMode && _verboseAttendanceLogs) {
+              debugPrint(
+                'markPeriodAttendance: Insert response: $insertResponse',
+              );
+            }
+          }
+        } catch (e) {
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint('markPeriodAttendance: Error in initial upsert: $e');
+          }
+          // If there's still a conflict, try update by unique fields
+          final conflictUpdateResponse = await _supabase
+              .from('attendance')
+              .update({
+                'is_present': isPresent,
+                'marked_at': DateTime.now().toIso8601String(),
+                'marked_by': currentUserId,
+                'department': studentDept,
+                'semester': studentSem,
+                'section': studentSec,
+                'subject_code': subjectCode, // ADDED
+              })
+              .eq('registration_no', registrationNo)
+              .eq('date', dateStr)
+              .eq('subject_id', subjectId!)
+              .eq('period_number', periodNumber);
+          if (kDebugMode && _verboseAttendanceLogs) {
+            debugPrint(
+              'markPeriodAttendance: Conflict update response: $conflictUpdateResponse',
+            );
+          }
+        }
 
         if (kDebugMode && _verboseAttendanceLogs) {
-          print('Period attendance marked successfully with subject_id: $subjectId');
+          print(
+            'Period attendance marked successfully with subject_id: $subjectId',
+          );
         }
         return true;
       } on PostgrestException catch (e) {
@@ -776,7 +870,7 @@ class AttendanceService {
 
       // First, get the subject_id from the subjects table
       String? subjectId;
-      
+
       var subjectQuery = _supabase
           .from('subjects')
           .select('id')
@@ -803,7 +897,7 @@ class AttendanceService {
           .from('attendance')
           .select('registration_no, is_present')
           .eq('date', today)
-          .eq('subject_id', subjectId)
+          .eq('subject_id', subjectId!)
           .eq('period_number', periodNumber);
 
       final attendanceResponse = await query;
@@ -943,36 +1037,66 @@ class AttendanceService {
     required int periodNumber,
   }) async {
     try {
+      // Query class_schedule for basic subject info
+      // Handle potential schema differences gracefully
       final weekday = _weekdayString(date).toLowerCase();
-      // Query class_schedule join subjects for name + faculty
-      final resp =
-          await _supabase
-              .from('class_schedule')
-              .select(
-                'subject_code, faculty_name, subjects(subject_name, faculty_name)',
-              )
-              .eq('department', department)
-              .eq('semester', semester)
-              .eq('section', section)
-              .eq('day_of_week', weekday)
-              .eq('period_number', periodNumber)
-              .maybeSingle();
-      if (resp == null) return null;
-      String? subjectName;
-      String? staffName;
-      if (resp['subjects'] != null) {
-        subjectName = resp['subjects']['subject_name'];
-        staffName = resp['subjects']['faculty_name'];
+      try {
+        final resp =
+            await _supabase
+                .from('class_schedule')
+                .select('subject_code, subjects(subject_name)')
+                .eq('department', department)
+                .eq('semester', semester)
+                .eq('section', section)
+                .eq('day_of_week', weekday)
+                .eq('period_number', periodNumber)
+                .maybeSingle();
+
+        if (resp != null) {
+          String? subjectName;
+          if (resp['subjects'] != null) {
+            subjectName = resp['subjects']['subject_name'];
+          }
+
+          return {
+            'subject_code': resp['subject_code'],
+            'subject_name': subjectName ?? resp['subject_code'],
+            'staff_name': 'Staff', // Default staff name
+          };
+        }
+      } catch (e) {
+        // If day_of_week doesn't exist, try without filtering by day
+        print('Trying without day_of_week filter due to: $e');
+        try {
+          final resp =
+              await _supabase
+                  .from('class_schedule')
+                  .select('subject_code, subjects(subject_name)')
+                  .eq('department', department)
+                  .eq('semester', semester)
+                  .eq('section', section)
+                  .eq('period_number', periodNumber)
+                  .limit(1)
+                  .maybeSingle();
+
+          if (resp != null) {
+            String? subjectName;
+            if (resp['subjects'] != null) {
+              subjectName = resp['subjects']['subject_name'];
+            }
+
+            return {
+              'subject_code': resp['subject_code'],
+              'subject_name': subjectName ?? resp['subject_code'],
+              'staff_name': 'Staff',
+            };
+          }
+        } catch (e2) {
+          print('Failed even without day filter: $e2');
+        }
       }
-      // Prefer explicit faculty_name stored on class_schedule row
-      if ((resp['faculty_name'] ?? '').toString().trim().isNotEmpty) {
-        staffName = resp['faculty_name'];
-      }
-      return {
-        'subject_code': resp['subject_code'],
-        'subject_name': subjectName ?? resp['subject_code'],
-        'staff_name': staffName,
-      };
+
+      return null;
     } catch (e) {
       print('Error resolving period class info: $e');
       return null;
@@ -1322,7 +1446,7 @@ class AttendanceService {
 
       // First, get the subject_id from the subjects table
       String? subjectId;
-      
+
       var subjectQuery = _supabase
           .from('subjects')
           .select('id')
@@ -1336,10 +1460,16 @@ class AttendanceService {
 
       final subjectData = await subjectQuery.limit(1);
 
+      print(
+        'ATTENDANCE QUERY DEBUG: Looking for subject_code: $subjectCode in dept: $department, sem: $semester',
+      );
+      print('ATTENDANCE QUERY DEBUG: Subject query result: $subjectData');
+
       if (subjectData.isEmpty) {
         if (kDebugMode && _verboseAttendanceLogs) {
           debugPrint('Subject not found: $subjectCode');
         }
+        print('ATTENDANCE QUERY DEBUG: Subject not found: $subjectCode');
         return [];
       }
 
@@ -1359,10 +1489,18 @@ class AttendanceService {
           .eq('subject_id', subjectId!)
           .eq('period_number', periodNumber);
 
+      print(
+        'ATTENDANCE QUERY DEBUG: Attendance query for subject_id: $subjectId, period: $periodNumber, date: $dateStr',
+      );
+      print(
+        'ATTENDANCE QUERY DEBUG: Found ${attendanceResponse.length} attendance records',
+      );
+
       if (attendanceResponse.isEmpty) {
         if (kDebugMode && _verboseAttendanceLogs) {
           debugPrint('No period attendance records found for $dateStr');
         }
+        print('ATTENDANCE QUERY DEBUG: No attendance records found');
         return [];
       }
 
@@ -1488,28 +1626,55 @@ class AttendanceService {
         }
 
         return attendanceMap;
-      } else if (mode == 'period' &&
-          subjectCode != null &&
-          periodNumber != null) {
-        // Get period attendance for the specified subject and period
-        final attendanceData = await getPeriodAttendanceForDate(
-          subjectCode: subjectCode,
-          periodNumber: periodNumber,
-          date: date,
-          department: department,
-          semester: semester,
-          section: section,
+      } else if (mode == 'period' && periodNumber != null) {
+        // First, check the period lock table to get the actual subject used
+        final dateStr = date.toIso8601String().split('T')[0];
+        print(
+          'PERIOD LOCK CHECK: Looking for period lock - date: $dateStr, period: $periodNumber, section: $section',
         );
 
-        // Convert to map format
-        final Map<String, bool> attendanceMap = {};
-        for (final record in attendanceData) {
-          final regNo = record['registration_no'] as String;
-          final isPresent = record['is_present'] as bool? ?? false;
-          attendanceMap[regNo] = isPresent;
+        final periodLockData = await _supabase
+            .from('attendance_period_lock')
+            .select('subject_code, period, date_taken, section')
+            .eq('date_taken', dateStr)
+            .eq('period', periodNumber)
+            .eq('section', section ?? '')
+            .limit(1);
+
+        String? actualSubjectCode = subjectCode;
+
+        if (periodLockData.isNotEmpty) {
+          actualSubjectCode = periodLockData.first['subject_code'];
+          print(
+            'PERIOD LOCK CHECK: Found period lock with subject: $actualSubjectCode',
+          );
+        } else {
+          print(
+            'PERIOD LOCK CHECK: No period lock found, using auto-resolved subject: $subjectCode',
+          );
         }
 
-        return attendanceMap;
+        if (actualSubjectCode != null) {
+          // Get period attendance for the actual subject used
+          final attendanceData = await getPeriodAttendanceForDate(
+            subjectCode: actualSubjectCode,
+            periodNumber: periodNumber,
+            date: date,
+            department: department,
+            semester: semester,
+            section: section,
+          );
+
+          // Convert to map format
+          final Map<String, bool> attendanceMap = {};
+          for (final record in attendanceData) {
+            final regNo = record['registration_no'] as String;
+            final isPresent = record['is_present'] as bool? ?? false;
+            attendanceMap[regNo] = isPresent;
+          }
+
+          return attendanceMap;
+        }
       }
 
       return {};

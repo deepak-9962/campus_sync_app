@@ -10,6 +10,7 @@ import '../screens/timetable_editor_screen.dart';
 import '../screens/staff_attendance_screen.dart';
 import '../screens/hod_dashboard_screen.dart';
 import '../screens/admin_dashboard_screen.dart';
+import '../screens/all_students_attendance_screen.dart';
 
 /// Feature configuration helper that provides role-based dashboard features
 class DashboardFeatureHelper {
@@ -22,39 +23,79 @@ class DashboardFeatureHelper {
     int? semester, // Made optional since admin doesn't need it
     String? assignedDepartment,
   }) {
-    switch (role.toLowerCase()) {
+    print('DEBUG_HELPER: getDashboardFeatures called with role: $role');
+    print('DEBUG_HELPER: department: $department');
+    print('DEBUG_HELPER: assignedDepartment: $assignedDepartment');
+
+    List<DashboardFeature> features;
+
+    final roleLower = role.toLowerCase();
+    switch (roleLower) {
       case 'student':
-        return _getStudentFeatures(
+        print('DEBUG_HELPER: Matched role: student');
+        features = _getStudentFeatures(
           context,
           userName,
           department ?? '',
           semester ?? 1,
         );
+        break;
       case 'faculty':
       case 'staff':
       case 'teacher':
-        return _getFacultyFeatures(
+        print('DEBUG_HELPER: Matched role: faculty/staff/teacher');
+        features = _getFacultyFeatures(
           context,
           userName,
           department ?? '',
           semester ?? 1,
         );
+        break;
       case 'hod':
-        return _getHODFeatures(
+        print('DEBUG_HELPER: Matched role: hod');
+        features = _getHODFeatures(
           context,
           userName,
           assignedDepartment ?? department ?? '',
         );
+        break;
       case 'admin':
-        return _getAdminFeatures(context, userName);
+        print('DEBUG_HELPER: Matched role: admin');
+        // If admin has an assigned department, surface HOD tiles too
+        final hasAssignedDept =
+            (assignedDepartment != null && assignedDepartment.isNotEmpty);
+        final adminBase = _getAdminFeatures(context, userName);
+        if (hasAssignedDept) {
+          final hodTiles = _getHODFeatures(
+            context,
+            userName,
+            assignedDepartment,
+          );
+          // Merge and deduplicate by title
+          final titles = <String>{};
+          features = [
+            ...adminBase.where((f) => titles.add(f.title)),
+            ...hodTiles.where((f) => titles.add(f.title)),
+          ];
+        } else {
+          features = adminBase;
+        }
+        break;
       default:
-        return _getStudentFeatures(
+        print('DEBUG_HELPER: Matched role: default (student)');
+        features = _getStudentFeatures(
           context,
           userName,
           department ?? '',
           semester ?? 1,
         );
+        break;
     }
+    print('DEBUG_HELPER: Returning ${features.length} features.');
+    for (var feature in features) {
+      print('DEBUG_HELPER: - ${feature.title}');
+    }
+    return features;
   }
 
   /// Student dashboard features
@@ -283,6 +324,37 @@ class DashboardFeatureHelper {
                     ),
               ),
             ),
+      ),
+      DashboardFeature(
+        title: 'All Students Attendance',
+        icon: Icons.people_alt,
+        color: Colors.green,
+        subtitle: 'View attendance for all students',
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => AllStudentsAttendanceScreen(
+                      department: department,
+                      semester: 1, // Assuming a default semester for now
+                    ),
+              ),
+            ),
+      ),
+      DashboardFeature(
+        title: 'Manage Faculty/Staff',
+        icon: Icons.group,
+        color: Colors.blueGrey,
+        subtitle: 'Manage departmental staff',
+        onTap: () => _showComingSoonDialog(context, 'Manage Faculty/Staff'),
+      ),
+      DashboardFeature(
+        title: 'Department Announcements',
+        icon: Icons.campaign,
+        color: Colors.orange,
+        subtitle: 'Create and manage announcements',
+        onTap: () => _showComingSoonDialog(context, 'Department Announcements'),
       ),
     ];
   }

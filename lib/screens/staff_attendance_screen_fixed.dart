@@ -864,7 +864,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                 },
                                 leading: CircleAvatar(
                                   backgroundColor:
-                                      present ? Colors.green[100] : Colors.red[100],
+                                      present
+                                          ? Colors.green[100]
+                                          : Colors.red[100],
                                   child: Icon(
                                     present ? Icons.check : Icons.close,
                                     color: present ? Colors.green : Colors.red,
@@ -872,9 +874,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                 ),
                                 title: Text(
                                   studentName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w500),
                                 ),
                                 subtitle: Text(
                                   'Registration: $reg',

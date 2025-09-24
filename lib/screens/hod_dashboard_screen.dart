@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:csv/csv.dart';
+import 'dart:convert';
+import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:universal_html/html.dart' as html;
 import '../services/hod_service.dart';
 import 'attendance_view_screen.dart';
 
@@ -27,13 +33,16 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   bool isLoading = true;
   String selectedView = 'summary'; // summary, semester-wise, low-attendance
   DateTime currentDate = DateTime.now();
+  bool _isAdmin = false;
+  String? _effectiveDepartment;
+  List<String> _availableDepartments = [];
 
   @override
   void initState() {
     super.initState();
     // Clear any stale data and fetch fresh data
     _clearData();
-    _loadDepartmentData();
+    _initRoleAndDepartment();
   }
 
   void _clearData() {
@@ -53,9 +62,46 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     });
   }
 
+  Future<void> _initRoleAndDepartment() async {
+    try {
+      final role = await _hodService.getUserRoleInfo();
+      final isAdmin = role['isAdmin'] == true;
+      List<String> depts = [];
+      if (isAdmin) {
+        depts = await _hodService.getAvailableDepartments();
+      }
+      String? eff = widget.department;
+      if (isAdmin) {
+        final passed = (eff ?? '').toLowerCase();
+        if (passed.contains('all') || passed.isEmpty) {
+          eff = depts.isNotEmpty ? depts.first : null;
+        } else if (depts.isNotEmpty && !depts.contains(eff)) {
+          eff = depts.first;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _isAdmin = isAdmin;
+        _availableDepartments = depts;
+        _effectiveDepartment = eff ?? widget.department;
+      });
+      await _loadDepartmentData();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isAdmin = false;
+        _availableDepartments = [];
+        _effectiveDepartment = widget.department;
+      });
+      await _loadDepartmentData();
+    }
+  }
+
   Future<void> _loadDepartmentData() async {
+    final dept = _effectiveDepartment ?? widget.department;
     print(
-      'HOD Dashboard: Loading fresh data for ${currentDate.toIso8601String().split('T')[0]}',
+      'HOD Dashboard: Loading fresh data for '
+      '${currentDate.toIso8601String().split('T')[0]} dept: $dept',
     );
 
     setState(() {
@@ -69,7 +115,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       );
 
       final summary = await _hodService.getDepartmentAttendanceSummary(
-        widget.department,
+        dept,
         date: currentDate,
       );
 
@@ -105,14 +151,14 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
 
       // Load TODAY'S semester-wise data using HOD service
       final semesterData = await _hodService.getTodaySemesterWiseData(
-        widget.department,
+        dept,
         selectedSemester: widget.selectedSemester,
         date: currentDate,
       );
 
       // Load students with low attendance TODAY using HOD service
       final lowAttendance = await _hodService.getTodayLowAttendanceStudents(
-        widget.department,
+        dept,
         selectedSemester: widget.selectedSemester,
         date: currentDate,
       );
@@ -167,8 +213,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           children: [
             Text(
               widget.selectedSemester != null
-                  ? 'HOD Dashboard - ${widget.department} - Semester ${widget.selectedSemester}'
-                  : 'HOD Dashboard - ${widget.department}',
+                  ? 'HOD Dashboard - ${_effectiveDepartment ?? widget.department} - Semester ${widget.selectedSemester}'
+                  : 'HOD Dashboard - ${_effectiveDepartment ?? widget.department}',
               style: const TextStyle(fontSize: 18),
             ),
             Text(
@@ -183,6 +229,33 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         backgroundColor: Colors.indigo[700],
         foregroundColor: Colors.white,
         actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Export/Share',
+            onSelected: (value) async {
+              if (value == 'csv') {
+                await _exportCurrentViewCSV();
+              } else if (value == 'pdf') {
+                await _exportCurrentViewPDF();
+              }
+            },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: 'csv',
+                    child: ListTile(
+                      leading: Icon(Icons.table_chart),
+                      title: Text('Export CSV (current view)'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'pdf',
+                    child: ListTile(
+                      leading: Icon(Icons.picture_as_pdf),
+                      title: Text('Export PDF (current view)'),
+                    ),
+                  ),
+                ],
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
             tooltip: 'Select Date',
@@ -211,63 +284,689 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Column(
-                children: [
-                  // Header with HOD info
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.indigo[700]!, Colors.indigo[500]!],
+              : RefreshIndicator(
+                onRefresh: () async {
+                  await _loadDepartmentData();
+                },
+                child: Column(
+                  children: [
+                    // Header with HOD info
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.indigo[700]!, Colors.indigo[500]!],
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, ${widget.hodName}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Department: ${_effectiveDepartment ?? widget.department}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome, ${widget.hodName}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+
+                    // Admin department selection (only for Admin)
+                    if (_isAdmin)
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.apartment, color: Colors.indigo),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Department:',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _effectiveDepartment,
+                                  isExpanded: true,
+                                  items:
+                                      _availableDepartments
+                                          .map(
+                                            (d) => DropdownMenuItem(
+                                              value: d,
+                                              child: Text(d),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (v) async {
+                                    if (v == null) return;
+                                    setState(() {
+                                      _effectiveDepartment = v;
+                                    });
+                                    await _loadDepartmentData();
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Quick date chips + View selector
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentDate = DateTime.now();
+                                    });
+                                    _loadDepartmentData();
+                                  },
+                                  icon: const Icon(Icons.today),
+                                  label: const Text('Today'),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentDate = DateTime.now().subtract(
+                                        const Duration(days: 1),
+                                      );
+                                    });
+                                    _loadDepartmentData();
+                                  },
+                                  child: const Text('Yesterday'),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  tooltip: 'Pick date',
+                                  icon: const Icon(Icons.calendar_today),
+                                  onPressed: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: currentDate,
+                                      firstDate: DateTime.now().subtract(
+                                        const Duration(days: 30),
+                                      ),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (picked != null &&
+                                        picked != currentDate) {
+                                      setState(() {
+                                        currentDate = picked;
+                                      });
+                                      _loadDepartmentData();
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildViewTab('summary', 'Summary'),
+                              _buildViewTab('semester-wise', 'Semester-wise'),
+                              _buildViewTab('low-attendance', 'Low Attendance'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Highly visible Actions row
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Card(
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isNarrow = constraints.maxWidth < 520;
+                              return Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  SizedBox(
+                                    width: isNarrow ? double.infinity : 180,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _exportCurrentViewCSV,
+                                      icon: const Icon(Icons.table_chart),
+                                      label: const Text('Export CSV'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue[700],
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                          horizontal: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: isNarrow ? double.infinity : 180,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _exportCurrentViewPDF,
+                                      icon: const Icon(Icons.picture_as_pdf),
+                                      label: const Text('Export PDF'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red[700],
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                          horizontal: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: isNarrow ? double.infinity : 180,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _loadDepartmentData,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Refresh Data'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green[700],
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                          horizontal: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Department: ${widget.department}',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
 
-                  // View selector
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        _buildViewTab('summary', 'Summary'),
-                        _buildViewTab('semester-wise', 'Semester-wise'),
-                        _buildViewTab('low-attendance', 'Low Attendance'),
-                      ],
-                    ),
-                  ),
-
-                  // Content based on selected view
-                  Expanded(child: _buildSelectedView()),
-                ],
+                    // Content based on selected view
+                    Expanded(child: _buildSelectedView()),
+                  ],
+                ),
               ),
     );
+  }
+
+  // ======== EXPORT HELPERS ========
+  List<List<dynamic>> _buildCsvRowsForCurrentView() {
+    final dateStr = currentDate.toIso8601String().split('T')[0];
+    final rows = <List<dynamic>>[];
+
+    rows.add(['Campus Sync – HOD Export']);
+    rows.add(['Department', _effectiveDepartment ?? widget.department]);
+    rows.add(['Date', dateStr]);
+    rows.add(['View', selectedView]);
+    rows.add([]);
+
+    if (selectedView == 'summary') {
+      rows.add(['Metric', 'Value']);
+      rows.add(['Total Students', departmentSummary['total_students'] ?? 0]);
+      rows.add(['Today Present', departmentSummary['today_present'] ?? 0]);
+      rows.add(['Today Absent', departmentSummary['today_absent'] ?? 0]);
+      rows.add([
+        'Today %',
+        (departmentSummary['today_percentage'] ?? 0.0).toStringAsFixed(1),
+      ]);
+    } else if (selectedView == 'semester-wise') {
+      rows.add([
+        'Semester',
+        'Total Students',
+        'Today Present',
+        'Today Absent',
+        'Today %',
+      ]);
+      for (final s in semesterWiseData) {
+        rows.add([
+          s['semester'],
+          s['total_students'],
+          s['today_present'] ?? 0,
+          s['today_absent'] ?? 0,
+          (s['today_percentage'] ?? 0.0).toStringAsFixed(1),
+        ]);
+      }
+    } else if (selectedView == 'low-attendance') {
+      rows.add(['Reg No', 'Name', 'Semester', 'Section', 'Percentage']);
+      for (final st in lowAttendanceStudents) {
+        rows.add([
+          st['registration_no'] ?? '',
+          st['student_name'] ?? '',
+          st['semester'] ?? '',
+          st['section'] ?? '',
+          (st['percentage'] ?? 0.0).toStringAsFixed(1),
+        ]);
+      }
+    }
+    return rows;
+  }
+
+  Future<void> _exportCurrentViewCSV() async {
+    try {
+      final rows = _buildCsvRowsForCurrentView();
+      final csv = const ListToCsvConverter().convert(rows);
+      final deptSlug =
+          (_effectiveDepartment ?? widget.department)
+              .replaceAll(' ', '_')
+              .toLowerCase();
+      final filename =
+          'hod_${deptSlug}_${selectedView}_${currentDate.toIso8601String().split('T')[0]}.csv';
+
+      if (kIsWeb) {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes], 'text/csv');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        html.AnchorElement(href: url)
+          ..setAttribute('download', filename)
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        // For non-web, fallback to share dialog via Printing (wrap CSV in a simple PDF)
+        final doc = pw.Document();
+        doc.addPage(
+          pw.Page(
+            build:
+                (ctx) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'HOD Export (CSV contents below)',
+                      style: pw.TextStyle(fontSize: 18),
+                    ),
+                    pw.SizedBox(height: 12),
+                    pw.Text(csv, style: const pw.TextStyle(fontSize: 10)),
+                  ],
+                ),
+          ),
+        );
+        await Printing.sharePdf(
+          bytes: await doc.save(),
+          filename: filename.replaceAll('.csv', '.pdf'),
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Export generated successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      }
+    }
+  }
+
+  Future<void> _exportCurrentViewPDF() async {
+    try {
+      final dateStr = currentDate.toIso8601String().split('T')[0];
+      final doc = pw.Document();
+
+      pw.Widget buildHeader() => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Campus Sync – HOD Report',
+            style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text('Department: ${_effectiveDepartment ?? widget.department}'),
+          pw.Text('Date: $dateStr'),
+          pw.Text('View: $selectedView'),
+          pw.SizedBox(height: 12),
+        ],
+      );
+
+      if (selectedView == 'summary') {
+        doc.addPage(
+          pw.Page(
+            build:
+                (ctx) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    buildHeader(),
+                    pw.Table(
+                      border: pw.TableBorder.all(width: 0.4),
+                      columnWidths: {
+                        0: pw.FlexColumnWidth(2),
+                        1: pw.FlexColumnWidth(1),
+                      },
+                      children: [
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Metric',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Value',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text('Total Students'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '${departmentSummary['total_students'] ?? 0}',
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text('Today Present'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '${departmentSummary['today_present'] ?? 0}',
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text('Today Absent'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '${departmentSummary['today_absent'] ?? 0}',
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text('Today %'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '${(departmentSummary['today_percentage'] ?? 0.0).toStringAsFixed(1)}',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+          ),
+        );
+      } else if (selectedView == 'semester-wise') {
+        doc.addPage(
+          pw.Page(
+            build:
+                (ctx) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    buildHeader(),
+                    pw.Table(
+                      border: pw.TableBorder.all(width: 0.4),
+                      columnWidths: {
+                        0: pw.FlexColumnWidth(1),
+                        1: pw.FlexColumnWidth(2),
+                        2: pw.FlexColumnWidth(2),
+                        3: pw.FlexColumnWidth(1),
+                      },
+                      children: [
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Sem',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Total Students',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Today P/A',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Today %',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        ...semesterWiseData.map(
+                          (s) => pw.TableRow(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text('${s['semester']}'),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text('${s['total_students']}'),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  '${s['today_present'] ?? 0} / ${s['today_absent'] ?? 0}',
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  '${(s['today_percentage'] ?? 0.0).toStringAsFixed(1)}',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+          ),
+        );
+      } else if (selectedView == 'low-attendance') {
+        doc.addPage(
+          pw.Page(
+            build:
+                (ctx) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    buildHeader(),
+                    pw.Table(
+                      border: pw.TableBorder.all(width: 0.4),
+                      columnWidths: {
+                        0: pw.FlexColumnWidth(2),
+                        1: pw.FlexColumnWidth(3),
+                        2: pw.FlexColumnWidth(1),
+                        3: pw.FlexColumnWidth(1),
+                        4: pw.FlexColumnWidth(1),
+                      },
+                      children: [
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Reg No',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Name',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Sem',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Sec',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '%',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        ...lowAttendanceStudents.map(
+                          (st) => pw.TableRow(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  '${st['registration_no'] ?? ''}',
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text('${st['student_name'] ?? ''}'),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text('${st['semester'] ?? ''}'),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text('${st['section'] ?? ''}'),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  '${(st['percentage'] ?? 0.0).toStringAsFixed(1)}',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+          ),
+        );
+      }
+
+      final bytes = await doc.save();
+      final deptSlug =
+          (_effectiveDepartment ?? widget.department)
+              .replaceAll(' ', '_')
+              .toLowerCase();
+      final filename = 'hod_${deptSlug}_${selectedView}_${dateStr}.pdf';
+      await Printing.sharePdf(bytes: bytes, filename: filename);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF generated successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('PDF export failed: $e')));
+      }
+    }
   }
 
   Widget _buildViewTab(String value, String label) {
@@ -508,7 +1207,19 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                 ),
               ),
             ),
-            title: Text('Semester ${semester['semester']}'),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Semester ${semester['semester']}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                _buildAttendanceTakenBadge(
+                  (semester['attendance_taken'] ?? false) == true,
+                ),
+              ],
+            ),
             subtitle: Text(
               'Students: ${semester['total_students']} | Today: ${semester['today_present'] ?? 0}P/${semester['today_absent'] ?? 0}A | Today\'s Avg: ${(semester['today_percentage'] ?? 0.0).toStringAsFixed(1)}%',
             ),
@@ -615,6 +1326,37 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAttendanceTakenBadge(bool taken) {
+    final Color bg = taken ? Colors.green[50]! : Colors.grey[200]!;
+    final Color fg = taken ? Colors.green[700]! : Colors.grey[700]!;
+    final IconData icon = taken ? Icons.check_circle : Icons.schedule;
+    final String label = taken ? 'Taken' : 'Not Taken';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: fg.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: fg,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
