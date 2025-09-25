@@ -65,16 +65,7 @@ class _AuthScreenState extends State<AuthScreen>
     if (session != null && mounted) {
       Future.microtask(() {
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) => HomeScreen(
-                    userName: session.user?.email ?? '',
-                    department: 'Computer Science and Engineering', // Default
-                    semester: 5, // Default
-                  ),
-            ),
-          );
+          Navigator.pushReplacementNamed(context, '/selection');
         }
       });
     }
@@ -114,37 +105,7 @@ class _AuthScreenState extends State<AuthScreen>
         if (response.session != null && mounted) {
           await Future.microtask(() {
             if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                PageRouteBuilder(
-                  pageBuilder:
-                      (context, animation, secondaryAnimation) => HomeScreen(
-                        userName: _emailController.text.trim(),
-                        department:
-                            'Computer Science and Engineering', // Default
-                        semester: 5, // Default
-                      ),
-                  transitionsBuilder: (
-                    context,
-                    animation,
-                    secondaryAnimation,
-                    child,
-                  ) {
-                    var begin = const Offset(1.0, 0.0);
-                    var end = Offset.zero;
-                    var curve = Curves.easeOutQuint;
-                    var tween = Tween(
-                      begin: begin,
-                      end: end,
-                    ).chain(CurveTween(curve: curve));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 400),
-                ),
-              );
+              Navigator.pushReplacementNamed(context, '/selection');
             }
           });
         } else if (mounted) {

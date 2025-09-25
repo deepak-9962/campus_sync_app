@@ -678,10 +678,11 @@ class HODService {
               );
 
           print(
-            'HOD Service: Semester $semester TODAY - ${semesterTodayData['total_students']} total students, ${semesterTodayData['today_present']} present, ${semesterTodayData['today_absent']} absent',
+            'HOD Service: Semester $semester TODAY - ${semesterTodayData['total_students']} total students, ${semesterTodayData['today_present']} present, ${semesterTodayData['today_absent']} absent, attendance_taken: ${semesterTodayData['attendance_taken']}',
           );
 
-          if (semesterTodayData['total_students'] > 0) {
+          if (semesterTodayData['total_students'] > 0 ||
+              (semesterTodayData['attendance_taken'] ?? false)) {
             data.add({
               'semester': semester,
               'total_students': semesterTodayData['total_students'],
@@ -689,10 +690,17 @@ class HODService {
               'today_absent': semesterTodayData['today_absent'],
               'today_percentage': semesterTodayData['today_percentage'],
               'students': semesterTodayData['students'],
+              'attendance_taken':
+                  semesterTodayData['attendance_taken'] ?? false,
               'date': targetDate.toIso8601String().split('T')[0],
             });
+            print(
+              'HOD Service: Added semester $semester data with attendance_taken: ${semesterTodayData['attendance_taken']}',
+            );
           } else {
-            print('HOD Service: No students found for semester $semester');
+            print(
+              'HOD Service: No students found for semester $semester and no attendance taken',
+            );
           }
         } catch (e) {
           print('HOD Service: Error loading semester $semester: $e');

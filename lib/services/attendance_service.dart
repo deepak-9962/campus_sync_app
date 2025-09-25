@@ -852,6 +852,132 @@ class AttendanceService {
     }
   }
 
+  // OPTIMIZED: Bulk mark period attendance for multiple students
+  Future<bool> markBulkPeriodAttendance({
+    required List<Map<String, dynamic>> studentAttendanceList,
+    required String subjectCode,
+    required int periodNumber,
+    DateTime? date,
+    String? department,
+    int? semester,
+    String? section,
+  }) async {
+    try {
+      final today = date ?? DateTime.now();
+      final dateStr = today.toIso8601String().split('T')[0];
+      final currentUserId = _supabase.auth.currentUser?.id;
+
+      print('Bulk marking period attendance for ${studentAttendanceList.length} students - Subject: $subjectCode, Period: $periodNumber');
+
+      // Step 1: Get subject ID once (not for each student!)
+      String? subjectId;
+      final subjectResponse = await _supabase
+          .from('subjects')
+          .select('id')
+          .eq('subject_code', subjectCode)
+          .eq('department', department!)
+          .eq('semester', semester!);
+
+      if (subjectResponse.isNotEmpty) {
+        subjectId = subjectResponse.first['id'];
+      } else {
+        // Create subject if it doesn't exist
+        final newSubject = await _supabase
+            .from('subjects')
+            .insert({
+              'subject_code': subjectCode,
+              'subject_name': subjectCode,
+              'department': department,
+              'semester': semester,
+              'credits': 4,
+            })
+            .select('id')
+            .single();
+        subjectId = newSubject['id'];
+      }
+
+      print('Bulk attendance: Using subject_id: $subjectId');
+
+      // Step 2: Check for existing records in bulk
+      final registrationNumbers = studentAttendanceList
+          .map((s) => s['registration_no'] as String)
+          .toList();
+
+      final existingRecords = await _supabase
+          .from('attendance')
+          .select('registration_no, id')
+          .eq('date', dateStr)
+          .eq('subject_id', subjectId!)
+          .eq('period_number', periodNumber)
+          .inFilter('registration_no', registrationNumbers);
+
+      final existingMap = <String, String>{};
+      for (final record in existingRecords) {
+        existingMap[record['registration_no']] = record['id'];
+      }
+
+      // Step 3: Prepare bulk operations
+      final List<Map<String, dynamic>> insertsData = [];
+      final List<Map<String, dynamic>> updatesData = [];
+
+      for (final studentData in studentAttendanceList) {
+        final regNo = studentData['registration_no'] as String;
+        final isPresent = studentData['is_present'] as bool;
+
+        final attendanceRecord = {
+          'registration_no': regNo,
+          'date': dateStr,
+          'subject_id': subjectId,
+          'period_number': periodNumber,
+          'is_present': isPresent,
+          'marked_at': DateTime.now().toIso8601String(),
+          'marked_by': currentUserId,
+          'department': department,
+          'semester': semester,
+          'section': section ?? '',
+          'subject_code': subjectCode,
+        };
+
+        if (existingMap.containsKey(regNo)) {
+          // Update existing record
+          updatesData.add({
+            'id': existingMap[regNo],
+            ...attendanceRecord,
+          });
+        } else {
+          // Insert new record
+          insertsData.add(attendanceRecord);
+        }
+      }
+
+      // Step 4: Execute bulk operations
+      if (insertsData.isNotEmpty) {
+        print('Bulk inserting ${insertsData.length} new attendance records');
+        await _supabase.from('attendance').insert(insertsData);
+      }
+
+      if (updatesData.isNotEmpty) {
+        print('Bulk updating ${updatesData.length} existing attendance records');
+        // Use upsert instead of individual updates for better performance
+        final upsertData = updatesData.map((data) {
+          data.remove('id'); // Remove ID since we'll use unique constraint for upsert
+          return data;
+        }).toList();
+        
+        await _supabase.from('attendance').upsert(
+          upsertData,
+          onConflict: 'registration_no,date,subject_id,period_number',
+        );
+      }
+
+      print('Bulk period attendance completed successfully');
+      return true;
+    } catch (e) {
+      print('Error in bulk period attendance: $e');
+      return false;
+    }
+  }
+
   // Get today's period attendance for a subject
   Future<List<Map<String, dynamic>>> getTodayPeriodAttendance({
     required String subjectCode,
@@ -1994,6 +2120,7 @@ class AttendanceService {
           'today_absent': 0,
           'today_percentage': 0.0,
           'students': [],
+          'attendance_taken': false,
         };
       }
 
@@ -2001,6 +2128,7 @@ class AttendanceService {
           allStudents.map((s) => s['registration_no'] as String).toList();
 
       // First, check if ANY attendance records exist for this semester on this date
+      // Check the daily_attendance table (where day attendance is stored)
       final attendanceCheckQuery = await _supabase
           .from('daily_attendance')
           .select('registration_no')
@@ -2036,7 +2164,7 @@ class AttendanceService {
         };
       }
 
-      // Get today's attendance from daily_attendance table
+      // Get today's attendance from daily_attendance table  
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')

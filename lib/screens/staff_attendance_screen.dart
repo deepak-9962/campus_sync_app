@@ -358,31 +358,42 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     });
     try {
       bool success = true;
-      for (final student in students) {
-        final reg = student['registration_no'] as String;
-        final present = attendance[reg] ?? true;
-        dynamic result;
-        if (_attendanceMode == 'period') {
-          result = await _attendanceService.markPeriodAttendance(
-            registrationNo: reg,
-            subjectCode: selectedSubject!,
-            periodNumber: selectedPeriod!,
-            isPresent: present,
-            date: selectedDate,
-            department: widget.department,
-            semester: widget.semester,
-            section: selectedSection,
-          );
-        } else {
-          result = await _attendanceService.markDayAttendance(
-            registrationNo: reg,
-            isPresent: present,
-            date: selectedDate,
-          );
+      
+      if (_attendanceMode == 'period') {
+        // OPTIMIZED: Use bulk attendance for period mode
+        final List<Map<String, dynamic>> studentAttendanceList = [];
+        for (final student in students) {
+          final reg = student['registration_no'] as String;
+          final present = attendance[reg] ?? true;
+          studentAttendanceList.add({
+            'registration_no': reg,
+            'is_present': present,
+          });
         }
-        if (!result) {
-          success = false;
-          break;
+        
+        success = await _attendanceService.markBulkPeriodAttendance(
+          studentAttendanceList: studentAttendanceList,
+          subjectCode: selectedSubject!,
+          periodNumber: selectedPeriod!,
+          date: selectedDate,
+          department: widget.department,
+          semester: widget.semester,
+          section: selectedSection,
+        );
+      } else {
+        // Keep individual loop for day mode
+        for (final student in students) {
+          final reg = student['registration_no'] as String;
+          final present = attendance[reg] ?? true;
+          final result = await _attendanceService.markDayAttendance(
+            registrationNo: reg,
+            isPresent: present,
+            date: selectedDate,
+          );
+          if (!result) {
+            success = false;
+            break;
+          }
         }
       }
       if (success) {

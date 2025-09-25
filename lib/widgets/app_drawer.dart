@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
+import '../screens/home_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final AuthService _authService = AuthService();
@@ -140,140 +142,142 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushNamed(context, '/announcements');
             },
           ),
-          // Admin specific options
-          FutureBuilder<bool>(
-            future: _authService.isAdmin(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done ||
-                  !(snapshot.data ?? false)) {
-                return const SizedBox.shrink();
-              }
-              return Column(
-                children: [
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.tune,
-                      color: Colors.indigo,
-                      size: 24,
-                    ),
-                    title: const Text(
-                      'Switch Dept & Semester',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Admin override for attendance and dashboards',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      // Show dialog
-                      final prefs = await SharedPreferences.getInstance();
-                      String selectedDept =
-                          prefs.getString('admin_selected_department') ??
-                          'Computer Science and Engineering';
-                      int selectedSem =
-                          prefs.getInt('admin_selected_semester') ?? 5;
-                      final departments = [
-                        'Computer Science and Engineering',
-                        'Information Technology',
-                        'Electronics and Communication Engineering',
-                        'Artificial Intelligence & Data Science',
-                        'Artificial Intelligence & Machine Learning',
-                        'Biomedical Engineering',
-                        'Robotics and Automation',
-                        'Mechanical Engineering',
-                      ];
-                      await showDialog<void>(
-                        context: context,
-                        builder: (ctx) {
-                          return AlertDialog(
-                            title: const Text(
-                              'Admin: Switch Department & Semester',
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                DropdownButtonFormField<String>(
-                                  value: selectedDept,
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Department',
-                                  ),
-                                  items:
-                                      departments
-                                          .map(
-                                            (d) => DropdownMenuItem(
-                                              value: d,
-                                              child: Text(d),
-                                            ),
-                                          )
-                                          .toList(),
-                                  onChanged: (v) {
-                                    if (v != null) selectedDept = v;
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<int>(
-                                  value: selectedSem,
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Semester',
-                                  ),
-                                  items:
-                                      List.generate(8, (i) => i + 1)
-                                          .map(
-                                            (s) => DropdownMenuItem(
-                                              value: s,
-                                              child: Text('$s'),
-                                            ),
-                                          )
-                                          .toList(),
-                                  onChanged: (v) {
-                                    if (v != null) selectedSem = v;
-                                  },
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await prefs.setString(
-                                    'admin_selected_department',
-                                    selectedDept,
-                                  );
-                                  await prefs.setInt(
-                                    'admin_selected_semester',
-                                    selectedSem,
-                                  );
-                                  Navigator.pop(ctx);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Admin context updated'),
+          // Context switcher for all roles
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.tune, color: Colors.indigo, size: 24),
+            title: const Text(
+              'Switch Dept & Semester',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            subtitle: const Text(
+              'Affects dashboards and attendance',
+              style: TextStyle(fontSize: 12),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              final prefs = await SharedPreferences.getInstance();
+              String selectedDept =
+                  prefs.getString('selected_department') ??
+                  prefs.getString('admin_selected_department') ??
+                  'Computer Science and Engineering';
+              int selectedSem =
+                  prefs.getInt('selected_semester') ??
+                  prefs.getInt('admin_selected_semester') ??
+                  5;
+              const departments = [
+                'Computer Science and Engineering',
+                'Information Technology',
+                'Electronics and Communication Engineering',
+                'Artificial Intelligence & Data Science',
+                'Artificial Intelligence & Machine Learning',
+                'Biomedical Engineering',
+                'Robotics and Automation',
+                'Mechanical Engineering',
+              ];
+              await showDialog<void>(
+                context: context,
+                builder: (ctx) {
+                  return AlertDialog(
+                    title: const Text('Switch Department & Semester'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: selectedDept,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Department',
+                          ),
+                          items:
+                              departments
+                                  .map(
+                                    (d) => DropdownMenuItem(
+                                      value: d,
+                                      child: Text(d),
                                     ),
-                                  );
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    '/home',
-                                    (route) => false,
-                                  );
-                                },
-                                child: const Text('Apply'),
-                              ),
-                            ],
+                                  )
+                                  .toList(),
+                          onChanged: (v) {
+                            if (v != null) selectedDept = v;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<int>(
+                          value: selectedSem,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Semester',
+                          ),
+                          items:
+                              List.generate(8, (i) => i + 1)
+                                  .map(
+                                    (s) => DropdownMenuItem(
+                                      value: s,
+                                      child: Text('$s'),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) {
+                            if (v != null) selectedSem = v;
+                          },
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Persist for all roles
+                          await prefs.setString(
+                            'selected_department',
+                            selectedDept,
+                          );
+                          await prefs.setInt('selected_semester', selectedSem);
+                          // Backward-compat for any admin-specific readers
+                          await prefs.setString(
+                            'admin_selected_department',
+                            selectedDept,
+                          );
+                          await prefs.setInt(
+                            'admin_selected_semester',
+                            selectedSem,
+                          );
+
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Context updated')),
+                          );
+
+                          // Rebuild Home with new context immediately
+                          final email =
+                              Supabase
+                                  .instance
+                                  .client
+                                  .auth
+                                  .currentUser
+                                  ?.email ??
+                              '';
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => HomeScreen(
+                                    userName: email,
+                                    department: selectedDept,
+                                    semester: selectedSem,
+                                  ),
+                            ),
+                            (route) => false,
                           );
                         },
-                      );
-                    },
-                  ),
-                ],
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),

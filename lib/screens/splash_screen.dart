@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'auth_screen.dart';
-import 'home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -66,17 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
         );
       } else {
         // User is already logged in and it's not first time
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => HomeScreen(
-                  userName: session.user.email ?? '',
-                  department: 'Computer Science and Engineering',
-                  semester: 5,
-                ),
-          ),
-        );
+        Navigator.pushReplacementNamed(context, '/selection');
       }
     });
   }

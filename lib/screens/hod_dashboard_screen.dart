@@ -176,6 +176,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       print(
         'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present, attendance_taken: ${summary['attendance_taken']}',
       );
+      
+      // Debug: Print semester-wise data
+      for (final semData in semesterData) {
+        print('HOD Dashboard: Semester ${semData['semester']} - attendance_taken: ${semData['attendance_taken']}, present: ${semData['today_present']}, absent: ${semData['today_absent']}');
+      }
 
       // ENHANCED: Log detailed state for debugging
       print(

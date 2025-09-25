@@ -22,6 +22,7 @@ import 'screens/daily_attendance_screen.dart';
 import 'screens/role_test_screen.dart';
 import 'screens/semester_selection_screen.dart'; // Import new screen
 import 'screens/department_selection_screen.dart'; // Import new screen
+import 'screens/selection_screen.dart'; // Centralized Dept/Sem selection
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -235,6 +236,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/auth': (context) => const AuthScreen(),
         '/sem': (context) => const SemScreen(userName: ''),
+        '/selection': (context) => const SelectionScreen(),
         '/home':
             (context) => const HomeScreen(
               userName: '',

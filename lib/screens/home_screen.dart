@@ -115,6 +115,65 @@ class _HomeScreenState extends State<HomeScreen>
     await _checkUserRole();
   }
 
+  Future<void> _showChangeContextDialog() async {
+    String tempDepartment = selectedDepartment ?? departments.first;
+    String tempSemester = selectedSemester ?? semesters.first;
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Change Department & Semester'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: tempDepartment,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Department'),
+                items:
+                    departments
+                        .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                        .toList(),
+                onChanged: (v) {
+                  if (v != null) tempDepartment = v;
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: tempSemester,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Semester'),
+                items:
+                    semesters
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
+                onChanged: (v) {
+                  if (v != null) tempSemester = v;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  selectedDepartment = tempDepartment;
+                  selectedSemester = tempSemester;
+                });
+                Navigator.pop(ctx);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -147,6 +206,13 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Change Department & Semester',
+            onPressed: _showChangeContextDialog,
+          ),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -962,6 +1028,14 @@ class _HomeScreenState extends State<HomeScreen>
                 context,
                 MaterialPageRoute(builder: (context) => RoleTestScreen()),
               );
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.swap_horiz,
+            title: 'Switch Dept & Semester',
+            onTap: () {
+              Navigator.pop(context);
+              _showChangeContextDialog();
             },
           ),
           if (_isAdmin) ...[
