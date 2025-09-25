@@ -36,12 +36,15 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   bool _isAdmin = false;
   String? _effectiveDepartment;
   List<String> _availableDepartments = [];
+  int? _selectedSemester; // Admin-selected semester filter (nullable = All)
 
   @override
   void initState() {
     super.initState();
     // Clear any stale data and fetch fresh data
     _clearData();
+    // Initialize semester filter from widget if provided
+    _selectedSemester = widget.selectedSemester;
     _initRoleAndDepartment();
   }
 
@@ -70,11 +73,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       if (isAdmin) {
         depts = await _hodService.getAvailableDepartments();
       }
-      String? eff = widget.department;
+      String eff = widget.department;
       if (isAdmin) {
-        final passed = (eff ?? '').toLowerCase();
+        final passed = eff.toLowerCase();
         if (passed.contains('all') || passed.isEmpty) {
-          eff = depts.isNotEmpty ? depts.first : null;
+          eff = depts.isNotEmpty ? depts.first : eff;
         } else if (depts.isNotEmpty && !depts.contains(eff)) {
           eff = depts.first;
         }
@@ -83,7 +86,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       setState(() {
         _isAdmin = isAdmin;
         _availableDepartments = depts;
-        _effectiveDepartment = eff ?? widget.department;
+        _effectiveDepartment = eff;
       });
       await _loadDepartmentData();
     } catch (_) {
@@ -152,14 +155,14 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       // Load TODAY'S semester-wise data using HOD service
       final semesterData = await _hodService.getTodaySemesterWiseData(
         dept,
-        selectedSemester: widget.selectedSemester,
+        selectedSemester: _selectedSemester ?? widget.selectedSemester,
         date: currentDate,
       );
 
       // Load students with low attendance TODAY using HOD service
       final lowAttendance = await _hodService.getTodayLowAttendanceStudents(
         dept,
-        selectedSemester: widget.selectedSemester,
+        selectedSemester: _selectedSemester ?? widget.selectedSemester,
         date: currentDate,
       );
 
@@ -212,8 +215,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.selectedSemester != null
-                  ? 'HOD Dashboard - ${_effectiveDepartment ?? widget.department} - Semester ${widget.selectedSemester}'
+              (_selectedSemester ?? widget.selectedSemester) != null
+                  ? 'HOD Dashboard - ${_effectiveDepartment ?? widget.department} - Semester ${_selectedSemester ?? widget.selectedSemester}'
                   : 'HOD Dashboard - ${_effectiveDepartment ?? widget.department}',
               style: const TextStyle(fontSize: 18),
             ),
@@ -334,38 +337,86 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey[300]!),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.apartment, color: Colors.indigo),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Department:',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _effectiveDepartment,
-                                  isExpanded: true,
-                                  items:
-                                      _availableDepartments
-                                          .map(
-                                            (d) => DropdownMenuItem(
-                                              value: d,
-                                              child: Text(d),
-                                            ),
-                                          )
-                                          .toList(),
-                                  onChanged: (v) async {
-                                    if (v == null) return;
-                                    setState(() {
-                                      _effectiveDepartment = v;
-                                    });
-                                    await _loadDepartmentData();
-                                  },
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.apartment,
+                                  color: Colors.indigo,
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Department:',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _effectiveDepartment,
+                                      isExpanded: true,
+                                      items:
+                                          _availableDepartments
+                                              .map(
+                                                (d) => DropdownMenuItem(
+                                                  value: d,
+                                                  child: Text(d),
+                                                ),
+                                              )
+                                              .toList(),
+                                      onChanged: (v) async {
+                                        if (v == null) return;
+                                        setState(() {
+                                          _effectiveDepartment = v;
+                                        });
+                                        await _loadDepartmentData();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const Icon(Icons.school, color: Colors.indigo),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Semester:',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<int?>(
+                                      value: _selectedSemester,
+                                      isExpanded: true,
+                                      items: <DropdownMenuItem<int?>>[
+                                        DropdownMenuItem<int?>(
+                                          value: null,
+                                          child: Text('All'),
+                                        ),
+                                        ...List.generate(8, (i) => i + 1)
+                                            .map(
+                                              (s) => DropdownMenuItem<int?>(
+                                                value: s,
+                                                child: Text('Semester $s'),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ],
+                                      onChanged: (v) async {
+                                        setState(() {
+                                          _selectedSemester = v;
+                                        });
+                                        await _loadDepartmentData();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -532,6 +583,12 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     rows.add(['Campus Sync – HOD Export']);
     rows.add(['Department', _effectiveDepartment ?? widget.department]);
     rows.add(['Date', dateStr]);
+    if ((_selectedSemester ?? widget.selectedSemester) != null) {
+      rows.add([
+        'Semester Filter',
+        (_selectedSemester ?? widget.selectedSemester),
+      ]);
+    }
     rows.add(['View', selectedView]);
     rows.add([]);
 
@@ -584,8 +641,12 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           (_effectiveDepartment ?? widget.department)
               .replaceAll(' ', '_')
               .toLowerCase();
+      final semPart =
+          (_selectedSemester ?? widget.selectedSemester) != null
+              ? 'sem${_selectedSemester ?? widget.selectedSemester}_'
+              : '';
       final filename =
-          'hod_${deptSlug}_${selectedView}_${currentDate.toIso8601String().split('T')[0]}.csv';
+          'hod_${deptSlug}_${semPart}${selectedView}_${currentDate.toIso8601String().split('T')[0]}.csv';
 
       if (kIsWeb) {
         final bytes = utf8.encode(csv);
@@ -649,6 +710,10 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           pw.SizedBox(height: 4),
           pw.Text('Department: ${_effectiveDepartment ?? widget.department}'),
           pw.Text('Date: $dateStr'),
+          if ((_selectedSemester ?? widget.selectedSemester) != null)
+            pw.Text(
+              'Semester Filter: ${_selectedSemester ?? widget.selectedSemester}',
+            ),
           pw.Text('View: $selectedView'),
           pw.SizedBox(height: 12),
         ],
@@ -952,7 +1017,12 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           (_effectiveDepartment ?? widget.department)
               .replaceAll(' ', '_')
               .toLowerCase();
-      final filename = 'hod_${deptSlug}_${selectedView}_${dateStr}.pdf';
+      final semPart =
+          (_selectedSemester ?? widget.selectedSemester) != null
+              ? 'sem${_selectedSemester ?? widget.selectedSemester}_'
+              : '';
+      final filename =
+          'hod_${deptSlug}_${semPart}${selectedView}_${dateStr}.pdf';
       await Printing.sharePdf(bytes: bytes, filename: filename);
 
       if (mounted) {
@@ -1446,7 +1516,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       MaterialPageRoute(
         builder:
             (context) => AttendanceViewScreen(
-              department: widget.department,
+              department: _effectiveDepartment ?? widget.department,
               semester: semester['semester'] as int,
             ),
       ),

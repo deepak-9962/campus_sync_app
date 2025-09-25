@@ -20,6 +20,8 @@ import 'screens/exams_screen.dart';
 import 'screens/attendance_screen.dart'; // Add this import for Attendance
 import 'screens/daily_attendance_screen.dart';
 import 'screens/role_test_screen.dart';
+import 'screens/semester_selection_screen.dart'; // Import new screen
+import 'screens/department_selection_screen.dart'; // Import new screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -263,6 +265,10 @@ class MyApp extends StatelessWidget {
               semester: 4,
             ),
         '/role_test': (context) => const RoleTestScreen(),
+        '/semester_selection':
+            (context) => const SemesterSelectionScreen(), // New route
+        '/department_selection':
+            (context) => const DepartmentSelectionScreen(), // New route
         // '/daily_attendance': (context) => const DailyAttendanceScreen(),
       },
     );
