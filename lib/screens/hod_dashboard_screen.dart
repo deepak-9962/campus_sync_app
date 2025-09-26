@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:universal_html/html.dart' as html;
 import '../services/hod_service.dart';
 import 'attendance_view_screen.dart';
+import 'hod/pdf_export_screen.dart';
 
 class HODDashboardScreen extends StatefulWidget {
   final String department;
@@ -126,7 +127,6 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       if (summary.containsKey('error')) {
         print('HOD Dashboard: Service returned error - ${summary['error']}');
         print('HOD Dashboard: Error message - ${summary['error_message']}');
-
         setState(() {
           isLoading = false;
         });
@@ -176,10 +176,12 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       print(
         'HOD Dashboard: Data loaded successfully - ${summary['total_students']} students, ${summary['today_present']} present, attendance_taken: ${summary['attendance_taken']}',
       );
-      
+
       // Debug: Print semester-wise data
       for (final semData in semesterData) {
-        print('HOD Dashboard: Semester ${semData['semester']} - attendance_taken: ${semData['attendance_taken']}, present: ${semData['today_present']}, absent: ${semData['today_absent']}');
+        print(
+          'HOD Dashboard: Semester ${semData['semester']} - attendance_taken: ${semData['attendance_taken']}, present: ${semData['today_present']}, absent: ${semData['today_absent']}',
+        );
       }
 
       // ENHANCED: Log detailed state for debugging
@@ -263,6 +265,21 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                     ),
                   ),
                 ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Export Student Data to PDF',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder:
+                      (context) => PDFExportScreen(
+                        department: _effectiveDepartment ?? widget.department,
+                        semester: _selectedSemester ?? widget.selectedSemester,
+                      ),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.calendar_today),

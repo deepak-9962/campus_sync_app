@@ -746,4 +746,183 @@ class HODService {
       return [];
     }
   }
+
+  /// Fetch all available columns from the students table (for dynamic PDF export)
+  Future<List<String>> fetchStudentTableColumns() async {
+    try {
+      // Fetch a single row to get all keys (columns)
+      final resp = await _supabase.from('students').select().limit(1);
+      if (resp.isEmpty) {
+        // Fallback to a default set if table is empty
+        return [
+          'registration_no',
+          'student_name',
+          'department',
+          'semester',
+          'current_semester',
+          'section',
+          'batch',
+          'user_id',
+          'created_at',
+          'updated_at',
+        ];
+      }
+      return resp.first.keys.toList();
+    } catch (e) {
+      // Return fallback columns if there's an error
+      return [
+        'registration_no',
+        'student_name',
+        'department',
+        'semester',
+        'current_semester',
+        'section',
+        'batch',
+        'user_id',
+        'created_at',
+        'updated_at',
+      ];
+    }
+  }
+
+  /// Fetch student data for only the selected columns, with optional filters
+  Future<List<Map<String, dynamic>>> fetchCustomStudentData(
+    List<String> selectedColumns, {
+    String? department,
+    int? semester,
+    String? section,
+  }) async {
+    var query = _supabase.from('students').select(selectedColumns.join(','));
+    if (department != null) {
+      query = query.eq('department', department);
+    }
+    if (semester != null) {
+      // Try both semester and current_semester for compatibility
+      query = query.or('semester.eq.$semester,current_semester.eq.$semester');
+    }
+    if (section != null) {
+      query = query.eq('section', section);
+    }
+    final resp = await query.order('registration_no');
+    return List<Map<String, dynamic>>.from(resp);
+  }
+
+  /// Fetch attendance report data for students with daily attendance
+  Future<Map<String, dynamic>> fetchAttendanceReportData({
+    String? department,
+    int? semester,
+    String? section,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      // Set default date range if not provided (current week)
+      final now = DateTime.now();
+      final weekStart =
+          startDate ?? now.subtract(Duration(days: now.weekday - 1));
+      final weekEnd = endDate ?? weekStart.add(const Duration(days: 6));
+
+      // Get students
+      var studentsQuery = _supabase
+          .from('students')
+          .select(
+            'registration_no, student_name, department, semester, current_semester, section',
+          );
+
+      if (department != null) {
+        studentsQuery = studentsQuery.eq('department', department);
+      }
+      if (semester != null) {
+        studentsQuery = studentsQuery.or(
+          'semester.eq.$semester,current_semester.eq.$semester',
+        );
+      }
+      if (section != null) {
+        studentsQuery = studentsQuery.eq('section', section);
+      }
+
+      final students = await studentsQuery.order('registration_no');
+
+      // Generate date range for the week
+      List<DateTime> dateRange = [];
+      for (int i = 0; i <= weekEnd.difference(weekStart).inDays; i++) {
+        dateRange.add(weekStart.add(Duration(days: i)));
+      }
+
+      // Get attendance data for the date range
+      final attendanceData = await _supabase
+          .from('daily_attendance')
+          .select('registration_no, date, is_present')
+          .gte('date', weekStart.toIso8601String().split('T')[0])
+          .lte('date', weekEnd.toIso8601String().split('T')[0]);
+
+      // Also get period-based attendance as fallback
+      final periodAttendanceData = await _supabase
+          .from('attendance')
+          .select('registration_no, date, is_present')
+          .gte('date', weekStart.toIso8601String().split('T')[0])
+          .lte('date', weekEnd.toIso8601String().split('T')[0]);
+
+      // Create attendance map
+      Map<String, Map<String, bool>> attendanceMap = {};
+
+      // Process daily attendance first
+      for (var record in attendanceData) {
+        final regNo = record['registration_no'] as String;
+        final date = record['date'] as String;
+        final isPresent = record['is_present'] as bool;
+
+        if (!attendanceMap.containsKey(regNo)) {
+          attendanceMap[regNo] = {};
+        }
+        attendanceMap[regNo]![date] = isPresent;
+      }
+
+      // Process period attendance (aggregate by date)
+      Map<String, Map<String, List<bool>>> periodMap = {};
+      for (var record in periodAttendanceData) {
+        final regNo = record['registration_no'] as String;
+        final date = record['date'] as String;
+        final isPresent = record['is_present'] as bool;
+
+        if (!periodMap.containsKey(regNo)) {
+          periodMap[regNo] = {};
+        }
+        if (!periodMap[regNo]!.containsKey(date)) {
+          periodMap[regNo]![date] = [];
+        }
+        periodMap[regNo]![date]!.add(isPresent);
+      }
+
+      // Convert period attendance to daily (present if attended any period)
+      for (var regNo in periodMap.keys) {
+        if (!attendanceMap.containsKey(regNo)) {
+          attendanceMap[regNo] = {};
+        }
+        for (var date in periodMap[regNo]!.keys) {
+          if (!attendanceMap[regNo]!.containsKey(date)) {
+            final periodsList = periodMap[regNo]![date]!;
+            attendanceMap[regNo]![date] = periodsList.any((p) => p);
+          }
+        }
+      }
+
+      return {
+        'students': students,
+        'dateRange': dateRange,
+        'attendanceMap': attendanceMap,
+        'startDate': weekStart,
+        'endDate': weekEnd,
+      };
+    } catch (e) {
+      print('Error fetching attendance report data: $e');
+      return {
+        'students': <Map<String, dynamic>>[],
+        'dateRange': <DateTime>[],
+        'attendanceMap': <String, Map<String, bool>>{},
+        'startDate': DateTime.now(),
+        'endDate': DateTime.now(),
+      };
+    }
+  }
 }
