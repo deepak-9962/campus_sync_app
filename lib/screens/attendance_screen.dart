@@ -3,6 +3,7 @@ import 'database_setup_screen.dart';
 import 'staff_attendance_screen.dart';
 import 'student_attendance_screen.dart';
 import 'all_students_attendance_screen.dart';
+import 'weekly_attendance_screen.dart';
 import '../services/auth_service.dart';
 import 'role_test_screen.dart';
 
@@ -335,6 +336,35 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 department: widget.department,
                                 semester: widget.semester,
                               ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.calendar_today, color: Colors.white),
+                    label: const Text(
+                      'Weekly Period Report',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[600],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WeeklyAttendanceScreen(),
                         ),
                       );
                     },
