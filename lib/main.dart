@@ -24,7 +24,9 @@ import 'screens/semester_selection_screen.dart'; // Import new screen
 import 'screens/department_selection_screen.dart'; // Import new screen
 import 'screens/selection_screen.dart'; // Centralized Dept/Sem selection
 
-void main() async {
+const String kBuildVersion = '1.0.0'; // bump when deploying new web build
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase only for mobile platforms
@@ -51,13 +53,18 @@ void main() async {
   //   debugPrint('Firebase initialization error: $e');
   // }
 
-  // Initialize Supabase
+  // Supabase config via --dart-define for web builds, fallback to hardcoded (avoid committing secrets)
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://hgzhfqvjsyszwtdeaifx.supabase.co',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnemhmcXZqc3lzend0ZGVhaWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzYyMzcsImV4cCI6MjA1NzIxMjIzN30.wdt6RGZFO4uz5P39UEHmfQtOW1OR7q4utyUGJ8qvxhk',
+  );
   try {
-    await Supabase.initialize(
-      url: 'https://hgzhfqvjsyszwtdeaifx.supabase.co',
-      anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnemhmcXZqc3lzend0ZGVhaWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzYyMzcsImV4cCI6MjA1NzIxMjIzN30.wdt6RGZFO4uz5P39UEHmfQtOW1OR7q4utyUGJ8qvxhk',
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   } catch (e) {
     debugPrint('Supabase initialization error: $e');
   }

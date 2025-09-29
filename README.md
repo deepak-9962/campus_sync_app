@@ -138,35 +138,41 @@ Campus Sync is a comprehensive Flutter-based application designed to address cri
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Flutter SDK (3.0 or higher)
-- Dart SDK (3.0 or higher)
-- A Supabase account and project
-- Git for version control
-
-### Installation
-
-1. **Clone the repository**
    ```bash
    git clone https://github.com/deepak-9962/campus_sync_app.git
-   cd campus_sync_app
-   ```
-
-2. **Install dependencies**
    ```bash
    flutter pub get
-   ```
-
-3. **Configure Supabase**
-   - Create a new project at [supabase.com](https://supabase.com)
-   - Copy your project URL and anon key
    - Create a `.env` file in the root directory:
-   ```env
    SUPABASE_URL=your_supabase_url_here
    SUPABASE_ANON_KEY=your_supabase_anon_key_here
    ```
    - **Important**: Never commit the `.env` file to version control
    - The `.env` file is already included in `.gitignore` for security
 
+
+### Web Deployment (Vercel / Netlify)
+
+Prerequisites: `flutter config --enable-web`
+
+Build (with dart-define for Supabase):
+
+```
+flutter build web --release --web-renderer canvaskit \
+  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+```
+
+Vercel quick deploy:
+1. Commit `vercel.json`.
+2. Run build locally, then `vercel deploy build/web` (or set a project build command to run the flutter build in CI).
+
+Netlify quick deploy:
+1. Commit `netlify.toml`.
+2. Connect repo in Netlify, it will run the build command and publish `build/web`.
+
+SPA routing handled by the included config files.
+
+If you update the app frequently, bump `kBuildVersion` in `lib/main.dart` so clients can detect a new cache version (optional banner logic can be added to `web/index.html`).
 4. **Setup Database**
    - Navigate to your Supabase SQL Editor
    - Run the setup scripts in order:
