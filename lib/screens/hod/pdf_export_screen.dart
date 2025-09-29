@@ -394,9 +394,9 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                       ),
                     ),
                     pw.Text(
-                      _selectedSemester != null 
-                        ? 'SEMESTER: $_selectedSemester'
-                        : 'ALL SEMESTERS',
+                      _selectedSemester != null
+                          ? 'SEMESTER: $_selectedSemester'
+                          : 'ALL SEMESTERS',
                       style: pw.TextStyle(
                         fontSize: 14,
                         fontWeight: pw.FontWeight.bold,
@@ -752,10 +752,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                           padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
                           child: Text(
                             'Filter students and attendance by semester. Select "All Semesters" to include all students.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ),
                         Padding(
@@ -764,7 +761,10 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Select Semester',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
                             value: _selectedSemester,
                             hint: const Text('All Semesters'),

@@ -867,7 +867,9 @@ class AttendanceService {
       final dateStr = today.toIso8601String().split('T')[0];
       final currentUserId = _supabase.auth.currentUser?.id;
 
-      print('Bulk marking period attendance for ${studentAttendanceList.length} students - Subject: $subjectCode, Period: $periodNumber');
+      print(
+        'Bulk marking period attendance for ${studentAttendanceList.length} students - Subject: $subjectCode, Period: $periodNumber',
+      );
 
       // Step 1: Get subject ID once (not for each student!)
       String? subjectId;
@@ -882,26 +884,28 @@ class AttendanceService {
         subjectId = subjectResponse.first['id'];
       } else {
         // Create subject if it doesn't exist
-        final newSubject = await _supabase
-            .from('subjects')
-            .insert({
-              'subject_code': subjectCode,
-              'subject_name': subjectCode,
-              'department': department,
-              'semester': semester,
-              'credits': 4,
-            })
-            .select('id')
-            .single();
+        final newSubject =
+            await _supabase
+                .from('subjects')
+                .insert({
+                  'subject_code': subjectCode,
+                  'subject_name': subjectCode,
+                  'department': department,
+                  'semester': semester,
+                  'credits': 4,
+                })
+                .select('id')
+                .single();
         subjectId = newSubject['id'];
       }
 
       print('Bulk attendance: Using subject_id: $subjectId');
 
       // Step 2: Check for existing records in bulk
-      final registrationNumbers = studentAttendanceList
-          .map((s) => s['registration_no'] as String)
-          .toList();
+      final registrationNumbers =
+          studentAttendanceList
+              .map((s) => s['registration_no'] as String)
+              .toList();
 
       final existingRecords = await _supabase
           .from('attendance')
@@ -940,10 +944,7 @@ class AttendanceService {
 
         if (existingMap.containsKey(regNo)) {
           // Update existing record
-          updatesData.add({
-            'id': existingMap[regNo],
-            ...attendanceRecord,
-          });
+          updatesData.add({'id': existingMap[regNo], ...attendanceRecord});
         } else {
           // Insert new record
           insertsData.add(attendanceRecord);
@@ -957,17 +958,24 @@ class AttendanceService {
       }
 
       if (updatesData.isNotEmpty) {
-        print('Bulk updating ${updatesData.length} existing attendance records');
-        // Use upsert instead of individual updates for better performance
-        final upsertData = updatesData.map((data) {
-          data.remove('id'); // Remove ID since we'll use unique constraint for upsert
-          return data;
-        }).toList();
-        
-        await _supabase.from('attendance').upsert(
-          upsertData,
-          onConflict: 'registration_no,date,subject_id,period_number',
+        print(
+          'Bulk updating ${updatesData.length} existing attendance records',
         );
+        // Use upsert instead of individual updates for better performance
+        final upsertData =
+            updatesData.map((data) {
+              data.remove(
+                'id',
+              ); // Remove ID since we'll use unique constraint for upsert
+              return data;
+            }).toList();
+
+        await _supabase
+            .from('attendance')
+            .upsert(
+              upsertData,
+              onConflict: 'registration_no,date,subject_id,period_number',
+            );
       }
 
       print('Bulk period attendance completed successfully');
@@ -2164,7 +2172,7 @@ class AttendanceService {
         };
       }
 
-      // Get today's attendance from daily_attendance table  
+      // Get today's attendance from daily_attendance table
       final todayAttendance = await _supabase
           .from('daily_attendance')
           .select('registration_no, is_present')
@@ -2481,41 +2489,51 @@ class AttendanceService {
 
   /// Get weekly period attendance for a specific student
   /// Returns a Map where keys are day names and values are lists of period attendance data
-  Future<Map<String, List<Map<String, dynamic>>>> getWeeklyPeriodAttendance(String studentId) async {
+  Future<Map<String, List<Map<String, dynamic>>>> getWeeklyPeriodAttendance(
+    String studentId,
+  ) async {
     try {
       print('Fetching weekly period attendance for student: $studentId');
-      
+
       // Get current week's date range (Monday to current day)
       final now = DateTime.now();
       final currentWeekday = now.weekday; // 1 = Monday, 7 = Sunday
-      
+
       // Calculate Monday of current week
       final monday = now.subtract(Duration(days: currentWeekday - 1));
       final startDate = DateTime(monday.year, monday.month, monday.day);
-      
+
       // End date is today or Sunday, whichever is earlier
       final sunday = monday.add(const Duration(days: 6));
       final endDate = now.isBefore(sunday) ? now : sunday;
-      
-      print('Date range: ${startDate.toString().split(' ')[0]} to ${endDate.toString().split(' ')[0]}');
-      
+
+      print(
+        'Date range: ${startDate.toString().split(' ')[0]} to ${endDate.toString().split(' ')[0]}',
+      );
+
       // Get student's department, semester, and section for class schedule lookup
-      final studentData = await _supabase
-          .from('students')
-          .select('department, semester, current_semester, section')
-          .eq('registration_no', studentId)
-          .single();
-      
+      final studentData =
+          await _supabase
+              .from('students')
+              .select('department, semester, current_semester, section')
+              .eq('registration_no', studentId)
+              .single();
+
       if (studentData.isEmpty) {
-        throw Exception('Student not found with registration number: $studentId');
+        throw Exception(
+          'Student not found with registration number: $studentId',
+        );
       }
-      
+
       final department = studentData['department'] as String;
-      final semester = (studentData['current_semester'] ?? studentData['semester']) as int;
+      final semester =
+          (studentData['current_semester'] ?? studentData['semester']) as int;
       final section = studentData['section'] as String;
-      
-      print('Student details - Department: $department, Semester: $semester, Section: $section');
-      
+
+      print(
+        'Student details - Department: $department, Semester: $semester, Section: $section',
+      );
+
       // Fetch class schedule for the student's department/semester/section
       final scheduleResponse = await _supabase
           .from('class_schedule')
@@ -2531,9 +2549,9 @@ class AttendanceService {
           .eq('section', section)
           .order('day_of_week')
           .order('period_number');
-      
+
       print('Found ${scheduleResponse.length} scheduled periods');
-      
+
       // Fetch attendance records for the date range
       final attendanceResponse = await _supabase
           .from('attendance')
@@ -2543,22 +2561,22 @@ class AttendanceService {
           .lte('date', endDate.toIso8601String().split('T')[0])
           .order('date')
           .order('period_number');
-      
+
       print('Found ${attendanceResponse.length} attendance records');
-      
+
       // Create a map for quick attendance lookup
       final Map<String, Map<int, bool>> attendanceMap = {};
       for (final record in attendanceResponse) {
         final date = record['date'] as String;
         final periodNumber = record['period_number'] as int;
         final isPresent = record['is_present'] as bool;
-        
+
         if (!attendanceMap.containsKey(date)) {
           attendanceMap[date] = {};
         }
         attendanceMap[date]![periodNumber] = isPresent;
       }
-      
+
       // Map weekday numbers to day names
       const dayNames = {
         1: 'Monday',
@@ -2569,43 +2587,46 @@ class AttendanceService {
         6: 'Saturday',
         7: 'Sunday',
       };
-      
+
       // Build the weekly attendance data
       final Map<String, List<Map<String, dynamic>>> weeklyData = {};
-      
+
       // Process each day of the current week up to today
       for (int dayNum = 1; dayNum <= currentWeekday; dayNum++) {
         final dayName = dayNames[dayNum]!;
         final currentDate = monday.add(Duration(days: dayNum - 1));
         final dateString = currentDate.toIso8601String().split('T')[0];
-        
+
         // Get scheduled periods for this day
-        final daySchedule = scheduleResponse.where((schedule) => 
-          schedule['day_of_week'] == dayNum
-        ).toList();
-        
+        final daySchedule =
+            scheduleResponse
+                .where((schedule) => schedule['day_of_week'] == dayNum)
+                .toList();
+
         final List<Map<String, dynamic>> dayAttendance = [];
-        
+
         for (final schedule in daySchedule) {
           final periodNumber = schedule['period_number'] as int;
           final subjectCode = schedule['subject_code'] as String?;
           final subjectName = schedule['subjects']?['subject_name'] as String?;
-          
+
           // Check if attendance was marked for this period on this date
           bool? attendanceStatus = attendanceMap[dateString]?[periodNumber];
-          
+
           // If no attendance record found but the class was scheduled and the date has passed
           String status;
           if (attendanceStatus != null) {
             status = attendanceStatus ? 'Present' : 'Absent';
-          } else if (currentDate.isBefore(DateTime.now().subtract(const Duration(days: 0)))) {
+          } else if (currentDate.isBefore(
+            DateTime.now().subtract(const Duration(days: 0)),
+          )) {
             // If the date is in the past and no record exists, mark as absent
             status = 'Absent';
           } else {
             // Future date or today - no attendance marked yet
             status = 'Not Marked';
           }
-          
+
           dayAttendance.add({
             'period_number': periodNumber,
             'subject_code': subjectCode,
@@ -2614,21 +2635,23 @@ class AttendanceService {
             'date': dateString,
           });
         }
-        
+
         // Sort periods by period number
-        dayAttendance.sort((a, b) => 
-          (a['period_number'] as int).compareTo(b['period_number'] as int)
+        dayAttendance.sort(
+          (a, b) =>
+              (a['period_number'] as int).compareTo(b['period_number'] as int),
         );
-        
+
         if (dayAttendance.isNotEmpty) {
           weeklyData[dayName] = dayAttendance;
         }
       }
-      
-      print('Successfully built weekly attendance data for ${weeklyData.keys.length} days');
-      
+
+      print(
+        'Successfully built weekly attendance data for ${weeklyData.keys.length} days',
+      );
+
       return weeklyData;
-      
     } catch (e) {
       print('Error fetching weekly period attendance: $e');
       rethrow;

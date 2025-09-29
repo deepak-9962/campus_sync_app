@@ -24,7 +24,8 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
     _weeklyAttendanceFuture = _fetchWeeklyAttendance();
   }
 
-  Future<Map<String, List<Map<String, dynamic>>>> _fetchWeeklyAttendance() async {
+  Future<Map<String, List<Map<String, dynamic>>>>
+  _fetchWeeklyAttendance() async {
     try {
       // Get current user
       final user = _authService.currentUser;
@@ -39,7 +40,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
       } else {
         throw Exception('Cannot determine student ID from email');
       }
-      
+
       return await _attendanceService.getWeeklyPeriodAttendance(studentId);
     } catch (e) {
       print('Error fetching weekly attendance: $e');
@@ -125,10 +126,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                       Text(
                         snapshot.error.toString(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -147,7 +145,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
             }
 
             final weeklyData = snapshot.data!;
-            
+
             if (weeklyData.isEmpty) {
               return Center(
                 child: Padding(
@@ -173,10 +171,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                       Text(
                         'Your weekly schedule or attendance records are not available yet.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                       ),
                     ],
                   ),
@@ -198,7 +193,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                 itemBuilder: (context, index) {
                   final dayName = weeklyData.keys.elementAt(index);
                   final dayAttendance = weeklyData[dayName]!;
-                  
+
                   return _buildDayCard(dayName, dayAttendance);
                 },
               ),
@@ -209,19 +204,23 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
     );
   }
 
-  Widget _buildDayCard(String dayName, List<Map<String, dynamic>> dayAttendance) {
+  Widget _buildDayCard(
+    String dayName,
+    List<Map<String, dynamic>> dayAttendance,
+  ) {
     // Calculate attendance stats for the day
     int presentCount = 0;
     int totalPeriods = dayAttendance.length;
-    
+
     for (var period in dayAttendance) {
       if (period['status'] == 'Present') {
         presentCount++;
       }
     }
-    
-    double attendancePercentage = totalPeriods > 0 ? (presentCount / totalPeriods) * 100 : 0;
-    
+
+    double attendancePercentage =
+        totalPeriods > 0 ? (presentCount / totalPeriods) * 100 : 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
       elevation: 4,
@@ -232,10 +231,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.grey[50]!,
-            ],
+            colors: [Colors.white, Colors.grey[50]!],
           ),
         ),
         child: Column(
@@ -268,7 +264,10 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -284,7 +283,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                 ],
               ),
             ),
-            
+
             // Periods list
             if (dayAttendance.isEmpty)
               const Padding(
@@ -302,7 +301,10 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
               )
             else
               Column(
-                children: dayAttendance.map((period) => _buildPeriodTile(period)).toList(),
+                children:
+                    dayAttendance
+                        .map((period) => _buildPeriodTile(period))
+                        .toList(),
               ),
           ],
         ),
@@ -314,15 +316,12 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
     final bool isPresent = period['status'] == 'Present';
     final Color statusColor = isPresent ? Colors.green : Colors.red;
     final IconData statusIcon = isPresent ? Icons.check_circle : Icons.cancel;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: statusColor.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.3), width: 1),
         color: statusColor.withOpacity(0.05),
       ),
       child: ListTile(
@@ -343,20 +342,15 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
         ),
         title: Text(
           period['subject_name'] ?? 'Subject not found',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
-        subtitle: period['subject_code'] != null
-            ? Text(
-                'Code: ${period['subject_code']}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              )
-            : null,
+        subtitle:
+            period['subject_code'] != null
+                ? Text(
+                  'Code: ${period['subject_code']}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                )
+                : null,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -369,11 +363,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              statusIcon,
-              color: statusColor,
-              size: 20,
-            ),
+            Icon(statusIcon, color: statusColor, size: 20),
           ],
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
