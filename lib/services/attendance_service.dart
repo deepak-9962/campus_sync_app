@@ -1295,6 +1295,41 @@ class AttendanceService {
     }
   }
 
+  // NEW: Explicit daily attendance submission (separate from period/subject logic)
+  // This intentionally ONLY writes to the daily_attendance table so that
+  // submitting a full-day record never creates or mutates period-based rows.
+  Future<bool> submitDailyAttendance({
+    required String registrationNo,
+    required bool isPresent,
+    required DateTime date,
+  }) async {
+    try {
+      final dateStr = date.toIso8601String().split('T')[0];
+      final currentUserId = _supabase.auth.currentUser?.id;
+
+      if (kDebugMode && _verboseAttendanceLogs) {
+        debugPrint(
+          'submitDailyAttendance: reg=$registrationNo date=$dateStr present=$isPresent',
+        );
+      }
+
+      // Upsert ensures idempotent submission if the same day is re-submitted.
+      await _supabase.from('daily_attendance').upsert({
+        'registration_no': registrationNo,
+        'date': dateStr,
+        'is_present': isPresent,
+        'marked_at': DateTime.now().toIso8601String(),
+        'marked_by': currentUserId,
+      }, onConflict: 'registration_no,date');
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('submitDailyAttendance error for $registrationNo: $e');
+      }
+      return false;
+    }
+  }
+
   // Get attendance records for a specific date (period-wise)
   Future<List<Map<String, dynamic>>> getAttendanceForDate(
     String department,
@@ -1772,7 +1807,7 @@ class AttendanceService {
             .select('subject_code, period, date_taken, section')
             .eq('date_taken', dateStr)
             .eq('period', periodNumber)
-            .eq('section', section ?? '')
+            .eq('section', section)
             .limit(1);
 
         String? actualSubjectCode = subjectCode;

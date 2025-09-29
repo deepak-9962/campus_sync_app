@@ -189,9 +189,33 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
+                        final service = AttendanceService();
+                        final date = _selectedDate;
+                        int success = 0;
+                        int fail = 0;
+                        // Iterate deterministically for stability
+                        final entries = _attendance.entries.toList()
+                          ..sort((a, b) => a.key.compareTo(b.key));
+                        for (final e in entries) {
+                          final ok = await service.submitDailyAttendance(
+                            registrationNo: e.key,
+                            isPresent: e.value,
+                            date: date,
+                          );
+                          if (ok) {
+                            success++;
+                          } else {
+                            fail++;
+                          }
+                        }
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Attendance saved locally!')),
+                          SnackBar(
+                            content: Text(
+                              'Daily attendance submitted: $success success, $fail failed',
+                            ),
+                          ),
                         );
                       },
                       icon: Icon(Icons.save),
