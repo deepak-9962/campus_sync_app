@@ -203,49 +203,51 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                           (_isSubmitting || !_hasChanges())
                               ? null
                               : () async {
-                                  setState(() {
-                                    _isSubmitting = true;
-                                  });
+                                setState(() {
+                                  _isSubmitting = true;
+                                });
 
-                                  final service = AttendanceService();
-                                  final date = _selectedDate;
-                                  int success = 0;
-                                  int fail = 0;
-                                  // Iterate deterministically for stability
-                                  final entries = _attendance.entries.toList()
-                                    ..sort((a, b) => a.key.compareTo(b.key));
-                                  for (final e in entries) {
-                                    final ok = await service.submitDailyAttendance(
-                                      registrationNo: e.key,
-                                      isPresent: e.value,
-                                      date: date,
-                                    );
-                                    if (ok) {
-                                      success++;
-                                    } else {
-                                      fail++;
-                                    }
+                                final service = AttendanceService();
+                                final date = _selectedDate;
+                                int success = 0;
+                                int fail = 0;
+                                // Iterate deterministically for stability
+                                final entries =
+                                    _attendance.entries.toList()
+                                      ..sort((a, b) => a.key.compareTo(b.key));
+                                for (final e in entries) {
+                                  final ok = await service
+                                      .submitDailyAttendance(
+                                        registrationNo: e.key,
+                                        isPresent: e.value,
+                                        date: date,
+                                      );
+                                  if (ok) {
+                                    success++;
+                                  } else {
+                                    fail++;
                                   }
+                                }
 
-                                  if (!mounted) return;
+                                if (!mounted) return;
 
-                                  // Save snapshot of submitted state
-                                  setState(() {
-                                    _lastSubmittedAttendance =
-                                        Map<String, bool>.from(_attendance);
-                                    _isSubmitting = false;
-                                  });
+                                // Save snapshot of submitted state
+                                setState(() {
+                                  _lastSubmittedAttendance =
+                                      Map<String, bool>.from(_attendance);
+                                  _isSubmitting = false;
+                                });
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Daily attendance submitted: $success success, $fail failed',
-                                      ),
-                                      backgroundColor:
-                                          fail > 0 ? Colors.orange : Colors.green,
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Daily attendance submitted: $success success, $fail failed',
                                     ),
-                                  );
-                                },
+                                    backgroundColor:
+                                        fail > 0 ? Colors.orange : Colors.green,
+                                  ),
+                                );
+                              },
                       icon:
                           _isSubmitting
                               ? SizedBox(
@@ -258,9 +260,7 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                               )
                               : Icon(Icons.save),
                       label: Text(
-                        _isSubmitting
-                            ? 'Submitting...'
-                            : 'Submit Attendance',
+                        _isSubmitting ? 'Submitting...' : 'Submit Attendance',
                       ),
                     ),
                   ],
