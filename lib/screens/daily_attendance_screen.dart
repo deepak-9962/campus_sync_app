@@ -21,7 +21,9 @@ class DailyAttendanceScreen extends StatefulWidget {
 class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
   List<Map<String, dynamic>> _students = [];
   Map<String, bool> _attendance = {};
+  Map<String, bool> _lastSubmittedAttendance = {};
   bool _isLoading = true;
+  bool _isSubmitting = false;
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -57,6 +59,14 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
         _attendance[reg] = present;
       }
     });
+  }
+
+  bool _hasChanges() {
+    if (_lastSubmittedAttendance.isEmpty) return true;
+    for (var key in _attendance.keys) {
+      if (_attendance[key] != _lastSubmittedAttendance[key]) return true;
+    }
+    return false;
   }
 
   void _pickDate() async {
@@ -189,37 +199,69 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
-                      onPressed: () async {
-                        final service = AttendanceService();
-                        final date = _selectedDate;
-                        int success = 0;
-                        int fail = 0;
-                        // Iterate deterministically for stability
-                        final entries = _attendance.entries.toList()
-                          ..sort((a, b) => a.key.compareTo(b.key));
-                        for (final e in entries) {
-                          final ok = await service.submitDailyAttendance(
-                            registrationNo: e.key,
-                            isPresent: e.value,
-                            date: date,
-                          );
-                          if (ok) {
-                            success++;
-                          } else {
-                            fail++;
-                          }
-                        }
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Daily attendance submitted: $success success, $fail failed',
-                            ),
-                          ),
-                        );
-                      },
-                      icon: Icon(Icons.save),
-                      label: Text('Submit Attendance'),
+                      onPressed:
+                          (_isSubmitting || !_hasChanges())
+                              ? null
+                              : () async {
+                                  setState(() {
+                                    _isSubmitting = true;
+                                  });
+
+                                  final service = AttendanceService();
+                                  final date = _selectedDate;
+                                  int success = 0;
+                                  int fail = 0;
+                                  // Iterate deterministically for stability
+                                  final entries = _attendance.entries.toList()
+                                    ..sort((a, b) => a.key.compareTo(b.key));
+                                  for (final e in entries) {
+                                    final ok = await service.submitDailyAttendance(
+                                      registrationNo: e.key,
+                                      isPresent: e.value,
+                                      date: date,
+                                    );
+                                    if (ok) {
+                                      success++;
+                                    } else {
+                                      fail++;
+                                    }
+                                  }
+
+                                  if (!mounted) return;
+
+                                  // Save snapshot of submitted state
+                                  setState(() {
+                                    _lastSubmittedAttendance =
+                                        Map<String, bool>.from(_attendance);
+                                    _isSubmitting = false;
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Daily attendance submitted: $success success, $fail failed',
+                                      ),
+                                      backgroundColor:
+                                          fail > 0 ? Colors.orange : Colors.green,
+                                    ),
+                                  );
+                                },
+                      icon:
+                          _isSubmitting
+                              ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : Icon(Icons.save),
+                      label: Text(
+                        _isSubmitting
+                            ? 'Submitting...'
+                            : 'Submit Attendance',
+                      ),
                     ),
                   ],
                 ),
