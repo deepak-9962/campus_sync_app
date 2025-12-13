@@ -1313,7 +1313,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
               ],
             ),
             subtitle: Text(
-              'Students: ${semester['total_students']} | Today: ${semester['today_present'] ?? 0}P/${semester['today_absent'] ?? 0}A | Today\'s Avg: ${(semester['today_percentage'] ?? 0.0).toStringAsFixed(1)}%',
+              'Students: ${semester['total_students']} | Today: ${semester['today_present'] ?? 0}P/${semester['today_absent'] ?? 0}A/${semester['today_na'] ?? 0}N/A | Avg: ${(semester['today_percentage'] ?? 0.0).toStringAsFixed(1)}%',
             ),
             children: [
               Container(
@@ -1377,7 +1377,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                       children: [
                         Expanded(
                           child: _buildMiniStat(
-                            'Today Present',
+                            'Present',
                             '${semester['today_present'] ?? 0}',
                             Icons.check_circle,
                             color: Colors.green,
@@ -1385,7 +1385,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         ),
                         Expanded(
                           child: _buildMiniStat(
-                            'Today Absent',
+                            'Absent',
                             '${semester['today_absent'] ?? 0}',
                             Icons.cancel,
                             color: Colors.red,
@@ -1393,9 +1393,17 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         ),
                         Expanded(
                           child: _buildMiniStat(
-                            'Today Total',
+                            'N/A',
+                            '${semester['today_na'] ?? 0}',
+                            Icons.remove_circle_outline,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildMiniStat(
+                            'Records',
                             '${(semester['today_present'] ?? 0) + (semester['today_absent'] ?? 0)}',
-                            Icons.people,
+                            Icons.fact_check,
                             color: Colors.blue,
                           ),
                         ),

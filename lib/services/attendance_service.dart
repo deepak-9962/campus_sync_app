@@ -2161,6 +2161,7 @@ class AttendanceService {
           'total_students': 0,
           'today_present': 0,
           'today_absent': 0,
+          'today_na': 0, // NEW: Include N/A count
           'today_percentage': 0.0,
           'students': [],
           'attendance_taken': false,
@@ -2189,6 +2190,7 @@ class AttendanceService {
           'total_students': totalStudents,
           'today_present': 0,
           'today_absent': 0,
+          'today_na': totalStudents, // All students are N/A if no attendance taken
           'today_percentage': 0.0,
           'students':
               allStudents
@@ -2199,7 +2201,8 @@ class AttendanceService {
                       'section': student['section'] ?? '',
                       'is_present': false,
                       'today_percentage': 0.0,
-                      'status': 'Not Taken',
+                      'status': 'N/A',  // Changed from 'Not Taken' to 'N/A'
+                      'has_record': false,  // NEW: Indicates no attendance record
                     },
                   )
                   .toList(),
@@ -2224,14 +2227,15 @@ class AttendanceService {
       final List<Map<String, dynamic>> studentsWithAttendance = [];
       int todayPresent = 0;
       int todayAbsent = 0;
+      int todayNA = 0; // NEW: Count of students with N/A status (no record)
       double totalPercentage = 0.0;
 
       for (final student in allStudents) {
         final regNo = student['registration_no'] as String;
         final attendance = attendanceMap[regNo];
 
-        // FIXED LOGIC: Only count students with actual attendance records
-        // Students without records are not counted as absent when some attendance exists
+        // FIXED LOGIC: Distinguish between "Absent" (has record) and "N/A" (no record)
+        // Students without records are marked as "N/A" - their class wasn't in session
         if (attendance != null) {
           final isPresent = attendance['is_present'] ?? false;
           final percentage = isPresent ? 100.0 : 0.0;
@@ -2251,16 +2255,19 @@ class AttendanceService {
             'is_present': isPresent,
             'today_percentage': percentage,
             'status': isPresent ? 'Present' : 'Absent',
+            'has_record': true,  // NEW: Has an attendance record
           });
         } else {
-          // Student has no attendance record - don't count as absent
+          // Student has no attendance record - marked as N/A (class not in session)
+          todayNA++; // Increment N/A count
           studentsWithAttendance.add({
             'registration_no': regNo,
             'student_name': student['student_name'] ?? '',
             'section': student['section'] ?? '',
             'is_present': false,
             'today_percentage': 0.0,
-            'status': 'No Record',
+            'status': 'N/A',  // Changed from 'No Record' to 'N/A'
+            'has_record': false,  // NEW: No attendance record
           });
         }
       }
@@ -2275,6 +2282,7 @@ class AttendanceService {
         'total_students': totalStudents,
         'today_present': todayPresent,
         'today_absent': todayAbsent,
+        'today_na': todayNA, // NEW: Include N/A count in return value
         'today_percentage': avgTodayPercentage,
         'students': studentsWithAttendance,
         'attendance_taken':
@@ -2288,6 +2296,7 @@ class AttendanceService {
         'total_students': 0,
         'today_present': 0,
         'today_absent': 0,
+        'today_na': 0, // NEW: Include N/A count
         'today_percentage': 0.0,
         'students': [],
         'attendance_taken': false, // Flag for error state
