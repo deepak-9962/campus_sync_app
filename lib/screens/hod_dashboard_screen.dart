@@ -8,6 +8,7 @@ import 'package:universal_html/html.dart' as html;
 import '../services/hod_service.dart';
 import 'attendance_view_screen.dart';
 import 'hod/pdf_export_screen.dart';
+import 'hod/automated_reports_screen.dart';
 
 class HODDashboardScreen extends StatefulWidget {
   final String department;
@@ -265,6 +266,21 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                     ),
                   ),
                 ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Automated Reports',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder:
+                      (context) => AutomatedReportsScreen(
+                        department: _effectiveDepartment ?? widget.department,
+                        semester: _selectedSemester ?? widget.selectedSemester,
+                      ),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),

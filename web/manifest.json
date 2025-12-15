@@ -1,13 +1,16 @@
 {
-    "name": "campus_sync_app",
-    "short_name": "campus_sync_app",
+    "name": "Campus Sync",
+    "short_name": "Campus Sync",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
-    "theme_color": "#FFFFFF",
-    "description": "A new Flutter project.",
+    "background_color": "#1976D2",
+    "theme_color": "#1976D2",
+    "description": "Attendance tracking, timetable management, resources hub, and GPA calculator for educational institutions",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["education", "productivity"],
+    "lang": "en",
+    "scope": "/",
     "icons": [
         {
             "src": "icons/Icon-192.png",
@@ -30,6 +33,15 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Check Attendance",
+            "short_name": "Attendance",
+            "description": "View your attendance records",
+            "url": "./",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
         }
     ]
 }
