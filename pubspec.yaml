@@ -1,0 +1,93 @@
+name: campus_sync_app
+description: "A new Flutter project."
+
+publish_to: 'none' 
+
+version: 1.0.2+3
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  supabase_flutter: ^2.8.4
+  uuid: ^4.0.0
+  image_picker: ^1.0.4
+  flutter_dotenv: ^5.1.0
+  cross_file: ^0.3.3+6
+  path: ^1.8.3
+  file_selector: ^1.0.1
+  http: ^1.2.1
+  shared_preferences: ^2.2.2
+  webview_flutter: ^4.10.0
+  file_picker: ^9.2.2
+  flutter_pdfview: ^1.4.0
+  path_provider: ^2.1.5
+  intl: ^0.19.0
+  csv: ^5.1.1
+  video_player: ^2.8.6 # Added for video playback
+  firebase_core: ^3.15.1
+  firebase_messaging: ^15.2.9
+  google_fonts: ^6.2.1
+  printing: ^5.13.3
+  pdf: ^3.11.0
+  universal_html: ^2.2.4
+  package_info_plus: ^8.0.0
+  dio: ^5.4.0
+  open_filex: ^4.5.0
+  permission_handler: ^11.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  supabase_gen: ^1.6.1
+
+# Configuration for the flutter_launcher_icons package
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/icon.png"
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
+
+flutter:
+
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - .env
+    - assets/icon/
+    - assets/videos/ # Added for video assets
+    - assets/fonts/
+
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+
+# Supabase type generation configuration
+# Note: Manual type definitions are used instead of supabase_gen due to connection issues
+# See lib/types/supabase_types.dart for manually created type definitions
+# See SUPABASE_TYPES_GUIDE.md for usage documentation
+supabase_gen:
+  output_path: "lib/supabase_types.dart"
+  supabase_url: "https://hgzhfqvjsyszwtdeaifx.supabase.co"
+  supabase_anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnemhmcXZqc3lzend0ZGVhaWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzYyMzcsImV4cCI6MjA1NzIxMjIzN30.wdt6RGZFO4uz5P39UEHmfQtOW1OR7q4utyUGJ8qvxhk"

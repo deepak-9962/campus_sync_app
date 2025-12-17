@@ -1,0 +1,15 @@
+# Supabase configuration
+supabase:
+  url: "https://hgzhfqvjsyszwtdeaifx.supabase.co"
+  anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnemhmcXZqc3lzend0ZGVhaWZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzYyMzcsImV4cCI6MjA1NzIxMjIzN30.wdt6RGZFO4uz5P39UEHmfQtOW1OR7q4utyUGJ8qvxhk"
+
+generation:
+  output_directory: lib
+  output_file: supabase_types.dart
+  exclude_tables:
+    - migrations
+    - schema_migrations
+    - auth
+    - storage
+    - realtime
+  use_null_safety: true
