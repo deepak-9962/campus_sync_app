@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.campus_sync_app"
-    compileSdk = 35
+    compileSdk = 36
 
     // Add the NDK version here
     ndkVersion = "27.0.12077973"
@@ -28,8 +28,8 @@ android {
         applicationId = "com.example.campus_sync_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21  // Updated to 21 to support PDFView
-        targetSdk = 35
+        minSdk = flutter.minSdkVersion  // Updated to 21 to support PDFView
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
