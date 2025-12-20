@@ -20,6 +20,7 @@ import 'hod_dashboard_screen.dart';
 import '../services/auth_service.dart';
 import '../services/hod_service.dart';
 import '../services/user_session_service.dart';
+import '../services/update_service.dart';
 import 'role_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -80,6 +81,11 @@ class _HomeScreenState extends State<HomeScreen>
     )..forward();
 
     _checkUserRole();
+    
+    // Check for app updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService().checkForUpdate(context);
+    });
   }
 
   Future<void> _checkUserRole() async {

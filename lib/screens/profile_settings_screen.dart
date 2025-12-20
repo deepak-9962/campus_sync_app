@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/update_service.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -75,6 +76,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
+            const SizedBox(height: 20),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.system_update),
+              title: const Text("Check for Updates"),
+              subtitle: const Text("Check if a new version is available"),
+              onTap: () {
+                UpdateService().checkForUpdate(context, showNoUpdate: true);
+              },
+            ),
           ],
         ),
       ),
