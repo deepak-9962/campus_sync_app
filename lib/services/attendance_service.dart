@@ -226,8 +226,9 @@ class AttendanceService {
   // Get attendance summary report (for admin/faculty)
   Future<List<Map<String, dynamic>>> getAttendanceSummaryReport() async {
     try {
-      final response =
-          await _supabase.from('attendance_summary_report').select();
+      final response = await _supabase
+          .from('attendance_summary_report')
+          .select('registration_no, student_name, department, semester, section, total_periods, attended_periods, overall_percentage');
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
@@ -439,7 +440,7 @@ class AttendanceService {
   }) async {
     try {
       print('Fetching analytics view for dept=$department sem=$semester');
-      var query = _supabase.from('attendance_analytics').select();
+      var query = _supabase.from('attendance_analytics').select('registration_no, student_name, department, semester, section, total_periods, attended_periods, overall_percentage, attendance_status');
       if (department != null && department.isNotEmpty) {
         query = query.ilike('department', department);
       }

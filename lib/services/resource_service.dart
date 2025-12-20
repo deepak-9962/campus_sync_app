@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 
@@ -210,11 +207,12 @@ class ResourceService {
     try {
       final response = await _supabase
           .from('resources')
-          .select('*')
+          .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
           .eq('department', department)
           .eq('semester', semester)
           .eq('category', category)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(50);
       
       return response.map<Resource>((data) => Resource.fromJson(data)).toList();
     } catch (e) {
@@ -308,7 +306,7 @@ class ResourceService {
         final response = await _supabase
             .from('resources')
             .insert(resourceData)
-            .select()
+            .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
             .single();
         
         print('Resource created successfully: $response');
@@ -457,9 +455,10 @@ class ResourceService {
       
       final response = await _supabase
           .from('resources')
-          .select()
+          .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
           .eq('category', dbCategory)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(50);
       
       final resources = (response as List<dynamic>)
           .map((json) => Resource.fromJson(json))
@@ -488,7 +487,7 @@ class ResourceService {
       // Get existing resource
       final existingResource = await _supabase
           .from('resources')
-          .select()
+          .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
           .eq('id', resourceId)
           .maybeSingle();
       
@@ -574,7 +573,7 @@ class ResourceService {
             .from('resources')
             .update(resourceData)
             .eq('id', resourceId)
-            .select()
+            .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
             .single();
         
         print('Resource updated successfully: $response');
@@ -599,7 +598,7 @@ class ResourceService {
           // Get updated resource
           final updated = await _supabase
               .from('resources')
-              .select()
+              .select('id, title, description, department, semester, category, file_type, file_size, file_url, file_path, created_at')
               .eq('id', resourceId)
               .maybeSingle();
           

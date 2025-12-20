@@ -638,6 +638,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
       rows.add(['Total Students', departmentSummary['total_students'] ?? 0]);
       rows.add(['Today Present', departmentSummary['today_present'] ?? 0]);
       rows.add(['Today Absent', departmentSummary['today_absent'] ?? 0]);
+      rows.add(['Today Not Taken', departmentSummary['today_not_taken'] ?? 0]);
       rows.add([
         'Today %',
         (departmentSummary['today_percentage'] ?? 0.0).toStringAsFixed(1),
@@ -648,6 +649,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         'Total Students',
         'Today Present',
         'Today Absent',
+        'Not Taken',
         'Today %',
       ]);
       for (final s in semesterWiseData) {
@@ -656,6 +658,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           s['total_students'],
           s['today_present'] ?? 0,
           s['today_absent'] ?? 0,
+          s['today_na'] ?? 0,
           (s['today_percentage'] ?? 0.0).toStringAsFixed(1),
         ]);
       }
@@ -835,6 +838,20 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                               padding: const pw.EdgeInsets.all(6),
                               child: pw.Text(
                                 '${departmentSummary['today_absent'] ?? 0}',
+                              ),
+                            ),
+                          ],
+                        ),
+                        pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text('Today Not Taken'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                '${departmentSummary['today_not_taken'] ?? 0}',
                               ),
                             ),
                           ],
@@ -1157,25 +1174,28 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                 child: _buildSummaryCard(
                   'Today Present',
                   departmentSummary['attendance_taken'] == false
-                      ? 'Not Taken'
+                      ? '0'
                       : '${departmentSummary['today_present'] ?? 0}',
                   Icons.check_circle,
-                  departmentSummary['attendance_taken'] == false
-                      ? Colors.grey
-                      : Colors.green,
+                  Colors.green,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryCard(
                   'Today Absent',
-                  departmentSummary['attendance_taken'] == false
-                      ? 'Not Taken'
-                      : '${departmentSummary['today_absent'] ?? 0}',
+                  '${departmentSummary['today_absent'] ?? 0}',
                   Icons.cancel,
-                  departmentSummary['attendance_taken'] == false
-                      ? Colors.grey
-                      : Colors.red,
+                  Colors.red,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSummaryCard(
+                  'Not Taken',
+                  '${departmentSummary['today_not_taken'] ?? 0}',
+                  Icons.help_outline,
+                  Colors.orange,
                 ),
               ),
             ],

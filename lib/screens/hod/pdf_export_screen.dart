@@ -33,21 +33,201 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
   String? _error;
   String _reportType = 'student_data'; // 'student_data' or 'attendance_report'
   int? _selectedSemester; // For filtering by semester
+  String? _selectedSection; // For filtering by section
+  String _dateSelectionMode = 'week'; // 'week' or 'custom'
   DateTime _startDate = DateTime.now().subtract(
     Duration(days: DateTime.now().weekday - 1),
   );
   DateTime _endDate = DateTime.now().subtract(
     Duration(days: DateTime.now().weekday - 7),
   );
+  DateTime _customStartDate = DateTime.now().subtract(const Duration(days: 30));
+  DateTime _customEndDate = DateTime.now();
+  
+  // Working days selection - stores dates that ARE working days (not excluded)
+  Set<DateTime> _selectedWorkingDays = {};
+  bool _workingDaysInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize selected semester with widget.semester
+    // Initialize selected semester and section with widget values
     _selectedSemester = widget.semester;
+    _selectedSection = widget.section;
     // Set end date to end of current week
     _endDate = _startDate.add(const Duration(days: 6));
     _fetchStudentColumns();
+    _initializeWorkingDays();
+  }
+
+  /// Initialize working days when custom date range changes
+  void _initializeWorkingDays() {
+    final start = _dateSelectionMode == 'custom' ? _customStartDate : _startDate;
+    final end = _dateSelectionMode == 'custom' ? _customEndDate : _endDate;
+    
+    _selectedWorkingDays.clear();
+    
+    // Add all dates except Sundays by default
+    for (var date = start; !date.isAfter(end); date = date.add(const Duration(days: 1))) {
+      // Normalize to date only (no time component)
+      final normalizedDate = DateTime(date.year, date.month, date.day);
+      // Exclude Sundays by default (weekday 7 = Sunday)
+      if (normalizedDate.weekday != DateTime.sunday) {
+        _selectedWorkingDays.add(normalizedDate);
+      }
+    }
+    _workingDaysInitialized = true;
+  }
+
+  /// Get all dates in the current range
+  List<DateTime> _getAllDatesInRange() {
+    final start = _dateSelectionMode == 'custom' ? _customStartDate : _startDate;
+    final end = _dateSelectionMode == 'custom' ? _customEndDate : _endDate;
+    
+    List<DateTime> dates = [];
+    for (var date = start; !date.isAfter(end); date = date.add(const Duration(days: 1))) {
+      dates.add(DateTime(date.year, date.month, date.day));
+    }
+    return dates;
+  }
+
+  /// Toggle a date's working day status
+  void _toggleWorkingDay(DateTime date) {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    setState(() {
+      if (_selectedWorkingDays.contains(normalizedDate)) {
+        _selectedWorkingDays.remove(normalizedDate);
+      } else {
+        _selectedWorkingDays.add(normalizedDate);
+      }
+    });
+  }
+
+  /// Select all dates as working days
+  void _selectAllWorkingDays() {
+    setState(() {
+      _selectedWorkingDays.clear();
+      for (final date in _getAllDatesInRange()) {
+        _selectedWorkingDays.add(date);
+      }
+    });
+  }
+
+  /// Deselect all dates
+  void _deselectAllWorkingDays() {
+    setState(() {
+      _selectedWorkingDays.clear();
+    });
+  }
+
+  /// Exclude all Sundays
+  void _excludeAllSundays() {
+    setState(() {
+      _selectedWorkingDays.removeWhere((date) => date.weekday == DateTime.sunday);
+    });
+  }
+
+  /// Exclude all Saturdays
+  void _excludeAllSaturdays() {
+    setState(() {
+      _selectedWorkingDays.removeWhere((date) => date.weekday == DateTime.saturday);
+    });
+  }
+
+  /// Get only the selected working days as the date range for reports
+  List<DateTime> _getWorkingDaysDateRange() {
+    final allDates = _getAllDatesInRange();
+    return allDates.where((date) => _selectedWorkingDays.contains(date)).toList()
+      ..sort();
+  }
+
+  /// Build the visual date grid for selecting working days
+  Widget _buildWorkingDaysGrid() {
+    final allDates = _getAllDatesInRange();
+    if (allDates.isEmpty) {
+      return const Center(child: Text('No dates in range'));
+    }
+    
+    // Find the first Monday before or on the start date to align the grid
+    DateTime firstDate = allDates.first;
+    while (firstDate.weekday != DateTime.monday) {
+      firstDate = firstDate.subtract(const Duration(days: 1));
+    }
+    
+    // Find the last Sunday after or on the end date to complete the grid
+    DateTime lastDate = allDates.last;
+    while (lastDate.weekday != DateTime.sunday) {
+      lastDate = lastDate.add(const Duration(days: 1));
+    }
+    
+    // Build grid data
+    List<List<DateTime?>> weeks = [];
+    DateTime current = firstDate;
+    while (!current.isAfter(lastDate)) {
+      List<DateTime?> week = [];
+      for (int i = 0; i < 7; i++) {
+        // Only include dates that are in the actual range
+        if (allDates.any((d) => d.year == current.year && d.month == current.month && d.day == current.day)) {
+          week.add(current);
+        } else {
+          week.add(null); // Placeholder for dates outside range
+        }
+        current = current.add(const Duration(days: 1));
+      }
+      weeks.add(week);
+    }
+    
+    return Column(
+      children: weeks.map((week) {
+        return Row(
+          children: week.map((date) {
+            if (date == null) {
+              return const Expanded(child: SizedBox(height: 36));
+            }
+            
+            final isSelected = _selectedWorkingDays.any(
+              (d) => d.year == date.year && d.month == date.month && d.day == date.day
+            );
+            final isSunday = date.weekday == DateTime.sunday;
+            final isSaturday = date.weekday == DateTime.saturday;
+            
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => _toggleWorkingDay(date),
+                child: Container(
+                  height: 36,
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? (isSunday ? Colors.red[100] : (isSaturday ? Colors.orange[100] : Colors.green[100]))
+                        : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isSelected 
+                          ? (isSunday ? Colors.red : (isSaturday ? Colors.orange : Colors.green))
+                          : Colors.grey[400]!,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${date.day}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected 
+                            ? (isSunday ? Colors.red[800] : (isSaturday ? Colors.orange[800] : Colors.green[800]))
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      }).toList(),
+    );
   }
 
   Future<void> _fetchStudentColumns() async {
@@ -97,7 +277,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
         selected,
         department: widget.department,
         semester: _selectedSemester,
-        section: widget.section,
+        section: _selectedSection,
       );
       final pdf = await _buildStudentDataPDF(selected, data);
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
@@ -129,15 +309,37 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
   }
 
   Future<void> _generateAttendanceReportPDF() async {
+    // Check if any working days are selected
+    if (_dateSelectionMode == 'custom' && _selectedWorkingDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one working day.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     setState(() => _generating = true);
     try {
+      // Use custom dates if custom mode is selected
+      final effectiveStartDate = _dateSelectionMode == 'custom' ? _customStartDate : _startDate;
+      final effectiveEndDate = _dateSelectionMode == 'custom' ? _customEndDate : _endDate;
+      
       final reportData = await _hodService.fetchAttendanceReportData(
         department: widget.department,
         semester: _selectedSemester,
-        section: widget.section,
-        startDate: _startDate,
-        endDate: _endDate,
+        section: _selectedSection,
+        startDate: effectiveStartDate,
+        endDate: effectiveEndDate,
       );
+      
+      // Filter to only include selected working days
+      if (_dateSelectionMode == 'custom') {
+        final workingDays = _getWorkingDaysDateRange();
+        reportData['dateRange'] = workingDays;
+      }
+      
       final pdf = await _buildAttendanceReportPDF(reportData);
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
 
@@ -212,8 +414,8 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                   pw.Text('Department: ${widget.department}'),
                   if (widget.semester != null)
                     pw.Text('Semester: ${widget.semester}'),
-                  if (widget.section != null)
-                    pw.Text('Section: ${widget.section}'),
+                  if (_selectedSection != null)
+                    pw.Text('Section: $_selectedSection'),
                   pw.Text('Date: $now'),
                   pw.SizedBox(height: 16),
                 ] else ...[
@@ -333,6 +535,8 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
     final dateRange = reportData['dateRange'] as List<DateTime>;
     final attendanceMap =
         reportData['attendanceMap'] as Map<String, Map<String, bool>>;
+    
+    final totalDays = dateRange.length;
 
     // Create header with dates
     final dateHeaders =
@@ -345,7 +549,8 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
       'Reg No',
       'Name of the Student',
       ...dateHeaders,
-      'Total\nDays\nPresent\nin a\nWEEK',
+      'Total\nDays\nPresent',
+      'Attendance\n%',
     ];
 
     // Prepare data rows
@@ -367,12 +572,16 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
         if (isPresent) presentDays++;
       }
 
+      // Calculate percentage
+      final percentage = totalDays > 0 ? (presentDays / totalDays * 100) : 0.0;
+
       dataRows.add([
         '${i + 1}',
         regNo,
         studentName,
         ...attendanceRow,
         presentDays.toString(),
+        '${percentage.toStringAsFixed(1)}%',
       ]);
     }
 
@@ -402,9 +611,9 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                         fontWeight: pw.FontWeight.bold,
                       ),
                     ),
-                    if (widget.section != null)
+                    if (_selectedSection != null)
                       pw.Text(
-                        'CLASS: ${widget.section}',
+                        'CLASS: $_selectedSection',
                         style: pw.TextStyle(
                           fontSize: 14,
                           fontWeight: pw.FontWeight.bold,
@@ -426,6 +635,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                   for (int i = 0; i < dateRange.length; i++)
                     i + 3: const pw.FixedColumnWidth(35),
                   dateRange.length + 3: const pw.FixedColumnWidth(40), // Total
+                  dateRange.length + 4: const pw.FixedColumnWidth(45), // Percentage
                 },
                 children: [
                   // Header row
@@ -555,7 +765,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
       columns,
       department: widget.department,
       semester: _selectedSemester,
-      section: widget.section,
+      section: _selectedSection,
     );
 
     List<List<dynamic>> csvData = [];
@@ -574,18 +784,39 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
     final csv = const ListToCsvConverter().convert(csvData);
     _downloadCSV(
       csv,
-      'student_data_${widget.department}_${_selectedSemester ?? 'all'}_${widget.section}.csv',
+      'student_data_${widget.department}_${_selectedSemester ?? 'all'}_${_selectedSection ?? 'all'}.csv',
     );
   }
 
   Future<void> _generateAttendanceReportCSV() async {
+    // Check if any working days are selected
+    if (_dateSelectionMode == 'custom' && _selectedWorkingDays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one working day.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Use custom dates if custom mode is selected
+    final effectiveStartDate = _dateSelectionMode == 'custom' ? _customStartDate : _startDate;
+    final effectiveEndDate = _dateSelectionMode == 'custom' ? _customEndDate : _endDate;
+    
     final reportData = await _hodService.fetchAttendanceReportData(
       department: widget.department,
       semester: _selectedSemester,
-      section: widget.section,
-      startDate: _startDate,
-      endDate: _endDate,
+      section: _selectedSection,
+      startDate: effectiveStartDate,
+      endDate: effectiveEndDate,
     );
+    
+    // Filter to only include selected working days
+    if (_dateSelectionMode == 'custom') {
+      final workingDays = _getWorkingDaysDateRange();
+      reportData['dateRange'] = workingDays;
+    }
 
     print('CSV Debug: reportData keys: ${reportData.keys}');
     print(
@@ -604,17 +835,20 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
     final dateRange = reportData['dateRange'] as List<DateTime>;
     final attendanceMap =
         reportData['attendanceMap'] as Map<String, Map<String, bool>>;
+    
+    final totalDays = dateRange.length;
 
     // Create header with dates (same format as PDF)
     final dateHeaders =
         dateRange.map((date) {
-          return '${DateFormat('dd.MM.yy').format(date)}\n${DateFormat('EEEE').format(date).toUpperCase()}';
+          return DateFormat('dd.MM.yy').format(date);
         }).toList();
 
     // Add headers
     List<dynamic> headers = ['S.No', 'Reg No', 'Name of the Student'];
     headers.addAll(dateHeaders);
-    headers.add('Total Days Present in a WEEK');
+    headers.add('Total Days Present');
+    headers.add('Attendance %');
     csvData.add(headers);
 
     // Add data rows (same logic as PDF)
@@ -640,6 +874,10 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
 
       // Add total present days
       row.add(presentDays);
+      
+      // Add attendance percentage
+      final percentage = totalDays > 0 ? (presentDays / totalDays * 100) : 0.0;
+      row.add('${percentage.toStringAsFixed(1)}%');
 
       csvData.add(row);
     }
@@ -649,11 +887,11 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
     );
 
     final csv = const ListToCsvConverter().convert(csvData);
-    final startDateStr = DateFormat('yyyy-MM-dd').format(_startDate);
-    final endDateStr = DateFormat('yyyy-MM-dd').format(_endDate);
+    final startDateStr = DateFormat('yyyy-MM-dd').format(effectiveStartDate);
+    final endDateStr = DateFormat('yyyy-MM-dd').format(effectiveEndDate);
     _downloadCSV(
       csv,
-      'attendance_report_${widget.department}_${_selectedSemester ?? 'all'}_${widget.section}_${startDateStr}_to_${endDateStr}.csv',
+      'attendance_report_${widget.department}_${_selectedSemester ?? 'all'}_${_selectedSection ?? 'all'}_${startDateStr}_to_${endDateStr}.csv',
     );
   }
 
@@ -676,7 +914,8 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
               ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? Center(child: Text(_error!))
-              : Column(
+              : SingleChildScrollView(
+                child: Column(
                 children: [
                   // Report Type Selection
                   Container(
@@ -790,6 +1029,75 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                     ),
                   ),
 
+                  // Section Filter
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(
+                            'Section Filter',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+                          child: Text(
+                            'Filter students and attendance by section. Select "All Sections" to include all sections.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                          child: DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              labelText: 'Select Section',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            value: _selectedSection,
+                            hint: const Text('All Sections'),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('All Sections'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'A',
+                                child: Text('Section A'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'B',
+                                child: Text('Section B'),
+                              ),
+                              const DropdownMenuItem<String>(
+                                value: 'C',
+                                child: Text('Section C'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedSection = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // Date Range Selection (for attendance report)
                   if (_reportType == 'attendance_report')
                     Container(
@@ -804,57 +1112,346 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                           const Padding(
                             padding: EdgeInsets.all(12),
                             child: Text(
-                              'Week Selection',
+                              'Date Range Selection',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
+                          // Mode selector: Week or Custom
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    '${DateFormat('dd/MM/yyyy').format(_startDate)} - ${DateFormat('dd/MM/yyyy').format(_endDate)}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: SegmentedButton<String>(
+                              segments: const [
+                                ButtonSegment(
+                                  value: 'week',
+                                  label: Text('Week'),
+                                  icon: Icon(Icons.calendar_view_week),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    final picked = await showDatePicker(
-                                      context: context,
-                                      initialDate: _startDate,
-                                      firstDate: DateTime.now().subtract(
-                                        const Duration(days: 365),
-                                      ),
-                                      lastDate: DateTime.now(),
-                                    );
-                                    if (picked != null) {
-                                      setState(() {
-                                        _startDate = picked.subtract(
-                                          Duration(days: picked.weekday - 1),
-                                        );
-                                        _endDate = _startDate.add(
-                                          const Duration(days: 6),
-                                        );
-                                      });
-                                    }
-                                  },
-                                  child: const Text('Change Week'),
+                                ButtonSegment(
+                                  value: 'custom',
+                                  label: Text('Custom Range'),
+                                  icon: Icon(Icons.date_range),
                                 ),
                               ],
+                              selected: {_dateSelectionMode},
+                              onSelectionChanged: (Set<String> newSelection) {
+                                setState(() {
+                                  _dateSelectionMode = newSelection.first;
+                                  if (_dateSelectionMode == 'custom') {
+                                    _initializeWorkingDays(); // Initialize working days when switching to custom
+                                  }
+                                });
+                              },
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          
+                          // Week Selection
+                          if (_dateSelectionMode == 'week')
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${DateFormat('dd/MM/yyyy').format(_startDate)} - ${DateFormat('dd/MM/yyyy').format(_endDate)}',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: _startDate,
+                                        firstDate: DateTime.now().subtract(
+                                          const Duration(days: 365),
+                                        ),
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          _startDate = picked.subtract(
+                                            Duration(days: picked.weekday - 1),
+                                          );
+                                          _endDate = _startDate.add(
+                                            const Duration(days: 6),
+                                          );
+                                        });
+                                      }
+                                    },
+                                    child: const Text('Change Week'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          
+                          // Custom Date Range Selection
+                          if (_dateSelectionMode == 'custom')
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                              child: Column(
+                                children: [
+                                  // Start Date
+                                  InkWell(
+                                    onTap: () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: _customStartDate,
+                                        firstDate: DateTime.now().subtract(
+                                          const Duration(days: 365),
+                                        ),
+                                        lastDate: _customEndDate,
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          _customStartDate = picked;
+                                          _initializeWorkingDays(); // Re-initialize working days for new range
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.calendar_today, size: 20),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Start Date',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  DateFormat('dd/MM/yyyy').format(_customStartDate),
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.arrow_drop_down),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // End Date
+                                  InkWell(
+                                    onTap: () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: _customEndDate,
+                                        firstDate: _customStartDate,
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          _customEndDate = picked;
+                                          _initializeWorkingDays(); // Re-initialize working days for new range
+                                        });
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.calendar_today, size: 20),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'End Date',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  DateFormat('dd/MM/yyyy').format(_customEndDate),
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.arrow_drop_down),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Show duration
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Duration: ${_customEndDate.difference(_customStartDate).inDays + 1} days',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 16),
+                                  
+                                  // Working Days Selection Header
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Select Working Days',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${_selectedWorkingDays.length} of ${_getAllDatesInRange().length} selected',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  
+                                  // Quick Action Buttons
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      ActionChip(
+                                        avatar: const Icon(Icons.select_all, size: 16),
+                                        label: const Text('Select All'),
+                                        onPressed: _selectAllWorkingDays,
+                                      ),
+                                      ActionChip(
+                                        avatar: const Icon(Icons.deselect, size: 16),
+                                        label: const Text('Deselect All'),
+                                        onPressed: _deselectAllWorkingDays,
+                                      ),
+                                      ActionChip(
+                                        avatar: const Icon(Icons.weekend, size: 16),
+                                        label: const Text('Exclude Sundays'),
+                                        backgroundColor: Colors.red[50],
+                                        onPressed: _excludeAllSundays,
+                                      ),
+                                      ActionChip(
+                                        avatar: const Icon(Icons.weekend_outlined, size: 16),
+                                        label: const Text('Exclude Saturdays'),
+                                        backgroundColor: Colors.orange[50],
+                                        onPressed: _excludeAllSaturdays,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  
+                                  // Date Grid
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey[300]!),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Day headers
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(7)),
+                                          ),
+                                          child: Row(
+                                            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                                                .map((day) => Expanded(
+                                                      child: Center(
+                                                        child: Text(
+                                                          day,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: day == 'Sun' ? Colors.red : (day == 'Sat' ? Colors.orange : Colors.black),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                          ),
+                                        ),
+                                        // Date chips grid
+                                        Padding(
+                                          padding: const EdgeInsets.all(8),
+                                          child: _buildWorkingDaysGrid(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 8),
+                                  // Summary
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Working Days: ${_selectedWorkingDays.length}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
 
                   // Column Selection (for student data only)
                   if (_reportType == 'student_data')
-                    Expanded(
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 300),
                       child: ListView(
+                        shrinkWrap: true,
                         children:
                             _allColumns
                                 .map(
@@ -872,14 +1469,14 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                       ),
                     )
                   else
-                    const Expanded(
-                      child: Center(
+                    Container(
+                      padding: const EdgeInsets.all(32.0),
+                      child: const Center(
                         child: Text(
                           'Attendance report will include:\n'
                           '• Student registration numbers and names\n'
                           '• Daily attendance for the selected week\n'
-                          '• Present/Absent markings (P/A)\n'
-                          '• Total present days count',
+                          '• Present/Absent markings (P/A)',
                           style: TextStyle(fontSize: 16),
                           textAlign: TextAlign.center,
                         ),
@@ -961,6 +1558,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                     ),
                   ),
                 ],
+              ),
               ),
     );
   }

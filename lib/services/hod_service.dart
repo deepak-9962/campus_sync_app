@@ -603,34 +603,29 @@ class HODService {
         }
       }
 
-      // FIXED LOGIC: Only count students with actual absence records as absent
-      // Students without records are not counted as absent when attendance exists for others
-      // This prevents the "all students absent" issue when attendance is partially taken
+      // FIXED LOGIC: Students without records are "Not Taken", not "Absent"
+      // Only students explicitly marked as absent should be counted as absent
       final studentsWithoutRecord = totalStudents - todayAttendance.length;
+      final todayNotTaken = studentsWithoutRecord;
 
-      // Only add students without records to absent count if attendance was partially taken
-      // The logic is: if some students have attendance records, then students without records
-      // are considered absent (they weren't marked but others were)
-      if (todayAttendance.isNotEmpty) {
-        todayAbsent += studentsWithoutRecord;
-      }
-
-      // Calculate percentage
+      // Calculate percentage based only on students with records
+      final studentsWithRecords = todayAttendance.length;
       final todayPercentage =
-          totalStudents > 0 ? (todayPresent / totalStudents) * 100 : 0.0;
+          studentsWithRecords > 0 ? (todayPresent / studentsWithRecords) * 100 : 0.0;
 
       print(
-        'HOD Service: Department $department - Total: $totalStudents, Present: $todayPresent, Absent: $todayAbsent, Records: ${todayAttendance.length}',
+        'HOD Service: Department $department - Total: $totalStudents, Present: $todayPresent, Absent: $todayAbsent, Not Taken: $todayNotTaken, Records: ${todayAttendance.length}',
       );
 
       return {
         'total_students': totalStudents,
         'today_present': todayPresent,
         'today_absent': todayAbsent,
+        'today_not_taken': todayNotTaken,
         'today_percentage': todayPercentage,
         'low_attendance_today': todayAbsent,
         'date': dateStr,
-        'attendance_taken': true, // Flag to indicate attendance was taken
+        'attendance_taken': todayAttendance.isNotEmpty,
       };
     } catch (e) {
       print('Error getting department attendance summary: $e');
@@ -638,6 +633,7 @@ class HODService {
         'total_students': 0,
         'today_present': 0,
         'today_absent': 0,
+        'today_not_taken': 0,
         'today_percentage': 0.0,
         'low_attendance_today': 0,
         'date': DateTime.now().toIso8601String().split('T')[0],
@@ -749,40 +745,20 @@ class HODService {
 
   /// Fetch all available columns from the students table (for dynamic PDF export)
   Future<List<String>> fetchStudentTableColumns() async {
-    try {
-      // Fetch a single row to get all keys (columns)
-      final resp = await _supabase.from('students').select().limit(1);
-      if (resp.isEmpty) {
-        // Fallback to a default set if table is empty
-        return [
-          'registration_no',
-          'student_name',
-          'department',
-          'semester',
-          'current_semester',
-          'section',
-          'batch',
-          'user_id',
-          'created_at',
-          'updated_at',
-        ];
-      }
-      return resp.first.keys.toList();
-    } catch (e) {
-      // Return fallback columns if there's an error
-      return [
-        'registration_no',
-        'student_name',
-        'department',
-        'semester',
-        'current_semester',
-        'section',
-        'batch',
-        'user_id',
-        'created_at',
-        'updated_at',
-      ];
-    }
+    // Return predefined columns to avoid SELECT * query
+    // This is more efficient and predictable
+    return [
+      'registration_no',
+      'student_name',
+      'department',
+      'semester',
+      'current_semester',
+      'section',
+      'batch',
+      'user_id',
+      'created_at',
+      'updated_at',
+    ];
   }
 
   /// Fetch student data for only the selected columns, with optional filters

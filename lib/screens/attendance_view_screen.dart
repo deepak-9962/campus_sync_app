@@ -330,18 +330,20 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
         ),
       );
     }
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Overall Attendance (${_overallAttendance.length} students)',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Overall Attendance (${_overallAttendance.length} students)',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView.builder(
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
             itemCount: _overallAttendance.length,
             itemBuilder: (context, index) {
               final rec = _overallAttendance[index];
@@ -393,8 +395,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -481,18 +483,26 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
       return const Center(child: Text('Select a period'));
     }
     if (_resolvedSubjectCode == null) {
-      return Column(
-        children: [
-          _buildSummaryBar(total: 0, present: 0, absent: 0, attendanceData: []),
-          Expanded(
-            child: Center(
-              child: Text(
-                'No class scheduled for Period $_selectedPeriodNumber on ${DateFormat('dd MMM').format(_selectedDate)}',
-                textAlign: TextAlign.center,
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSummaryBar(total: 0, present: 0, absent: 0, attendanceData: []),
+            Padding(
+              padding: const EdgeInsets.all(48),
+              child: Column(
+                children: [
+                  Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
+                  SizedBox(height: 16),
+                  Text(
+                    'No class scheduled for Period $_selectedPeriodNumber on ${DateFormat('dd MMM').format(_selectedDate)}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
     final int total = _periodAttendance.length;
@@ -503,18 +513,18 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     final int absent = total - present;
 
     if (_periodAttendance.isEmpty) {
-      return Column(
-        children: [
-          _buildSummaryBar(
-            total: total,
-            present: present,
-            absent: absent,
-            attendanceData: _periodAttendance,
-          ),
-          Expanded(
-            child: Center(
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSummaryBar(
+              total: total,
+              present: present,
+              absent: absent,
+              attendanceData: _periodAttendance,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(48),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
                   SizedBox(height: 16),
@@ -528,46 +538,48 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
-    return Column(
-      children: [
-        // Subject / Staff header
-        if (_resolvedSubjectCode != null)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Icon(Icons.book, size: 18, color: Colors.blue[700]),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${_resolvedSubjectName ?? 'Subject'} (${_resolvedSubjectCode})' +
-                        (_resolvedStaffName != null
-                            ? ' • ${_resolvedStaffName}'
-                            : ''),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Subject / Staff header
+          if (_resolvedSubjectCode != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Icon(Icons.book, size: 18, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_resolvedSubjectName ?? 'Subject'} (${_resolvedSubjectCode})' +
+                          (_resolvedStaffName != null
+                              ? ' • ${_resolvedStaffName}'
+                              : ''),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+          _buildSummaryBar(
+            total: total,
+            present: present,
+            absent: absent,
+            attendanceData: _periodAttendance,
           ),
-        _buildSummaryBar(
-          total: total,
-          present: present,
-          absent: absent,
-          attendanceData: _periodAttendance,
-        ),
-        Expanded(
-          child: ListView.builder(
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
             padding: EdgeInsets.all(16),
             itemCount: _periodAttendance.length,
             itemBuilder: (context, index) {
@@ -628,8 +640,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -642,18 +654,18 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     final int absent = total - present;
 
     if (_dailyAttendance.isEmpty) {
-      return Column(
-        children: [
-          _buildSummaryBar(
-            total: total,
-            present: present,
-            absent: absent,
-            attendanceData: _dailyAttendance,
-          ),
-          Expanded(
-            child: Center(
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildSummaryBar(
+              total: total,
+              present: present,
+              absent: absent,
+              attendanceData: _dailyAttendance,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(48),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.today, size: 64, color: Colors.grey[400]),
                   SizedBox(height: 16),
@@ -665,21 +677,23 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
-    return Column(
-      children: [
-        _buildSummaryBar(
-          total: total,
-          present: present,
-          absent: absent,
-          attendanceData: _dailyAttendance,
-        ),
-        Expanded(
-          child: ListView.builder(
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildSummaryBar(
+            total: total,
+            present: present,
+            absent: absent,
+            attendanceData: _dailyAttendance,
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
             padding: EdgeInsets.all(16),
             itemCount: _dailyAttendance.length,
             itemBuilder: (context, index) {
@@ -742,8 +756,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

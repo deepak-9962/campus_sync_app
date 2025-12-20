@@ -47,7 +47,7 @@ class _AnnouncementCreationScreenState
             await _supabase
                 .from('announcements')
                 .insert(announcement)
-                .select()
+                .select('id, title, content, priority, is_emergency, created_at')
                 .single();
 
         // Send notification to all users

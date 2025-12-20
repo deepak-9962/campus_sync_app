@@ -19,6 +19,7 @@ import 'daily_attendance_screen.dart';
 import 'hod_dashboard_screen.dart';
 import '../services/auth_service.dart';
 import '../services/hod_service.dart';
+import '../services/user_session_service.dart';
 import 'role_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -49,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen>
   final AuthService _authService = AuthService();
   final HODService _hodService = HODService();
   String? _assignedDepartment;
+  String? _displayName; // User's actual name from database
 
   final List<String> semesters = ['1', '2', '3', '4', '5', '6', '7', '8'];
   final List<String> departments = [
@@ -82,29 +84,22 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _checkUserRole() async {
     try {
-      final role = await _authService.getUserRole();
-      final isStaff = await _authService.isStaff();
-      final isAdmin = await _authService.isAdmin();
+      // Use UserSessionService for cached role checks - SINGLE API call
+      final userSession = UserSessionService();
+      final info = await userSession.getUserInfo();
 
-      // Fetch assigned department (for HOD/Admin)
-      try {
-        final info = await _hodService.getUserRoleInfo();
-        _assignedDepartment =
-            (info['assignedDepartment'] is String &&
-                    (info['assignedDepartment'] as String).isNotEmpty)
-                ? info['assignedDepartment'] as String
-                : null;
-      } catch (_) {
-        _assignedDepartment = null;
-      }
-
+      if (!mounted) return;
+      
       setState(() {
-        _userRole = role;
-        _isStaff = isStaff;
-        _isAdmin = isAdmin;
+        _userRole = info['role'] ?? 'student';
+        _isStaff = info['isStaff'] ?? false;
+        _isAdmin = info['isAdmin'] ?? false;
+        _assignedDepartment = info['assignedDepartment'];
+        _displayName = info['name']; // Get user's actual name
         _isLoadingRole = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingRole = false;
       });
@@ -266,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                   ),
                                   Text(
-                                    widget.userName,
+                                    _displayName ?? widget.userName,
                                     style: textTheme.titleLarge?.copyWith(
                                       fontSize: 18,
                                       color: colorScheme.onSurface,

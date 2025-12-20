@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/student_data_service.dart';
 import '../services/attendance_service.dart';
+import '../services/user_session_service.dart';
+import '../utils/debouncer.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // added for period lock
 import '../widgets/edit_attendance_button.dart'; // added for edit attendance
@@ -33,7 +35,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   List<Map<String, dynamic>> subjects = [];
   List<Map<String, dynamic>> schedule = [];
   Map<String, bool> attendance = {};
-  String _sortBy = 'student_name'; // registration_no, student_name
+  String _sortBy = 'registration_no'; // registration_no, student_name
   bool _sortAscending = true;
   String _userRole = 'staff'; // For edit attendance permission
 
@@ -75,18 +77,13 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
   Future<void> _loadUserRole() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        final response = await Supabase.instance.client
-            .from('users')
-            .select('role')
-            .eq('id', userId)
-            .maybeSingle();
-        if (response != null && mounted) {
-          setState(() {
-            _userRole = (response['role'] ?? 'staff').toString().toLowerCase();
-          });
-        }
+      // Use cached UserSessionService instead of direct Supabase query
+      final userSession = UserSessionService();
+      final info = await userSession.getUserInfo();
+      if (mounted) {
+        setState(() {
+          _userRole = (info['role'] ?? 'staff').toString().toLowerCase();
+        });
       }
     } catch (e) {
       debugPrint('Error loading user role: $e');
@@ -659,17 +656,23 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       ),
       body: Column(
         children: [
-          // Header section with controls
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color:
-                  _attendanceMode == 'day' ? Colors.blue[50] : Colors.green[50],
-              border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          // Scrollable content area
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header section with controls
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color:
+                          _attendanceMode == 'day' ? Colors.blue[50] : Colors.green[50],
+                      border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                 Text(
                   'Semester ${widget.semester} - ${_attendanceMode == "day" ? "Day Attendance" : "Period Attendance"}',
                   style: TextStyle(
@@ -913,302 +916,324 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             ),
           ),
 
-          // Students list
-          Expanded(
-            child:
-                (_attendanceMode == 'period'
-                        ? (selectedSection == null || selectedPeriod == null)
-                        : (selectedSection == null))
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            _attendanceMode == 'period'
-                                ? 'Please select section and period to view students'
-                                : 'Please select a section to view students',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
+                  // Students list section (now inside ScrollView)
+                  _buildStudentListSection(),
+                ],
+              ),
+            ),
+          ),
+
+          // Fixed Submit button at bottom
+          _buildSubmitButton(),
+        ],
+      ),
+    );
+  }
+
+  /// Build the student list section based on current state
+  Widget _buildStudentListSection() {
+    // Show placeholder if selections not complete
+    if (_attendanceMode == 'period'
+        ? (selectedSection == null || selectedPeriod == null)
+        : (selectedSection == null)) {
+      return Container(
+        padding: EdgeInsets.all(48),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16),
+            Text(
+              _attendanceMode == 'period'
+                  ? 'Please select section and period to view students'
+                  : 'Please select a section to view students',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show loading
+    if (isLoading) {
+      return Container(
+        padding: EdgeInsets.all(48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Show empty state
+    if (students.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(48),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No students found for Section $selectedSection',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show student list
+    return Column(
+      children: [
+        // Attendance Already Taken Status Card
+        if (_attendanceAlreadyTaken)
+          Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[300]!, width: 1.5),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        shape: BoxShape.circle,
                       ),
-                    )
-                    : isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : students.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'No students found for Section $selectedSection',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Debug: students.length = ${students.length}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green[700],
+                        size: 28,
                       ),
-                    )
-                    : Column(
-                      children: [
-                        // Attendance Already Taken Status Card
-                        if (_attendanceAlreadyTaken)
-                          Container(
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.green[300]!, width: 1.5),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green[100],
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        color: Colors.green[700],
-                                        size: 28,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Attendance Already Taken',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.green[800],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _attendanceMode == 'period'
-                                                ? 'Period $selectedPeriod - ${DateFormat('dd MMM yyyy').format(selectedDate)}'
-                                                : 'Daily - ${DateFormat('dd MMM yyyy').format(selectedDate)}',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.green[700],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                // Stats Row
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _buildStatusStat('Present', _existingPresentCount, Colors.green),
-                                    _buildStatusStat('Absent', _existingAttendanceCount - _existingPresentCount, Colors.red),
-                                    _buildStatusStat('Total', _existingAttendanceCount, Colors.blue),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                // Edit Button
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      if (_attendanceMode == 'period') {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const EditPeriodAttendanceScreen(),
-                                          ),
-                                        );
-                                      } else {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const EditDailyAttendanceScreen(),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    icon: const Icon(Icons.edit, size: 18),
-                                    label: const Text('Edit Attendance'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        
-                        // Attendance summary
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          color: Colors.grey[100],
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildSummaryItem(
-                                'Present',
-                                attendance.values.where((v) => v).length,
-                                Colors.green,
-                              ),
-                              _buildSummaryItem(
-                                'Absent',
-                                attendance.values.where((v) => !v).length,
-                                Colors.red,
-                              ),
-                              _buildSummaryItem(
-                                'Total',
-                                students.length,
-                                Colors.blue,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Sort indicator
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          color: Colors.grey[50],
-                          child: Row(
-                            children: [
-                              Icon(
-                                _sortAscending
-                                    ? Icons.arrow_upward
-                                    : Icons.arrow_downward,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Sorted by ${_sortBy == 'registration_no' ? 'Registration No' : 'Student Name'} (${_sortAscending ? 'A-Z' : 'Z-A'})',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Students list
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: students.length,
-                            itemBuilder: (context, index) {
-                              final student = students[index];
-                              final reg = student['registration_no'] as String;
-                              final present = attendance[reg] ?? false;
-                              final studentName =
-                                  student['student_name']?.toString() ??
-                                  _generateStudentName(reg, index);
-
-                              return ListTile(
-                                onTap: () {
-                                  _safeSetState(() {
-                                    attendance[reg] = !present;
-                                  });
-                                },
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      present ? Colors.green[100] : Colors.red[100],
-                                  child: Icon(
-                                    present ? Icons.check : Icons.close,
-                                    color: present ? Colors.green : Colors.red,
-                                  ),
-                                ),
-                                title: Text(
-                                  studentName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  'Registration: $reg',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                trailing: Container(
-                                  width: 60,
-                                  child: Switch(
-                                    value: present,
-                                    onChanged: (val) {
-                                      _safeSetState(() {
-                                        attendance[reg] = val;
-                                      });
-                                    },
-                                    activeColor: Colors.green,
-                                    inactiveThumbColor: Colors.red[300],
-                                    inactiveTrackColor: Colors.red[100],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        // Submit button
-                        Container(
-                          padding: EdgeInsets.all(16),
-                          child: ElevatedButton.icon(
-                            onPressed: isLoading ? null : _submitAttendance,
-                            icon: Icon(Icons.save),
-                            label: Text(
-                              'Submit ${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  _attendanceMode == 'day'
-                                      ? Colors.blue[700]
-                                      : Colors.green[700],
-                              foregroundColor: Colors.white,
-                              minimumSize: Size(double.infinity, 50),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Attendance Already Taken',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          Text(
+                            '$_existingPresentCount present out of $_existingAttendanceCount students',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (_attendanceMode == 'period') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditPeriodAttendanceScreen(),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditDailyAttendanceScreen(),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Edit Attendance'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        
+        // Attendance summary
+        Container(
+          padding: EdgeInsets.all(12),
+          color: Colors.grey[100],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildSummaryItem(
+                'Present',
+                attendance.values.where((v) => v).length,
+                Colors.green,
+              ),
+              _buildSummaryItem(
+                'Absent',
+                attendance.values.where((v) => !v).length,
+                Colors.red,
+              ),
+              _buildSummaryItem(
+                'Total',
+                students.length,
+                Colors.blue,
+              ),
+            ],
+          ),
+        ),
+
+        // Sort indicator
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          color: Colors.grey[50],
+          child: Row(
+            children: [
+              Icon(
+                _sortAscending
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward,
+                size: 16,
+                color: Colors.grey[600],
+              ),
+              SizedBox(width: 4),
+              Text(
+                'Sorted by ${_sortBy == 'registration_no' ? 'Registration No' : 'Student Name'} (${_sortAscending ? 'A-Z' : 'Z-A'})',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Students list (using shrinkWrap so it doesn't scroll independently)
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: students.length,
+          itemBuilder: (context, index) {
+            final student = students[index];
+            final reg = student['registration_no'] as String;
+            final present = attendance[reg] ?? false;
+            final studentName =
+                student['student_name']?.toString() ??
+                _generateStudentName(reg, index);
+
+            return ListTile(
+              onTap: () {
+                _safeSetState(() {
+                  attendance[reg] = !present;
+                });
+              },
+              leading: CircleAvatar(
+                backgroundColor:
+                    present ? Colors.green[100] : Colors.red[100],
+                child: Icon(
+                  present ? Icons.check : Icons.close,
+                  color: present ? Colors.green : Colors.red,
+                ),
+              ),
+              title: Text(
+                studentName,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                'Registration: $reg',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              trailing: Container(
+                width: 60,
+                child: Switch(
+                  value: present,
+                  onChanged: (val) {
+                    _safeSetState(() {
+                      attendance[reg] = val;
+                    });
+                  },
+                  activeColor: Colors.green,
+                  inactiveThumbColor: Colors.red[300],
+                  inactiveTrackColor: Colors.red[100],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Build the fixed submit button at bottom
+  Widget _buildSubmitButton() {
+    // Only show submit button when students are loaded
+    if (students.isEmpty || isLoading) {
+      return SizedBox.shrink();
+    }
+    
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, -2),
           ),
         ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: ElevatedButton.icon(
+          onPressed: isLoading ? null : _submitAttendance,
+          icon: Icon(Icons.save),
+          label: Text(
+            'Submit ${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance',
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                _attendanceMode == 'day'
+                    ? Colors.blue[700]
+                    : Colors.green[700],
+            foregroundColor: Colors.white,
+            minimumSize: Size(double.infinity, 50),
+          ),
+        ),
       ),
     );
   }

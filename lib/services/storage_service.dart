@@ -1,12 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
 import 'package:cross_file/cross_file.dart';
+import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 
 class StorageService {

@@ -58,7 +58,7 @@ class ExamService {
                       'T',
                     )[0], // Format as YYYY-MM-DD
               })
-              .select()
+              .select('id, name, department, semester, date, created_at')
               .single();
 
       return response;

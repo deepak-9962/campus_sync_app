@@ -81,7 +81,7 @@ class TimetableManagementService {
       // Check if record exists - handle case where multiple records might exist
       final existingRecords = await _supabase
           .from('class_schedule')
-          .select()
+          .select('id, department, semester, section, day_of_week, period_number, subject_code, subject_id, faculty_name, room, batch')
           .eq('department', department)
           .eq('semester', semester)
           .eq('section', section)
@@ -379,7 +379,7 @@ class TimetableManagementService {
       if (room != null && room.isNotEmpty) {
         var roomQuery = _supabase
             .from('class_schedule')
-            .select()
+            .select('id')
             .eq('day_of_week', dayOfWeek.toLowerCase())
             .eq('period_number', periodNumber)
             .eq('room', room);
@@ -399,7 +399,7 @@ class TimetableManagementService {
       if (facultyName != null && facultyName.isNotEmpty) {
         var facultyQuery = _supabase
             .from('class_schedule')
-            .select()
+            .select('id')
             .eq('day_of_week', dayOfWeek.toLowerCase())
             .eq('period_number', periodNumber)
             .eq('faculty_name', facultyName);
@@ -433,7 +433,7 @@ class TimetableManagementService {
       // Get source timetable
       final sourceTimetable = await _supabase
           .from('class_schedule')
-          .select()
+          .select('department, semester, section, day_of_week, period_number, start_time, end_time, subject_code, subject_id, room, faculty_name, batch')
           .eq('department', department)
           .eq('semester', semester)
           .eq('section', fromSection);

@@ -66,8 +66,9 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
     try {
       final response = await _supabase
           .from('lost_and_found_items')
-          .select() // Fetch all columns from lost_and_found_items only
-          .order('created_at', ascending: false);
+          .select('id, user_id, type, description, created_at, contact_info, image_url')
+          .order('created_at', ascending: false)
+          .limit(100);
 
       // No .execute() needed here, the await handles it.
       // Error handling is done via try-catch for PostgrestErrors or other exceptions.

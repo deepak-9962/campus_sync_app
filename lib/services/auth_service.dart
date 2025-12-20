@@ -77,7 +77,7 @@ class AuthService {
     final response =
         await _supabase
             .from('profiles')
-            .select()
+            .select('id, email, name, gender, department, semester, created_at')
             .eq('id', currentUser!.id)
             .single();
 

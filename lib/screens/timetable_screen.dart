@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import '../services/timetable_service.dart';
+import '../services/cache_service.dart';
 
 class TimetableScreen extends StatefulWidget {
   final String department;
@@ -41,8 +42,10 @@ class _TimetableScreenState extends State<TimetableScreen>
   bool _isLoading = true;
   String _selectedSection = 'A';
   final TimetableService _timetableService = TimetableService();
+  final CacheService _cache = CacheService();
   String _errorMessage = '';
   Timer? _refreshTimer;
+  int? _lastPeriodIndex; // Track period to avoid unnecessary rebuilds
   Map<String, ScrollController> _scrollControllers = {};
   Map<String, GlobalKey> _listViewKeys = {};
 
@@ -77,6 +80,22 @@ class _TimetableScreenState extends State<TimetableScreen>
       default:
         return '';
     }
+  }
+
+  // Get current period index for smart refresh optimization
+  int? _getCurrentPeriodIndex() {
+    final currentDay = _getCurrentDay();
+    final dayCapitalized = currentDay.isNotEmpty 
+        ? currentDay[0].toUpperCase() + currentDay.substring(1) 
+        : '';
+    final schedule = _timetableData[dayCapitalized] ?? [];
+    
+    for (int i = 0; i < schedule.length; i++) {
+      if (_isCurrentPeriod(currentDay, schedule[i].time)) {
+        return i;
+      }
+    }
+    return null;
   }
 
   bool _isCurrentPeriod(String day, String timeSlot) {
@@ -182,13 +201,17 @@ class _TimetableScreenState extends State<TimetableScreen>
       _tabController.animateTo(todayIndex);
     }
 
-    // Start timer to refresh UI every minute to update current period highlighting
+    // Start timer to refresh UI every minute - OPTIMIZED: only rebuild when period changes
     _refreshTimer = Timer.periodic(Duration(minutes: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          // This will trigger a rebuild to update current period highlighting
-        });
-        // Auto-scroll to current period after state update
+      if (!mounted) return;
+      
+      // Calculate current period index
+      final currentPeriodIndex = _getCurrentPeriodIndex();
+      
+      // Only rebuild if period actually changed
+      if (currentPeriodIndex != _lastPeriodIndex) {
+        _lastPeriodIndex = currentPeriodIndex;
+        setState(() {});
         _scrollToCurrentPeriod();
       }
     });
@@ -260,6 +283,24 @@ class _TimetableScreenState extends State<TimetableScreen>
   }
 
   Future<void> _loadTimetableData() async {
+    // Try to get from cache first
+    final cacheKey = 'timetable_${widget.department}_${widget.semester}_$_selectedSection';
+    final cached = _cache.get<Map<String, List<TimeSlot>>>(cacheKey);
+    
+    if (cached != null) {
+      setState(() {
+        _timetableData = cached;
+        _isLoading = false;
+        _errorMessage = '';
+      });
+      
+      // Auto-scroll to current period after cache load
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentPeriod();
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -330,6 +371,10 @@ class _TimetableScreenState extends State<TimetableScreen>
       print(
         'Final formatted data: ${formattedData.keys.map((k) => '$k: ${formattedData[k]!.length} periods').join(', ')}',
       );
+
+      // Cache the timetable data for 30 minutes
+      final cacheKey = 'timetable_${widget.department}_${widget.semester}_$_selectedSection';
+      _cache.set(cacheKey, formattedData, CacheService.timetableTTL);
 
       setState(() {
         _timetableData = formattedData;

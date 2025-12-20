@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -89,7 +88,7 @@ class SupabaseSetup {
       
       // Ensure users table has our user
       try {
-        final userData = await _supabase.from('users').select().eq('id', user.id).maybeSingle();
+        final userData = await _supabase.from('users').select('id, is_admin, role').eq('id', user.id).maybeSingle();
         
         if (userData == null) {
           // User doesn't exist, create it

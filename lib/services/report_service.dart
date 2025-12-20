@@ -675,7 +675,7 @@ class ReportService {
   }
 
   pw.Widget _buildConsolidationTable(List<Map<String, dynamic>> data) {
-    return pw.Table.fromTextArray(
+    return pw.TableHelper.fromTextArray(
       headers: ['S.No', 'Reg. No.', 'Name', 'Section', 'Total', 'Attended', 'Percentage', 'Status', 'Eligible'],
       data: data.asMap().entries.map((entry) {
         final row = entry.value;
