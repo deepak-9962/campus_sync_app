@@ -32,15 +32,21 @@ flutter config --no-analytics
 echo "📥 Getting dependencies..."
 flutter pub get
 
+# Create .env file from environment variables
+echo "🔐 Creating .env file..."
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+    echo "SUPABASE_URL=$SUPABASE_URL" > .env
+    echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+    echo "✅ .env file created with environment variables"
+else
+    echo "⚠️ SUPABASE_URL or SUPABASE_ANON_KEY not found in environment variables"
+    echo "Creating empty .env file to satisfy build requirements..."
+    touch .env
+fi
+
 # Build for web (defaults to auto/canvaskit)
 echo "🔨 Building web app..."
 flutter build web --release
-
-# Inject environment variables if they exist
-if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
-    echo "🔐 Environment variables detected"
-    # The app should read these from .env or dart-define
-fi
 
 echo "✅ Build complete! Output in build/web/"
 echo "📱 PWA is ready for deployment"
