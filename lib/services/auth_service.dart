@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import 'user_session_service.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -66,6 +67,7 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     await _supabase.auth.signOut();
+    UserSessionService().clearSession();
   }
 
   // Get user profile data

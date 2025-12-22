@@ -92,9 +92,11 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       // Use UserSessionService for cached role checks - SINGLE API call
       final userSession = UserSessionService();
-      final info = await userSession.getUserInfo();
+      final info = await userSession.getUserInfo(forceRefresh: true);
 
       if (!mounted) return;
+      
+      print('DEBUG: User role info: $_userRole = ${info['role']}, isStaff = ${info['isStaff']}, isAdmin = ${info['isAdmin']}');
       
       setState(() {
         _userRole = info['role'] ?? 'student';
@@ -104,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen>
         _displayName = info['name']; // Get user's actual name
         _isLoadingRole = false;
       });
+      
+      print('DEBUG: After setState - Role: $_userRole, isStaff: $_isStaff, isAdmin: $_isAdmin');
     } catch (e) {
+      print('ERROR: Failed to load user role: $e');
       if (!mounted) return;
       setState(() {
         _isLoadingRole = false;
@@ -1060,6 +1065,7 @@ class _HomeScreenState extends State<HomeScreen>
               Navigator.pop(context);
               try {
                 await Supabase.instance.client.auth.signOut();
+                UserSessionService().clearSession();
                 if (mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => AuthScreen()),

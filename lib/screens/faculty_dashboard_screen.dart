@@ -8,6 +8,7 @@ import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/user_session_service.dart';
 
 /// Faculty Dashboard Screen
 ///
@@ -691,6 +692,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                 try {
                   // Sign out from Supabase
                   await Supabase.instance.client.auth.signOut();
+                  UserSessionService().clearSession();
 
                   if (mounted) {
                     // Navigate to AuthScreen and clear all previous routes

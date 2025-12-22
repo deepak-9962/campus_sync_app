@@ -4,6 +4,7 @@ import '../models/dashboard_feature.dart';
 import '../helpers/dashboard_feature_helper.dart';
 import '../services/auth_service.dart';
 import '../services/hod_service.dart';
+import '../services/user_session_service.dart';
 import 'auth_screen.dart';
 import 'profile_settings_screen.dart';
 
@@ -217,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen>
               Navigator.pop(context);
               try {
                 await Supabase.instance.client.auth.signOut();
+                UserSessionService().clearSession();
                 if (mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const AuthScreen()),
