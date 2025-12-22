@@ -1,0 +1,10 @@
+{
+  "name": "campus_sync_app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "bash vercel_build.sh"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
