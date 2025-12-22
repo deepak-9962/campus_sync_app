@@ -32,9 +32,9 @@ flutter config --no-analytics
 echo "📥 Getting dependencies..."
 flutter pub get
 
-# Build for web with CanvasKit renderer (better compatibility)
+# Build for web (defaults to auto/canvaskit)
 echo "🔨 Building web app..."
-flutter build web --release --web-renderer canvaskit
+flutter build web --release
 
 # Inject environment variables if they exist
 if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
