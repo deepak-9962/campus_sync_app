@@ -79,6 +79,9 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Automated Reports'),
@@ -106,7 +109,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                      Icon(Icons.error_outline, size: 64, color: colorScheme.error),
                       const SizedBox(height: 16),
                       Text(_errorMessage!, textAlign: TextAlign.center),
                       const SizedBox(height: 16),
@@ -184,13 +187,14 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   }
 
   Widget _buildInfoCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
-      color: Colors.blue[50],
+      color: colorScheme.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.blue[700], size: 32),
+            Icon(Icons.info_outline, color: colorScheme.onPrimaryContainer, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -200,17 +204,17 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                     widget.department,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[900],
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                   if (widget.semester != null)
                     Text(
                       'Semester ${widget.semester}',
-                      style: TextStyle(color: Colors.blue[700]),
+                      style: TextStyle(color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
                     ),
                   Text(
                     'Reports will be generated for this department',
-                    style: TextStyle(fontSize: 12, color: Colors.blue[600]),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onPrimaryContainer.withOpacity(0.7)),
                   ),
                 ],
               ),
@@ -262,7 +266,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                       description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -275,7 +279,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                       height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(Icons.arrow_forward_ios, color: Colors.grey[400]),
+                  : Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
             ],
           ),
         ),
@@ -398,26 +402,27 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   // ============================================================================
 
   Widget _buildScheduledTab() {
+    final colorScheme = Theme.of(context).colorScheme;
     if (_scheduledReports.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
+            Icon(Icons.schedule, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
             const SizedBox(height: 16),
             Text(
               'No Scheduled Reports',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Set up automated reports to be generated\nand sent automatically',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5)),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -441,6 +446,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   }
 
   Widget _buildScheduleCard(Map<String, dynamic> schedule) {
+    final colorScheme = Theme.of(context).colorScheme;
     final reportType = _getReportTypeDisplay(schedule['report_type']);
     final frequency = _getFrequencyDisplay(schedule['frequency']);
     final isEnabled = schedule['enabled'] ?? true;
@@ -459,12 +465,12 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isEnabled ? Colors.green[50] : Colors.grey[100],
+                color: isEnabled ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 _getReportTypeIcon(schedule['report_type']),
-                color: isEnabled ? Colors.green : Colors.grey,
+                color: isEnabled ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
             title: Text(
@@ -494,7 +500,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                     children: [
                       Text(
                         'Next Run',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       Text(
                         nextRun != null
@@ -511,7 +517,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                     children: [
                       Text(
                         'Last Run',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       Text(
                         lastRun != null
@@ -533,7 +539,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                   onPressed: () => _showEditScheduleDialog(schedule),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red[400]),
+                  icon: Icon(Icons.delete, color: colorScheme.error),
                   tooltip: 'Delete',
                   onPressed: () => _confirmDeleteSchedule(schedule['id']),
                 ),
@@ -547,7 +553,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(12),
                   bottomRight: Radius.circular(12),
@@ -557,7 +563,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
                 spacing: 8,
                 runSpacing: 4,
                 children: [
-                  Icon(Icons.email, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.email, size: 16, color: colorScheme.onSurface.withOpacity(0.6)),
                   ...List<String>.from(schedule['recipients']).map(
                     (email) => Chip(
                       label: Text(email, style: const TextStyle(fontSize: 10)),
@@ -663,7 +669,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Delete'),
           ),
         ],
@@ -686,25 +692,26 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   // ============================================================================
 
   Widget _buildHistoryTab() {
+    final colorScheme = Theme.of(context).colorScheme;
     if (_reportHistory.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: Colors.grey[400]),
+            Icon(Icons.history, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
             const SizedBox(height: 16),
             Text(
               'No Report History',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Generated reports will appear here',
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5)),
             ),
           ],
         ),
@@ -722,6 +729,7 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   }
 
   Widget _buildHistoryCard(Map<String, dynamic> log) {
+    final colorScheme = Theme.of(context).colorScheme;
     final reportType = _getReportTypeDisplay(log['report_type']);
     final generatedAt = DateTime.parse(log['generated_at']);
     final hasFile = log['file_url'] != null;
@@ -732,12 +740,12 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue[50],
+            color: colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             _getReportTypeIcon(log['report_type']),
-            color: Colors.blue,
+            color: colorScheme.primary,
           ),
         ),
         title: Text(reportType),
@@ -817,10 +825,11 @@ class _AutomatedReportsScreenState extends State<AutomatedReportsScreen>
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? colorScheme.error : colorScheme.primary,
         duration: const Duration(seconds: 3),
       ),
     );

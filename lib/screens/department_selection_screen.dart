@@ -82,6 +82,9 @@ class _DepartmentSelectionScreenState extends State<DepartmentSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Select Department')),
       body:
@@ -92,10 +95,13 @@ class _DepartmentSelectionScreenState extends State<DepartmentSelectionScreen> {
                 itemBuilder: (context, index) {
                   final department = _departments[index];
                   return ListTile(
-                    title: Text(department),
+                    title: Text(
+                      department,
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
                     trailing:
                         _selectedDepartment == department
-                            ? const Icon(Icons.check, color: Colors.green)
+                            ? Icon(Icons.check, color: colorScheme.primary)
                             : null,
                     onTap: () {
                       _updateCurrentDepartment(department);

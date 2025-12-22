@@ -85,6 +85,9 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Daily Attendance')),
       body:
@@ -138,7 +141,8 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                           onPressed: () => _markAll(false),
                           child: const Text('Mark All Absent'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: colorScheme.error,
+                            foregroundColor: colorScheme.onError,
                           ),
                         ),
                       ],
@@ -147,7 +151,7 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: _students.length,
-                        separatorBuilder: (_, __) => Divider(height: 1),
+                        separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor),
                         itemBuilder: (context, idx) {
                           final student = _students[idx];
                           final reg = student['registration_no'] as String;
@@ -165,10 +169,12 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                                 });
                               },
                               activeColor: Colors.green,
-                              inactiveThumbColor: Colors.red,
+                              inactiveThumbColor: colorScheme.error,
                             ),
                             tileColor:
-                                present ? Colors.green[50] : Colors.red[50],
+                                present
+                                    ? Colors.green.withOpacity(0.1)
+                                    : colorScheme.error.withOpacity(0.1),
                           );
                         },
                       ),
@@ -187,7 +193,7 @@ class _DailyAttendanceScreenState extends State<DailyAttendanceScreen> {
                         Text(
                           'Absent: ${_attendance.values.where((v) => !v).length}',
                           style: TextStyle(
-                            color: Colors.red,
+                            color: colorScheme.error,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

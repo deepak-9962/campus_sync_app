@@ -45,13 +45,6 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
   bool _isLoading = true;
   String _error = '';
 
-  // Light Theme Colors (consistent with HomeScreen)
-  static const Color primaryLightBackground = Color(0xFFF5F5F5);
-  static const Color cardLightBackground = Colors.white;
-  static const Color primaryTextLight = Color(0xFF212121);
-  static const Color secondaryTextLight = Color(0xFF757575);
-  static const Color accentColorLight = Color(0xFF1976D2);
-
   @override
   void initState() {
     super.initState();
@@ -66,7 +59,7 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
     try {
       final response = await _supabase
           .from('lost_and_found_items')
-          .select('id, user_id, type, description, created_at, contact_info, image_url')
+          .select('id, user_id, type, description, created_at')
           .order('created_at', ascending: false)
           .limit(100);
 
@@ -136,18 +129,20 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
   void _showAddItemDialog() {
     final descriptionController = TextEditingController();
     String selectedType = 'lost'; // Default type
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           // To update dialog state for radio buttons
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: cardLightBackground,
-              title: const Text(
+              backgroundColor: colorScheme.surface,
+              title: Text(
                 'Post an Item',
-                style: TextStyle(color: primaryTextLight),
+                style: TextStyle(color: colorScheme.onSurface),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -164,11 +159,11 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                               selectedType = value!;
                             });
                           },
-                          activeColor: accentColorLight,
+                          activeColor: colorScheme.primary,
                         ),
-                        const Text(
+                        Text(
                           'Lost',
-                          style: TextStyle(color: primaryTextLight),
+                          style: TextStyle(color: colorScheme.onSurface),
                         ),
                         Radio<String>(
                           value: 'found',
@@ -178,11 +173,11 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                               selectedType = value!;
                             });
                           },
-                          activeColor: accentColorLight,
+                          activeColor: colorScheme.primary,
                         ),
-                        const Text(
+                        Text(
                           'Found',
-                          style: TextStyle(color: primaryTextLight),
+                          style: TextStyle(color: colorScheme.onSurface),
                         ),
                       ],
                     ),
@@ -191,52 +186,26 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                       controller: descriptionController,
                       decoration: InputDecoration(
                         hintText:
-                            'Describe who you are and about the lost or found thing', // Updated hint text
-                        hintStyle: TextStyle(color: secondaryTextLight),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(
-                            color: accentColorLight.withOpacity(0.5),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(
-                            color: accentColorLight.withOpacity(0.5),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: const BorderSide(
-                            color: accentColorLight,
-                            width: 2.0,
-                          ),
-                        ),
+                            'Describe who you are and about the lost or found thing',
                       ),
                       maxLines: 3,
-                      style: const TextStyle(color: primaryTextLight),
+                      style: TextStyle(color: colorScheme.onSurface),
                     ),
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text(
+                  child: Text(
                     'Cancel',
-                    style: TextStyle(color: accentColorLight),
+                    style: TextStyle(color: colorScheme.primary),
                   ),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(dialogContext).pop();
                   },
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accentColorLight,
-                  ),
-                  child: const Text(
-                    'Post',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: const Text('Post'),
                   onPressed: () {
                     if (descriptionController.text.isNotEmpty) {
                       _addItem(selectedType, descriptionController.text);
@@ -259,21 +228,17 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
-      backgroundColor: primaryLightBackground,
       appBar: AppBar(
-        title: const Text(
-          'Lost and Found',
-          style: TextStyle(color: primaryTextLight),
-        ),
-        backgroundColor: cardLightBackground,
-        iconTheme: const IconThemeData(color: primaryTextLight),
-        elevation: 0.5,
+        title: const Text('Lost and Found'),
       ),
       body:
           _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: accentColorLight),
+              ? Center(
+                child: CircularProgressIndicator(color: colorScheme.primary),
               )
               : _error.isNotEmpty && _items.isEmpty
               ? Center(
@@ -287,19 +252,18 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                 child: Text(
                   'No lost or found items yet.\nBe the first to post!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: secondaryTextLight, fontSize: 16),
+                  style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
                 ),
               )
               : RefreshIndicator(
                 onRefresh: _fetchItems,
-                color: accentColorLight,
+                color: colorScheme.primary,
                 child: ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: _items.length,
                   itemBuilder: (context, index) {
                     final item = _items[index];
                     return Card(
-                      color: cardLightBackground,
                       elevation: 1.0,
                       margin: const EdgeInsets.symmetric(
                         vertical: 6.0,
@@ -321,8 +285,8 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                         ),
                         title: Text(
                           item.description,
-                          style: const TextStyle(
-                            color: primaryTextLight,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 3,
@@ -334,23 +298,20 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
                             Text(
                               'Status: ${item.type.capitalize()}',
                               style: TextStyle(
-                                color: secondaryTextLight,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontSize: 12,
                               ),
                             ),
-                            // Removed: if (item.userName != null) Text('Posted by: ${item.userName}', ...)
                             Text(
-                              'On: ${item.createdAt.toLocal().toString().substring(0, 16)}', // Format date
+                              'On: ${item.createdAt.toLocal().toString().substring(0, 16)}',
                               style: TextStyle(
-                                color: secondaryTextLight,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontSize: 12,
                               ),
                             ),
                           ],
                         ),
-                        isThreeLine:
-                            item.userName !=
-                            null, // Adjust based on whether username would have been shown
+                        isThreeLine: item.userName != null,
                       ),
                     );
                   },
@@ -358,8 +319,6 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
               ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddItemDialog,
-        backgroundColor: accentColorLight,
-        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

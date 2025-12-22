@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.15),
+                          color: colorScheme.shadow.withOpacity(0.15),
                           blurRadius: 8,
                           offset: Offset(0, 2),
                         ),
@@ -745,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen>
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: colorScheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: colorScheme.onPrimary,
         child: Icon(Icons.chat_bubble_outline),
       ),
     );
@@ -885,7 +885,7 @@ class _HomeScreenState extends State<HomeScreen>
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: colorScheme.primary.withOpacity(0.8),
-                  child: Icon(Icons.person, color: Colors.white, size: 30),
+                  child: Icon(Icons.person, color: colorScheme.onPrimary, size: 30),
                 ),
                 SizedBox(height: 12),
                 Text(
@@ -939,7 +939,7 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
           if (_isStaff || _isAdmin) ...[
-            Divider(color: Colors.grey[300]),
+            Divider(color: colorScheme.outlineVariant),
             _buildDrawerItem(
               icon: Icons.dashboard,
               title: 'Faculty Dashboard',
@@ -1019,7 +1019,7 @@ class _HomeScreenState extends State<HomeScreen>
               },
             ),
           ],
-          Divider(color: Colors.grey[300]),
+          Divider(color: colorScheme.outlineVariant),
           _buildDrawerItem(
             icon: Icons.bug_report_outlined,
             title: 'Role Setup Test',
@@ -1040,7 +1040,7 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
           if (_isAdmin) ...[
-            Divider(color: Colors.grey[300]),
+            Divider(color: colorScheme.outlineVariant),
             _buildDrawerItem(
               icon: Icons.admin_panel_settings,
               title: 'Admin Tools',
@@ -1052,7 +1052,7 @@ class _HomeScreenState extends State<HomeScreen>
               },
             ),
           ],
-          Divider(color: Colors.grey[300]),
+          Divider(color: colorScheme.outlineVariant),
           _buildDrawerItem(
             icon: Icons.logout,
             title: 'Logout',
@@ -1117,7 +1117,7 @@ class _HomeScreenState extends State<HomeScreen>
                 height: 4,
                 margin: EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1132,10 +1132,10 @@ class _HomeScreenState extends State<HomeScreen>
                 leading: Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue[100],
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.today, color: Colors.blue[700]),
+                  child: Icon(Icons.today, color: Theme.of(context).colorScheme.primary),
                 ),
                 title: Text('Today\'s Attendance'),
                 subtitle: Text('View attendance records for today'),
@@ -1159,10 +1159,10 @@ class _HomeScreenState extends State<HomeScreen>
                 leading: Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green[100],
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.analytics, color: Colors.green[700]),
+                  child: Icon(Icons.analytics, color: Theme.of(context).colorScheme.tertiary),
                 ),
                 title: Text('Overall Attendance'),
                 subtitle: Text('View overall attendance statistics'),
@@ -1186,10 +1186,10 @@ class _HomeScreenState extends State<HomeScreen>
                 leading: Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.orange[100],
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.calendar_month, color: Colors.orange[700]),
+                  child: Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.secondary),
                 ),
                 title: Text('Daily Attendance'),
                 subtitle: Text('View day-wise attendance records'),

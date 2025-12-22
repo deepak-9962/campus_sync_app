@@ -180,14 +180,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Admin Dashboard',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.purple[700],
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
         actions: [
           IconButton(
@@ -202,15 +205,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.purple[700]!, Colors.purple[500]!, Colors.white],
+            colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7), colorScheme.surface],
             stops: const [0.0, 0.3, 1.0],
           ),
         ),
         child: SafeArea(
           child:
               _isLoading
-                  ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                  ? Center(
+                    child: CircularProgressIndicator(color: colorScheme.onPrimary),
                   )
                   : _errorMessage != null
                   ? _buildErrorView()
@@ -221,27 +224,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildErrorView() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 80, color: colorScheme.error.withOpacity(0.7)),
             const SizedBox(height: 16),
             Text(
               'Error Loading Departments',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.red[700],
+                color: colorScheme.error,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.red[600]),
+              style: TextStyle(fontSize: 16, color: colorScheme.error.withOpacity(0.8)),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -249,8 +253,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[700],
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
@@ -295,14 +299,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildWelcomeHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: colorScheme.surface.withOpacity(0.9),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: colorScheme.onSurface.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -313,13 +318,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.purple[100],
+              color: colorScheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.admin_panel_settings,
               size: 30,
-              color: Colors.purple[700],
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(width: 16),
@@ -332,20 +337,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   widget.userName,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.6)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'System Administrator',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.purple[600],
+                    color: colorScheme.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -358,14 +363,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildDepartmentSelection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: colorScheme.surface.withOpacity(0.9),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: colorScheme.onSurface.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -376,14 +382,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.school, color: Colors.purple[700], size: 24),
+              Icon(Icons.school, color: colorScheme.primary, size: 24),
               const SizedBox(width: 12),
               Text(
                 'Select Department',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -392,7 +398,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: DropdownButtonHideUnderline(
@@ -400,8 +406,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 value: _selectedDepartment,
                 isExpanded: true,
                 hint: const Text('Choose a department'),
-                icon: Icon(Icons.arrow_drop_down, color: Colors.purple[700]),
-                style: TextStyle(color: Colors.grey[800], fontSize: 16),
+                icon: Icon(Icons.arrow_drop_down, color: colorScheme.primary),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
                 items:
                     _departments.map((dept) {
                       return DropdownMenuItem<String>(
@@ -415,14 +421,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.purple[100],
+                                color: colorScheme.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '${dept['student_count']} students',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.purple[700],
+                                  color: colorScheme.primary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -445,6 +451,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildNavigationCards() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -453,7 +460,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: colorScheme.onPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -491,16 +498,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     required MaterialColor color,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
+          color: colorScheme.surface.withOpacity(0.9),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: colorScheme.onSurface.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -522,14 +530,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6)),
               textAlign: TextAlign.center,
             ),
           ],
@@ -539,14 +547,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Widget _buildStatisticsSummary() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: colorScheme.surface.withOpacity(0.9),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: colorScheme.onSurface.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -557,14 +566,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.bar_chart, color: Colors.purple[700], size: 24),
+              Icon(Icons.bar_chart, color: colorScheme.primary, size: 24),
               const SizedBox(width: 12),
               Text(
                 'System Overview',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
@@ -602,6 +611,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     IconData icon,
     MaterialColor color,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -624,7 +634,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           const SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6)),
             textAlign: TextAlign.center,
           ),
         ],

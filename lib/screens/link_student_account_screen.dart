@@ -75,11 +75,12 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Link Student Account'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24),
@@ -91,27 +92,27 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
               width: double.infinity,
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
               ),
               child: Column(
                 children: [
-                  Icon(Icons.link, size: 64, color: Colors.blue),
+                  Icon(Icons.link, size: 64, color: colorScheme.primary),
                   SizedBox(height: 16),
                   Text(
                     'Link Your Student Account',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
                   Text(
                     'To view your attendance, please link your user account with your student registration number.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.7)),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -122,6 +123,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
 
             // Instructions
             Card(
+              color: colorScheme.surface,
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -129,13 +131,14 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue),
+                        Icon(Icons.info_outline, color: colorScheme.primary),
                         SizedBox(width: 8),
                         Text(
                           'Instructions',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -143,17 +146,17 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                     SizedBox(height: 12),
                     Text(
                       '1. Enter your registration number exactly as it appears in your student ID card',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                     ),
                     SizedBox(height: 8),
                     Text(
                       '2. Make sure you are logged in with your correct email address',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                     ),
                     SizedBox(height: 8),
                     Text(
                       '3. If you encounter any issues, contact your administrator',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                     ),
                   ],
                 ),
@@ -183,7 +186,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
                       ),
                     ),
                     textCapitalization: TextCapitalization.characters,
@@ -206,18 +209,18 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                       width: double.infinity,
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade200),
+                        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red),
+                          Icon(Icons.error_outline, color: colorScheme.error),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade700),
+                              style: TextStyle(color: colorScheme.onErrorContainer),
                             ),
                           ),
                         ],
@@ -229,18 +232,18 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                       width: double.infinity,
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
+                        color: colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.shade200),
+                        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle_outline, color: Colors.green),
+                          Icon(Icons.check_circle_outline, color: colorScheme.primary),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _successMessage!,
-                              style: TextStyle(color: Colors.green.shade700),
+                              style: TextStyle(color: colorScheme.onPrimaryContainer),
                             ),
                           ),
                         ],
@@ -255,8 +258,8 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _linkAccount,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -273,7 +276,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        colorScheme.onPrimary,
                                       ),
                                     ),
                                   ),
@@ -301,7 +304,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
               width: double.infinity,
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -310,7 +313,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                     'Current Department: ${widget.department}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[700],
+                      color: colorScheme.onSurface.withOpacity(0.7),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -318,7 +321,7 @@ class _LinkStudentAccountScreenState extends State<LinkStudentAccountScreen> {
                     'Current Semester: ${widget.semester}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[700],
+                      color: colorScheme.onSurface.withOpacity(0.7),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

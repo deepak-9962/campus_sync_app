@@ -907,6 +907,9 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Export Student Data to PDF')),
       body:
@@ -921,7 +924,7 @@ class _PDFExportScreenState extends State<PDFExportScreen> {
                   Container(
                     margin: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: theme.dividerColor),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(

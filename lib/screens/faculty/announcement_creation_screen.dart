@@ -114,10 +114,12 @@ class _AnnouncementCreationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Announcement'),
-        backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -232,7 +234,7 @@ class _AnnouncementCreationScreenState
                       label: Text('Upload PDF Resource'),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.green,
+                        backgroundColor: colorScheme.secondary,
                       ),
                     ),
                   ),
@@ -243,7 +245,7 @@ class _AnnouncementCreationScreenState
                 onPressed: _isSending ? null : _createAnnouncement,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: colorScheme.primary,
                 ),
                 child:
                     _isSending
@@ -254,7 +256,7 @@ class _AnnouncementCreationScreenState
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: colorScheme.onPrimary,
                                 strokeWidth: 2,
                               ),
                             ),

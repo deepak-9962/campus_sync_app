@@ -147,11 +147,14 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('My Attendance'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -172,6 +175,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildLoadingState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -180,7 +184,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           SizedBox(height: 16),
           Text(
             'Loading your attendance...',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.6)),
           ),
         ],
       ),
@@ -188,27 +192,28 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildErrorState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             SizedBox(height: 16),
             Text(
               'Unable to Load Attendance',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.red[700],
+                color: colorScheme.error,
               ),
             ),
             SizedBox(height: 8),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withOpacity(0.6)),
             ),
             SizedBox(height: 24),
             ElevatedButton.icon(
@@ -216,8 +221,8 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
               icon: Icon(Icons.refresh),
               label: Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
               ),
             ),
           ],
@@ -227,27 +232,28 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildNoDataState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assignment, size: 64, color: Colors.grey[400]),
+            Icon(Icons.assignment, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
             SizedBox(height: 16),
             Text(
               'No Attendance Records',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             SizedBox(height: 8),
             Text(
               'No attendance records found for your account.\nAttendance will appear here once classes begin.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withOpacity(0.6)),
             ),
           ],
         ),
@@ -256,6 +262,8 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildAttendanceData() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final data = _attendanceData!;
     final totalClasses = data['total_classes'] ?? 0;
     final presentClasses = data['present_classes'] ?? 0;
@@ -277,7 +285,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadStudentAttendance,
-      color: Colors.blue,
+      color: colorScheme.primary,
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(16),
@@ -328,7 +336,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                           Icon(
                             Icons.access_time,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: colorScheme.onSurface.withOpacity(0.6),
                           ),
                           SizedBox(width: 8),
                           Expanded(
@@ -336,7 +344,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                               'Last updated: ${_formatRefreshTime(_lastRefreshTime!)}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -356,18 +364,18 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: colorScheme.primaryContainer.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
+                  Icon(Icons.info_outline, color: colorScheme.primary, size: 16),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Pull down to refresh or tap the refresh button to get the latest attendance data',
-                      style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                      style: TextStyle(fontSize: 12, color: colorScheme.primary),
                     ),
                   ),
                 ],
@@ -416,7 +424,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                             child: CircularProgressIndicator(
                               value: double.parse(attendancePercentage) / 100,
                               strokeWidth: 10,
-                              backgroundColor: Colors.grey.shade300,
+                              backgroundColor: colorScheme.surfaceContainerHighest,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 percentageColor,
                               ),
@@ -437,7 +445,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                                 'Attendance',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                               SizedBox(height: 4),
@@ -556,7 +564,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                                 ),
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey[700],
+                                  color: colorScheme.onSurface.withOpacity(0.7),
                                 ),
                               ),
                             ],
@@ -605,6 +613,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -615,7 +624,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ),
@@ -652,7 +661,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           ),
           Text(
             title,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
             textAlign: TextAlign.center,
           ),
         ],

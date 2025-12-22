@@ -372,21 +372,21 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                           'Database Management Systems',
                           'CSE 4A - Room 302',
                           '9:00 AM - 10:30 AM',
-                          Colors.blue.shade700,
+                          Theme.of(context).colorScheme.primary,
                         ),
                         SizedBox(height: 16),
                         _buildClassCard(
                           'Artificial Intelligence',
                           'CSE 4B - Lab 103',
                           '11:00 AM - 12:30 PM',
-                          Colors.purple.shade700,
+                          Theme.of(context).colorScheme.secondary,
                         ),
                         SizedBox(height: 16),
                         _buildClassCard(
                           'Operating Systems',
                           'CSE 4C - Room 205',
                           '2:00 PM - 3:30 PM',
-                          Colors.deepPurple.shade700,
+                          Theme.of(context).colorScheme.tertiary,
                         ),
                       ],
                     ),
@@ -403,12 +403,12 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                       Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
                           Icons.dashboard_customize_outlined,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.primary,
                           size: 20,
                         ),
                       ),
@@ -418,7 +418,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: 1.2,
                           
                         ),
@@ -666,7 +666,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   );
                 },
               ),
-              Divider(color: Colors.white24, thickness: 1),
+              Divider(color: Theme.of(context).dividerColor, thickness: 1),
               _buildDrawerTile(
                 'Switch Department/Semester',
                 Icons.school_outlined,
@@ -684,7 +684,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                   ),
                 );
               }),
-              Divider(color: Colors.white24, thickness: 1),
+              Divider(color: Theme.of(context).dividerColor, thickness: 1),
               _buildDrawerTile('Logout', Icons.logout, () async {
                 Navigator.pop(context); // Close the drawer
 

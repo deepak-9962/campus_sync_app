@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/update_service.dart';
+import '../services/theme_service.dart';
+import '../main.dart'; // For themeService
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -16,12 +18,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   void initState() {
     super.initState();
     _nameController.text = userName; // Pre-fill name field
+    themeService.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     _nameController.dispose(); // Dispose controller to free memory
+    themeService.removeListener(_onThemeChanged);
     super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
   }
 
   void _saveProfile() {
@@ -33,6 +41,50 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       SnackBar(
         content: Text('Profile saved successfully!'),
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showThemeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Theme'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<AppThemeMode>(
+              title: const Text('Light'),
+              secondary: const Icon(Icons.light_mode),
+              value: AppThemeMode.light,
+              groupValue: themeService.themeMode,
+              onChanged: (value) {
+                themeService.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<AppThemeMode>(
+              title: const Text('Dark'),
+              secondary: const Icon(Icons.dark_mode),
+              value: AppThemeMode.dark,
+              groupValue: themeService.themeMode,
+              onChanged: (value) {
+                themeService.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<AppThemeMode>(
+              title: const Text('System Default'),
+              secondary: const Icon(Icons.settings_brightness),
+              value: AppThemeMode.system,
+              groupValue: themeService.themeMode,
+              onChanged: (value) {
+                themeService.setThemeMode(value!);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -78,6 +130,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
             const SizedBox(height: 20),
             const Divider(),
+            ListTile(
+              leading: Icon(themeService.themeModeIcon),
+              title: const Text("Theme"),
+              subtitle: Text(themeService.themeModeDisplayName),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _showThemeDialog,
+            ),
             ListTile(
               leading: const Icon(Icons.system_update),
               title: const Text("Check for Updates"),

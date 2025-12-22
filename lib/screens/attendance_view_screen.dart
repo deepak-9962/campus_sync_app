@@ -254,20 +254,23 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Attendance - ${widget.department}'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         bottom: TabBar(
           controller: _mainTabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          labelColor: colorScheme.onPrimary,
+          unselectedLabelColor: colorScheme.onPrimary.withOpacity(0.7),
           tabs: const [Tab(text: "Today's"), Tab(text: 'Overall')],
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.group, color: Colors.white),
+            icon: Icon(Icons.group, color: colorScheme.onPrimary),
             onSelected: (String section) {
               setState(() => _selectedSection = section);
               if (_mainTabController.index == 0) {
@@ -292,6 +295,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
   }
 
   Widget _buildTodayPane() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         _buildDateAndSelectors(
@@ -299,8 +303,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
         ),
         TabBar(
           controller: _todayTabController,
-          labelColor: Colors.blue[700],
-          indicatorColor: Colors.blue[700],
+          labelColor: colorScheme.primary,
+          indicatorColor: colorScheme.primary,
           tabs: const [Tab(text: 'Period'), Tab(text: 'Daily')],
         ),
         Expanded(
@@ -378,7 +382,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                       Expanded(
                         child: LinearProgressIndicator(
                           value: pct / 100.0,
-                          backgroundColor: Colors.grey[200],
+                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                           color:
                               pct >= 75
                                   ? Colors.green
@@ -401,17 +405,19 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
   }
 
   Widget _buildDateAndSelectors({required bool showPeriodSelectors}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+        color: colorScheme.surfaceContainerHighest,
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, color: Colors.blue[700]),
+              Icon(Icons.calendar_today, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'Date: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
@@ -425,7 +431,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                 'Section: $_selectedSection',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
               const SizedBox(width: 16),
@@ -433,8 +439,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                 icon: const Icon(Icons.date_range, size: 18),
                 label: const Text('Change Date'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[700],
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -483,6 +489,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
       return const Center(child: Text('Select a period'));
     }
     if (_resolvedSubjectCode == null) {
+      final colorScheme = Theme.of(context).colorScheme;
       return SingleChildScrollView(
         child: Column(
           children: [
@@ -491,12 +498,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               padding: const EdgeInsets.all(48),
               child: Column(
                 children: [
-                  Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.schedule, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
                   SizedBox(height: 16),
                   Text(
                     'No class scheduled for Period $_selectedPeriodNumber on ${DateFormat('dd MMM').format(_selectedDate)}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
                   ),
                 ],
               ),
@@ -513,6 +520,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     final int absent = total - present;
 
     if (_periodAttendance.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       return SingleChildScrollView(
         child: Column(
           children: [
@@ -526,14 +534,14 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               padding: const EdgeInsets.all(48),
               child: Column(
                 children: [
-                  Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.schedule, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
                   SizedBox(height: 16),
                   Text(
                     'No records for ${DateFormat('dd MMM').format(_selectedDate)}, '
                     'Subject: ${_resolvedSubjectName ?? _resolvedSubjectCode}, '
                     'Period: ${_selectedPeriodNumber ?? '-'}, Sec: $_selectedSection',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
                   ),
                 ],
               ),
@@ -551,10 +559,10 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               child: Row(
                 children: [
-                  Icon(Icons.book, size: 18, color: Colors.blue[700]),
+                  Icon(Icons.book, size: 18, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -654,6 +662,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     final int absent = total - present;
 
     if (_dailyAttendance.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       return SingleChildScrollView(
         child: Column(
           children: [
@@ -667,12 +676,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
               padding: const EdgeInsets.all(48),
               child: Column(
                 children: [
-                  Icon(Icons.today, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.today, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
                   SizedBox(height: 16),
                   Text(
                     'No daily attendance records found\nfor this date and section',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
                   ),
                 ],
               ),
@@ -767,12 +776,14 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
     required int absent,
     List<Map<String, dynamic>>? attendanceData,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+        color: colorScheme.surface,
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Wrap(
         spacing: 12,
@@ -781,8 +792,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
           _summaryChip(
             label: 'Total',
             value: total.toString(),
-            color: Colors.grey[700]!,
-            bg: Colors.grey[200]!,
+            color: colorScheme.onSurface.withOpacity(0.7),
+            bg: colorScheme.surfaceContainerHighest,
             onTap: null,
           ),
           _summaryChip(
@@ -884,7 +895,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: Theme.of(context).dividerColor,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -915,7 +926,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen>
                                     'No $title students',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey[600],
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                     ),
                                   ),
                                 )

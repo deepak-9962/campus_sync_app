@@ -217,6 +217,9 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -237,13 +240,13 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.indigo[700],
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actionsIconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
+        actionsIconTheme: IconThemeData(color: colorScheme.onPrimary),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.share, color: Colors.white),
+            icon: Icon(Icons.share, color: colorScheme.onPrimary),
             tooltip: 'Export/Share',
             onSelected: (value) async {
               if (value == 'csv') {
@@ -271,7 +274,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                 ],
           ),
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Colors.white),
+            icon: Icon(Icons.auto_awesome, color: colorScheme.onPrimary),
             tooltip: 'Automated Reports',
             onPressed: () {
               Navigator.of(context).push(
@@ -286,7 +289,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+            icon: Icon(Icons.picture_as_pdf, color: colorScheme.onPrimary),
             tooltip: 'Export Student Data to PDF',
             onPressed: () {
               Navigator.of(context).push(
@@ -301,7 +304,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
+            icon: Icon(Icons.calendar_today, color: colorScheme.onPrimary),
             tooltip: 'Select Date',
             onPressed: () async {
               final picked = await showDatePicker(
@@ -319,7 +322,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: colorScheme.onPrimary),
             tooltip: 'Refresh Data',
             onPressed: _loadDepartmentData,
           ),
@@ -342,7 +345,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Colors.indigo[700]!, Colors.indigo[500]!],
+                          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7)],
                         ),
                       ),
                       child: Column(
@@ -350,8 +353,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         children: [
                           Text(
                             'Welcome, ${widget.hodName}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: colorScheme.onPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -359,8 +362,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                           const SizedBox(height: 4),
                           Text(
                             'Department: ${_effectiveDepartment ?? widget.department}',
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: colorScheme.onPrimary.withOpacity(0.7),
                               fontSize: 16,
                             ),
                           ),
@@ -374,18 +377,18 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                         margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.apartment,
-                                  color: Colors.indigo,
+                                  color: colorScheme.primary,
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
@@ -422,7 +425,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                const Icon(Icons.school, color: Colors.indigo),
+                                Icon(Icons.school, color: colorScheme.primary),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Semester:',
@@ -467,7 +470,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                     Container(
                       margin: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -559,8 +562,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                                       icon: const Icon(Icons.table_chart),
                                       label: const Text('Export CSV'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue[700],
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: colorScheme.primary,
+                                        foregroundColor: colorScheme.onPrimary,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 14,
                                           horizontal: 16,
@@ -575,8 +578,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                                       icon: const Icon(Icons.picture_as_pdf),
                                       label: const Text('Export PDF'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red[700],
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: colorScheme.error,
+                                        foregroundColor: colorScheme.onError,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 14,
                                           horizontal: 16,
@@ -591,8 +594,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                                       icon: const Icon(Icons.refresh),
                                       label: const Text('Refresh Data'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green[700],
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: colorScheme.tertiary,
+                                        foregroundColor: colorScheme.onTertiary,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 14,
                                           horizontal: 16,
@@ -1098,6 +1101,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   }
 
   Widget _buildViewTab(String value, String label) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = selectedView == value;
     return Expanded(
       child: GestureDetector(
@@ -1109,14 +1114,14 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.indigo[700] : Colors.transparent,
+            color: isSelected ? colorScheme.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[700],
+                color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -1235,8 +1240,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                           icon: const Icon(Icons.school),
                           label: const Text('View by Semester'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo[700],
-                            foregroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ),
@@ -1251,8 +1256,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                           icon: const Icon(Icons.warning),
                           label: const Text('Low Attendance'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange[700],
-                            foregroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).colorScheme.tertiary,
+                            foregroundColor: Theme.of(context).colorScheme.onTertiary,
                           ),
                         ),
                       ),
@@ -1296,7 +1301,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                   child: Text(
                     title,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1329,11 +1334,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           child: ExpansionTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.indigo[700],
+              backgroundColor: Theme.of(context).colorScheme.primary,
               child: Text(
                 '${semester['semester']}',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1500,12 +1505,15 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   }
 
   Widget _buildLowAttendanceView() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     if (lowAttendanceStudents.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle, size: 64, color: Colors.green[400]),
+            Icon(Icons.check_circle, size: 64, color: colorScheme.tertiary),
             const SizedBox(height: 16),
             const Text(
               'Great! No students with low attendance',
@@ -1514,7 +1522,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               'All students have attendance ≥ 75%',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 16),
             ),
           ],
         ),
@@ -1530,11 +1538,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.red[400],
+              backgroundColor: colorScheme.error,
               child: Text(
                 '${student['percentage']?.toStringAsFixed(0) ?? '0'}%',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colorScheme.onError,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -1544,7 +1552,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
             subtitle: Text(
               'Reg: ${student['registration_no']} | Sem: ${student['semester']} | Sec: ${student['section']}',
             ),
-            trailing: Icon(Icons.warning, color: Colors.red[400]),
+            trailing: Icon(Icons.warning, color: colorScheme.error),
           ),
         );
       },
@@ -1557,7 +1565,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     IconData icon, {
     Color? color,
   }) {
-    final displayColor = color ?? Colors.indigo[700]!;
+    final displayColor = color ?? Theme.of(context).colorScheme.primary;
     return Column(
       children: [
         Icon(icon, color: displayColor, size: 20),
@@ -1572,7 +1580,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
         ),
         Text(
           label,
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
           textAlign: TextAlign.center,
         ),
       ],

@@ -99,21 +99,25 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   }
 
   Widget _buildBody() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     if (widget.filePath == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 50, color: Colors.red),
+            Icon(Icons.error_outline, size: 50, color: colorScheme.error),
             SizedBox(height: 16),
             Text('PDF file path is missing',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
             SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
                 'Try downloading the file again',
                 textAlign: TextAlign.center,
+                style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7)),
               ),
             ),
             SizedBox(height: 24),
@@ -133,16 +137,17 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 50, color: Colors.red),
+            Icon(Icons.error_outline, size: 50, color: colorScheme.error),
             SizedBox(height: 16),
             Text('Error loading PDF',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
             SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
                 _errorMessage,
                 textAlign: TextAlign.center,
+                style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7)),
               ),
             ),
             SizedBox(height: 24),
@@ -206,7 +211,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
                     Text('Loading PDF...',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                   ],
                 ),
               )

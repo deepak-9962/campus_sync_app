@@ -23,11 +23,18 @@ import 'screens/role_test_screen.dart';
 import 'screens/semester_selection_screen.dart'; // Import new screen
 import 'screens/department_selection_screen.dart'; // Import new screen
 import 'screens/selection_screen.dart'; // Centralized Dept/Sem selection
+import 'services/theme_service.dart'; // Theme service for dark mode
 
 const String kBuildVersion = '1.0.0'; // bump when deploying new web build
 
+// Global theme service instance
+final ThemeService themeService = ThemeService();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize theme service
+  await themeService.initialize();
 
   // Initialize Firebase only for mobile platforms
   if (!kIsWeb) {
@@ -110,8 +117,31 @@ void setupNotificationListeners() {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    themeService.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    themeService.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,124 +149,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Campus Sync App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Roboto', // Default font
-        textTheme:
-            GoogleFonts.notoSansTextTheme(), // Fallback for missing glyphs
-        // Color Scheme
-        colorScheme: ColorScheme.light(
-          primary: const Color(0xFF1976D2), // Blue 700 (Accent)
-          secondary: const Color(
-            0xFF1976D2,
-          ), // Can be same as primary or different
-          surface: Colors.white, // Card and dialog backgrounds
-          background: const Color(0xFFF5F5F5), // Main background
-          error: Colors.red.shade700,
-          onPrimary: Colors.white, // Text/icons on primary color
-          onSecondary: Colors.white, // Text/icons on secondary color
-          onSurface: const Color(0xFF212121), // Primary text on surface
-          onBackground: const Color(0xFF212121), // Primary text on background
-          onError: Colors.white,
-        ),
-
-        // Scaffold Background Color
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-
-        // AppBar Theme
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white, // AppBar background
-          foregroundColor: const Color(0xFF212121), // Title and icons on AppBar
-          elevation: 0.5,
-          iconTheme: IconThemeData(color: const Color(0xFF424242)),
-          titleTextStyle: TextStyle(
-            color: const Color(0xFF212121),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        // Card Theme
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 1.0, // Subtle elevation
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          margin: EdgeInsets.symmetric(
-            vertical: 6.0,
-            horizontal: 0,
-          ), // Default card margin
-        ),
-
-        // Text Theme is provided above via GoogleFonts.notoSansTextTheme()
-
-        // ElevatedButton Theme
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1976D2), // Accent color
-            foregroundColor: Colors.white, // Text on button
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-          ),
-        ),
-
-        // InputDecoration Theme (for TextFields)
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.grey[100], // Light fill for text fields
-          hintStyle: TextStyle(color: Colors.grey[500]),
-          labelStyle: TextStyle(
-            color: const Color(0xFF757575),
-          ), // Medium grey for labels
-          border: OutlineInputBorder(
-            // Default border for all states if others not specified
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(color: Colors.grey[400]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            // Border when the input field is enabled and not focused
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(color: Colors.grey[400]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(
-              color: const Color(0xFF1976D2), // Accent color on focus
-              width: 2.0,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-
-        // Icon Theme
-        iconTheme: IconThemeData(
-          color: const Color(0xFF1976D2), // Primary color for better visibility
-          size: 24.0,
-        ),
-
-        // Primary Icon Theme (for AppBar and other primary contexts)
-        primaryIconTheme: IconThemeData(
-          color: const Color(0xFF424242),
-          size: 24.0,
-        ),
-
-        // Floating Action Button Theme
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: const Color(0xFF1976D2),
-          foregroundColor: Colors.white,
-          iconSize: 24.0,
-        ),
-
-        // Dialog Theme
-        dialogBackgroundColor: Colors.white,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeService.flutterThemeMode,
       // Start with the AuthScreen
       home: const AuthScreen(),
       // Define routes for navigation

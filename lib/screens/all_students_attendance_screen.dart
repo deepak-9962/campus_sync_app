@@ -123,14 +123,14 @@ class _AllStudentsAttendanceScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           _showTodayAttendance ? 'Today\'s Attendance' : 'Overall Attendance',
         ),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
@@ -168,7 +168,7 @@ class _AllStudentsAttendanceScreenState
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue[50]!, Colors.white],
+            colors: [colorScheme.primaryContainer, colorScheme.surface],
           ),
         ),
         child: Column(
@@ -178,7 +178,7 @@ class _AllStudentsAttendanceScreenState
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue[700],
+                color: colorScheme.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -188,15 +188,15 @@ class _AllStudentsAttendanceScreenState
                 children: [
                   Text(
                     widget.department,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     'Semester ${widget.semester}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                    style: TextStyle(color: colorScheme.onPrimary.withOpacity(0.7), fontSize: 16),
                   ),
                 ],
               ),
@@ -207,7 +207,7 @@ class _AllStudentsAttendanceScreenState
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -227,7 +227,7 @@ class _AllStudentsAttendanceScreenState
                         decoration: BoxDecoration(
                           color:
                               !_showTodayAttendance
-                                  ? Colors.blue[700]
+                                  ? colorScheme.primary
                                   : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -237,8 +237,8 @@ class _AllStudentsAttendanceScreenState
                             style: TextStyle(
                               color:
                                   !_showTodayAttendance
-                                      ? Colors.white
-                                      : Colors.grey[700],
+                                      ? colorScheme.onPrimary
+                                      : colorScheme.onSurface.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -261,7 +261,7 @@ class _AllStudentsAttendanceScreenState
                         decoration: BoxDecoration(
                           color:
                               _showTodayAttendance
-                                  ? Colors.blue[700]
+                                  ? colorScheme.primary
                                   : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -271,8 +271,8 @@ class _AllStudentsAttendanceScreenState
                             style: TextStyle(
                               color:
                                   _showTodayAttendance
-                                      ? Colors.white
-                                      : Colors.grey[700],
+                                      ? colorScheme.onPrimary
+                                      : colorScheme.onSurface.withOpacity(0.6),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -295,7 +295,7 @@ class _AllStudentsAttendanceScreenState
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -311,11 +311,11 @@ class _AllStudentsAttendanceScreenState
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: colorScheme.shadow.withOpacity(0.1),
                       spreadRadius: 1,
                       blurRadius: 4,
                       offset: const Offset(0, 2),
@@ -391,14 +391,14 @@ class _AllStudentsAttendanceScreenState
                             Icon(
                               Icons.error_outline,
                               size: 64,
-                              color: Colors.red[300],
+                              color: colorScheme.error.withOpacity(0.6),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               _errorMessage,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Colors.red[600],
+                                color: colorScheme.error,
                                 fontSize: 16,
                               ),
                             ),
@@ -418,7 +418,7 @@ class _AllStudentsAttendanceScreenState
                             Icon(
                               Icons.school_outlined,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: colorScheme.onSurface.withOpacity(0.4),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -427,9 +427,9 @@ class _AllStudentsAttendanceScreenState
                                       ? 'No attendance data available for today'
                                       : 'No overall attendance data available')
                                   : 'No students match your search',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.grey,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -442,7 +442,7 @@ class _AllStudentsAttendanceScreenState
                                   : 'Try adjusting your search criteria',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: colorScheme.onSurface.withOpacity(0.5),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -479,6 +479,7 @@ class _AllStudentsAttendanceScreenState
     IconData icon,
     Color color,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -491,12 +492,13 @@ class _AllStudentsAttendanceScreenState
             color: color,
           ),
         ),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6))),
       ],
     );
   }
 
   Widget _buildStudentCard(Map<String, dynamic> student) {
+    final colorScheme = Theme.of(context).colorScheme;
     final percentage = student['percentage'] ?? 0.0;
     final attendedClasses = student['attended_classes'] ?? 0;
     final totalClasses = student['total_classes'] ?? 0;
@@ -569,7 +571,7 @@ class _AllStudentsAttendanceScreenState
                     const SizedBox(height: 2),
                     Text(
                       registrationNo,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
                     ),
                   ],
                   const SizedBox(height: 4),
@@ -577,7 +579,7 @@ class _AllStudentsAttendanceScreenState
                     _showTodayAttendance
                         ? 'Status: ${status.toUpperCase()}'
                         : '$attendedClasses / $totalClasses classes',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
                   ),
                 ],
               ),

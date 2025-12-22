@@ -258,6 +258,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Announcements'),
@@ -288,7 +291,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                     Text(
                       _errorMessage!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red),
+                      style: TextStyle(color: colorScheme.error),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
@@ -303,15 +306,15 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.campaign_outlined,
                       size: 80,
-                      color: Colors.grey,
+                      color: colorScheme.onSurface.withOpacity(0.4),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'No announcements yet',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      style: TextStyle(fontSize: 18, color: colorScheme.onSurface.withOpacity(0.6)),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
@@ -346,7 +349,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                           isEmergency
                               ? RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: Colors.red, width: 2),
+                                side: BorderSide(color: colorScheme.error, width: 2),
                               )
                               : null,
                       child: Column(
@@ -360,7 +363,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                             decoration: BoxDecoration(
                               color:
                                   isEmergency
-                                      ? Colors.red.withOpacity(0.1)
+                                      ? colorScheme.error.withOpacity(0.1)
                                       : priorityColor.withOpacity(0.1),
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(12),
@@ -387,15 +390,15 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                 Text(
                                   createdAt,
                                   style: TextStyle(
-                                    color: Colors.grey[600],
+                                    color: colorScheme.onSurface.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
                                 if (_isStaffOrAdmin)
                                   IconButton(
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.delete,
-                                      color: Colors.red,
+                                      color: colorScheme.error,
                                     ),
                                     tooltip: 'Delete Announcement',
                                     onPressed: () async {
@@ -424,10 +427,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                                         context,
                                                         true,
                                                       ),
-                                                  child: const Text(
+                                                  child: Text(
                                                     'Delete',
                                                     style: TextStyle(
-                                                      color: Colors.red,
+                                                      color: colorScheme.error,
                                                     ),
                                                   ),
                                                 ),
@@ -464,16 +467,16 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                 const SizedBox(height: 16),
                                 Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.person_outline,
                                       size: 14,
-                                      color: Colors.grey,
+                                      color: colorScheme.onSurface.withOpacity(0.6),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Posted by $creatorName',
                                       style: TextStyle(
-                                        color: Colors.grey[600],
+                                        color: colorScheme.onSurface.withOpacity(0.6),
                                         fontSize: 12,
                                       ),
                                     ),

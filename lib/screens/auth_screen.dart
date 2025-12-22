@@ -436,7 +436,7 @@ class _AuthScreenState extends State<AuthScreen>
                       SizedBox(height: 20),
                       Row(
                         children: [
-                          Expanded(child: Divider(color: Colors.grey[300])),
+                          Expanded(child: Divider(color: theme.dividerColor)),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
@@ -444,7 +444,7 @@ class _AuthScreenState extends State<AuthScreen>
                               style: theme.textTheme.bodyMedium,
                             ),
                           ),
-                          Expanded(child: Divider(color: Colors.grey[300])),
+                          Expanded(child: Divider(color: theme.dividerColor)),
                         ],
                       ),
                       SizedBox(height: 30),

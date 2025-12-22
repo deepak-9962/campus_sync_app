@@ -94,16 +94,24 @@ class _MyMarksScreenState extends State<MyMarksScreen>
   }
 
   Widget _buildGradientBackground({required Widget child}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.shade50,
-            Colors.indigo.shade50,
-            Colors.purple.shade50,
-          ],
+          colors: isDark
+              ? [
+                  colorScheme.surface,
+                  colorScheme.surface,
+                  colorScheme.surface,
+                ]
+              : [
+                  colorScheme.primary.withOpacity(0.05),
+                  colorScheme.secondary.withOpacity(0.05),
+                  colorScheme.tertiary.withOpacity(0.05),
+                ],
         ),
       ),
       child: child,
@@ -141,7 +149,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -179,7 +187,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
               title,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -207,7 +215,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey.shade600,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
@@ -248,7 +256,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -292,10 +300,10 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                   children: [
                     Text(
                       subject,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3748),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -303,7 +311,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                       'Database Management Systems',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -353,14 +361,14 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                       '/ $outOf',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     Text(
                       '${percentage.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -394,7 +402,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.indigo.shade700,
+        foregroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         centerTitle: true,
       ),
@@ -411,11 +419,11 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.indigo.withOpacity(0.3),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                                 spreadRadius: 0,
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
@@ -424,7 +432,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           ),
                           child: Icon(
                             Icons.autorenew,
-                            color: Colors.indigo.shade600,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 30,
                           ),
                         ),
@@ -434,7 +442,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                         'Loading your results...',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.indigo.shade600,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -452,11 +460,11 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(60),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                                 spreadRadius: 0,
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
@@ -468,7 +476,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                                 ? Icons.person_off_outlined
                                 : Icons.assignment_outlined,
                             size: 48,
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -479,7 +487,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade700,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -487,7 +495,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           _message,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -499,14 +507,14 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               'Registration: $_registrationNo',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -528,11 +536,11 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                           margin: const EdgeInsets.symmetric(horizontal: 20),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.indigo.withOpacity(0.1),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                 spreadRadius: 0,
                                 blurRadius: 15,
                                 offset: const Offset(0, 4),
@@ -546,15 +554,15 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.indigo.shade100,
-                                      Colors.indigo.shade50,
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   Icons.person,
-                                  color: Colors.indigo.shade600,
+                                  color: Theme.of(context).colorScheme.primary,
                                   size: 24,
                                 ),
                               ),
@@ -568,14 +576,14 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.indigo.shade700,
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
                                     Text(
                                       'Registration: $_registrationNo',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.grey.shade600,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                       ),
                                     ),
                                   ],
@@ -595,11 +603,11 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                             margin: const EdgeInsets.symmetric(horizontal: 20),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                                   spreadRadius: 0,
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
@@ -612,13 +620,13 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                                   child: _buildStatItem(
                                     'Total Exams',
                                     '${_marksSummary['totalExams'] ?? 0}',
-                                    Colors.blue.shade600,
+                                    Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 Container(
                                   width: 1,
                                   height: 40,
-                                  color: Colors.grey.shade300,
+                                  color: Theme.of(context).dividerColor,
                                 ),
                                 Expanded(
                                   child: _buildStatItem(
@@ -630,7 +638,7 @@ class _MyMarksScreenState extends State<MyMarksScreen>
                                 Container(
                                   width: 1,
                                   height: 40,
-                                  color: Colors.grey.shade300,
+                                  color: Theme.of(context).dividerColor,
                                 ),
                                 Expanded(
                                   child: _buildStatItem(
@@ -666,8 +674,8 @@ class _MyMarksScreenState extends State<MyMarksScreen>
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _loadUserMarks,
-        backgroundColor: Colors.indigo.shade600,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: RotationTransition(
           turns: _refreshController,
           child: const Icon(Icons.refresh),

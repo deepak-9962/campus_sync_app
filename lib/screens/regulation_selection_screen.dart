@@ -30,7 +30,7 @@ class RegulationSelectionScreen extends StatelessWidget {
                 'Please select the academic regulation for the GPA/CGPA calculator:',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.8),
+                  color: theme.colorScheme.onSurface.withOpacity(0.8),
                 ),
               ),
               const SizedBox(height: 30),

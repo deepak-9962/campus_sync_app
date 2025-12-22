@@ -1146,6 +1146,9 @@ class _ExamsScreenState extends State<ExamsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -1162,11 +1165,11 @@ class _ExamsScreenState extends State<ExamsScreen>
             children: [
               // Header with department and semester
               Card(
-                color: Colors.blue.shade50,
+                color: colorScheme.primaryContainer,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.blue.shade200),
+                  side: BorderSide(color: colorScheme.primary.withOpacity(0.3)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -1178,7 +1181,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade800,
+                          color: colorScheme.onPrimaryContainer,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -1186,7 +1189,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                         'Semester ${widget.semester}',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.blue.shade600,
+                          color: colorScheme.onPrimaryContainer.withOpacity(0.8),
                         ),
                       ),
                     ],
@@ -1226,6 +1229,9 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildResultsLookup() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1296,7 +1302,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                     height: 24,
                     padding: const EdgeInsets.all(2.0),
                     child: CircularProgressIndicator(
-                      color: Colors.white,
+                      color: colorScheme.onPrimary,
                       strokeWidth: 3,
                     ),
                   )
@@ -1324,23 +1330,23 @@ class _ExamsScreenState extends State<ExamsScreen>
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.shade100,
+              color: colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade300),
+              border: Border.all(color: colorScheme.error.withOpacity(0.5)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700),
+                    Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
                     SizedBox(width: 8),
                     Text(
                       'Record Not Found',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red.shade700,
+                        color: colorScheme.onErrorContainer,
                       ),
                     ),
                   ],
@@ -1348,12 +1354,12 @@ class _ExamsScreenState extends State<ExamsScreen>
                 SizedBox(height: 8),
                 Text(
                   _errorMessage!,
-                  style: TextStyle(color: Colors.red.shade900),
+                  style: TextStyle(color: colorScheme.onErrorContainer),
                 ),
                 SizedBox(height: 12),
                 Text(
                   'Make sure you entered the correct registration number, or try one of the available numbers below:',
-                  style: TextStyle(color: Colors.red.shade800),
+                  style: TextStyle(color: colorScheme.onErrorContainer.withOpacity(0.9)),
                 ),
                 SizedBox(height: 16),
                 _buildAvailableRegistrationsList(),
@@ -1395,7 +1401,7 @@ class _ExamsScreenState extends State<ExamsScreen>
             SizedBox(height: 8),
             Text(
               'Select a registration number from the list below:',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
             ),
             SizedBox(height: 12),
             _buildAvailableRegistrationsList(),
@@ -1406,6 +1412,8 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildAvailableRegistrationsList() {
+    final theme = Theme.of(context);
+    
     if (availableRegistrations.isEmpty) {
       _loadAllMarks();
       return Center(
@@ -1419,7 +1427,7 @@ class _ExamsScreenState extends State<ExamsScreen>
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: theme.dividerColor),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListView.builder(
@@ -1442,6 +1450,7 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildResultsCard() {
+    final theme = Theme.of(context);
     final studentName = filteredMarks.first.name;
     final avgMarks = _calculateAverageMarks();
 
@@ -1463,7 +1472,7 @@ class _ExamsScreenState extends State<ExamsScreen>
             SizedBox(height: 8),
             Text(
               'Registration No: $_selectedRegistration',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurface.withOpacity(0.6)),
             ),
             SizedBox(height: 24),
             _buildMarksProgress(avgMarks),
@@ -1476,6 +1485,8 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildMarksProgress(double avgMarks) {
+    final theme = Theme.of(context);
+    
     Color progressColor;
     if (avgMarks < 60) {
       progressColor = Colors.red;
@@ -1504,7 +1515,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                       value: value,
                       strokeWidth: 12,
                       valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
                     ),
               ),
             ),
@@ -1527,7 +1538,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                         'Average Score',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                     ],
@@ -1559,9 +1570,10 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildSubjectMarksTable() {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: EdgeInsets.all(16),
@@ -1573,7 +1585,7 @@ class _ExamsScreenState extends State<ExamsScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           SizedBox(height: 16),
@@ -1583,7 +1595,7 @@ class _ExamsScreenState extends State<ExamsScreen>
               TableRow(
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                    bottom: BorderSide(color: theme.dividerColor, width: 1),
                   ),
                 ),
                 children: [
@@ -1593,7 +1605,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                       'Subject',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -1604,7 +1616,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -1614,7 +1626,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                 return TableRow(
                   decoration: BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+                      bottom: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 1),
                     ),
                   ),
                   children: [
@@ -1634,7 +1646,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                           '${mark.marks}',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1658,7 +1670,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -1676,7 +1688,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -1694,7 +1706,7 @@ class _ExamsScreenState extends State<ExamsScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -1705,6 +1717,7 @@ class _ExamsScreenState extends State<ExamsScreen>
   }
 
   Widget _buildAssessmentCard(String title, IconData icon) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: () {
         setState(() {
@@ -1717,12 +1730,12 @@ class _ExamsScreenState extends State<ExamsScreen>
         width: double.infinity,
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: theme.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.shade200,
+              color: theme.shadowColor.withOpacity(0.1),
               blurRadius: 5,
               offset: Offset(0, 2),
             ),
@@ -1733,10 +1746,10 @@ class _ExamsScreenState extends State<ExamsScreen>
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: Colors.blue, size: 28),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 28),
             ),
             SizedBox(width: 16),
             Expanded(
@@ -1747,7 +1760,7 @@ class _ExamsScreenState extends State<ExamsScreen>
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.grey.shade700,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
               size: 18,
             ),
           ],

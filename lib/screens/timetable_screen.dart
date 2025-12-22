@@ -420,6 +420,9 @@ class _TimetableScreenState extends State<TimetableScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -481,14 +484,14 @@ class _TimetableScreenState extends State<TimetableScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[600]),
+                    Icon(Icons.error_outline, size: 48, color: colorScheme.error),
                     SizedBox(height: 16),
                     Text(
                       _errorMessage,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.red[600],
+                        color: colorScheme.error,
                         
                       ),
                     ),
@@ -508,14 +511,14 @@ class _TimetableScreenState extends State<TimetableScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.schedule, size: 48, color: Colors.grey[600]),
+                    Icon(Icons.schedule, size: 48, color: colorScheme.onSurface.withOpacity(0.6)),
                     SizedBox(height: 16),
                     Text(
                       'No timetable available for ${widget.department}, Semester ${widget.semester}, Section $_selectedSection',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: colorScheme.onSurface.withOpacity(0.6),
                         
                       ),
                     ),
@@ -530,9 +533,9 @@ class _TimetableScreenState extends State<TimetableScreen>
                 TabBar(
                   controller: _tabController,
                   isScrollable: true,
-                  indicatorColor: Theme.of(context).primaryColor,
-                  labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: colorScheme.primary,
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
                   labelStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
                     
@@ -555,6 +558,8 @@ class _TimetableScreenState extends State<TimetableScreen>
   }
 
   Widget _buildHeaderInfo() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
@@ -579,7 +584,7 @@ class _TimetableScreenState extends State<TimetableScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
+                  color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -587,8 +592,8 @@ class _TimetableScreenState extends State<TimetableScreen>
                   children: [
                     Text(
                       'Sem ${widget.semester} - Section $_selectedSection',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         
@@ -605,6 +610,7 @@ class _TimetableScreenState extends State<TimetableScreen>
   }
 
   Widget _buildDaySchedule(String day) {
+    final colorScheme = Theme.of(context).colorScheme;
     final schedule = _timetableData[day] ?? [];
 
     if (schedule.isEmpty) {
@@ -612,13 +618,13 @@ class _TimetableScreenState extends State<TimetableScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.free_breakfast, size: 48, color: Colors.grey[400]),
+            Icon(Icons.free_breakfast, size: 48, color: colorScheme.onSurface.withOpacity(0.4)),
             SizedBox(height: 16),
             Text(
               'No classes scheduled for $day',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
                 
               ),
             ),
@@ -643,6 +649,9 @@ class _TimetableScreenState extends State<TimetableScreen>
   }
 
   Widget _buildTimeSlotCard(TimeSlot slot, String day) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     // Determine color based on subject
     Color subjectColor = _getSubjectColor(slot.subject);
     String defaultClassroom = _selectedSection == 'A' ? 'C11' : 'C12';
@@ -656,7 +665,7 @@ class _TimetableScreenState extends State<TimetableScreen>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isCurrentPeriod ? Colors.green.shade400 : Colors.grey.shade200,
+          color: isCurrentPeriod ? Colors.green.shade400 : theme.dividerColor,
           width: isCurrentPeriod ? 2 : 1,
         ),
       ),
@@ -678,7 +687,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       color:
                           isCurrentPeriod
                               ? Colors.green[700]
-                              : Colors.grey[600],
+                              : colorScheme.onSurface.withOpacity(0.6),
                       fontWeight: FontWeight.w500,
                       
                     ),
@@ -748,7 +757,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                       color:
                           isCurrentPeriod
                               ? Colors.green.shade700
-                              : Colors.black87,
+                              : colorScheme.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -763,7 +772,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                           color:
                               isCurrentPeriod
                                   ? Colors.green[600]
-                                  : Colors.grey[600],
+                                  : colorScheme.onSurface.withOpacity(0.6),
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -774,7 +783,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                               color:
                                   isCurrentPeriod
                                       ? Colors.green[600]
-                                      : Colors.grey[600],
+                                      : colorScheme.onSurface.withOpacity(0.6),
                               
                             ),
                             maxLines: 1,
@@ -793,7 +802,7 @@ class _TimetableScreenState extends State<TimetableScreen>
                         color:
                             isCurrentPeriod
                                 ? Colors.green[600]
-                                : Colors.grey[600],
+                                : colorScheme.onSurface.withOpacity(0.6),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -805,15 +814,14 @@ class _TimetableScreenState extends State<TimetableScreen>
                           color:
                               isCurrentPeriod
                                   ? Colors.green[600]
-                                  : Colors.grey[600],
-                          
+                                  : colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                       if (slot.batch?.isNotEmpty == true) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 6,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
@@ -832,7 +840,6 @@ class _TimetableScreenState extends State<TimetableScreen>
                                       ? Colors.green.shade700
                                       : subjectColor,
                               fontWeight: FontWeight.w500,
-                              
                             ),
                           ),
                         ),

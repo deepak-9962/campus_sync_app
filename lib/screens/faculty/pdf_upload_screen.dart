@@ -158,6 +158,9 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
   
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload PDF Resource'),
@@ -274,7 +277,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
                         children: [
-                          const Icon(Icons.picture_as_pdf, color: Colors.red),
+                          Icon(Icons.picture_as_pdf, color: colorScheme.error),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -295,7 +298,7 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                                       return Text(
                                         'Size: ${fileSizeMB.toStringAsFixed(2)} MB',
                                         style: TextStyle(
-                                          color: Colors.grey[600],
+                                          color: colorScheme.onSurface.withOpacity(0.6),
                                           fontSize: 12,
                                         ),
                                       );
@@ -325,15 +328,15 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(8),
-                    color: Colors.red[50],
+                    color: colorScheme.errorContainer,
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red),
+                        Icon(Icons.error_outline, color: colorScheme.error),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _errorMessage!,
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(color: colorScheme.error),
                           ),
                         ),
                       ],
@@ -363,14 +366,14 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                   height: 60,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.blue.shade700, Colors.blue.shade500],
+                      colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
+                        color: colorScheme.primary.withOpacity(0.3),
                         spreadRadius: 1,
                         blurRadius: 8,
                         offset: const Offset(0, 4),
@@ -389,14 +392,14 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                           children: [
                             Icon(
                               Icons.cloud_upload_rounded,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 28,
                             ),
                             const SizedBox(width: 12),
                             Text(
                               _isUploading ? 'Uploading...' : 'Upload PDF Now',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: colorScheme.onPrimary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
@@ -418,8 +421,8 @@ class _PdfUploadScreenState extends State<PdfUploadScreen> {
                   child: ElevatedButton(
                     onPressed: _isUploading ? null : _uploadPdf,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                     ),
                     child: _isUploading
                         ? const Text('Uploading...')

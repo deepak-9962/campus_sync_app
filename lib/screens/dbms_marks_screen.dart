@@ -73,12 +73,12 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Database Management System - Exam Results'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
       ),
       body:
           _isLoading
@@ -91,23 +91,23 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
                       margin: const EdgeInsets.all(16),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue[200]!),
+                        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.analytics, color: Colors.blue[700]),
+                              Icon(Icons.analytics, color: colorScheme.primary),
                               const SizedBox(width: 8),
                               Text(
                                 'Class Statistics',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue[700],
+                                  color: colorScheme.primary,
                                 ),
                               ),
                             ],
@@ -170,7 +170,7 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
-                        fillColor: Colors.grey[100],
+                        fillColor: colorScheme.surfaceContainerHighest,
                       ),
                       onChanged:
                           (value) => setState(() => _searchQuery = value),
@@ -183,12 +183,12 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
                   Expanded(
                     child:
                         _filteredMarks.isEmpty
-                            ? const Center(
+                            ? Center(
                               child: Text(
                                 'No marks found',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.grey,
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                             )
@@ -223,7 +223,7 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
                                     ),
                                     subtitle: Text(
                                       'Database Management System',
-                                      style: TextStyle(color: Colors.grey[600]),
+                                      style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
                                     ),
                                     trailing: Column(
                                       mainAxisAlignment:
@@ -246,7 +246,7 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
                                             '${mark.toStringAsFixed(1)}%',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey[600],
+                                              color: colorScheme.onSurface.withOpacity(0.6),
                                             ),
                                           ),
                                       ],
@@ -260,8 +260,8 @@ class _DBMSMarksScreenState extends State<DBMSMarksScreen> {
               ),
       floatingActionButton: FloatingActionButton(
         onPressed: _loadMarks,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.refresh, color: Colors.white),
+        backgroundColor: colorScheme.primary,
+        child: Icon(Icons.refresh, color: colorScheme.onPrimary),
       ),
     );
   }
@@ -282,21 +282,22 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Icon(icon, color: color ?? Colors.blue[700], size: 20),
+        Icon(icon, color: color ?? colorScheme.primary, size: 20),
         const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: color ?? Colors.blue[700],
+            color: color ?? colorScheme.primary,
           ),
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6)),
           textAlign: TextAlign.center,
         ),
       ],

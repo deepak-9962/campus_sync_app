@@ -72,13 +72,20 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1A237E), Color(0xFF4A148C), Color(0xFF311B92)],
+            colors: [
+              colorScheme.primary,
+              colorScheme.secondary,
+              colorScheme.tertiary ?? colorScheme.primary,
+            ],
           ),
         ),
         child: FadeTransition(
@@ -92,11 +99,11 @@ class _SplashScreenState extends State<SplashScreen>
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black26,
+                        color: colorScheme.shadow.withOpacity(0.26),
                         blurRadius: 15,
                         offset: Offset(0, 5),
                       ),
@@ -106,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Icon(
                       Icons.school,
                       size: 70,
-                      color: Color(0xFF1A237E),
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
@@ -117,15 +124,14 @@ class _SplashScreenState extends State<SplashScreen>
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
-
+                    color: colorScheme.onPrimary,
                     letterSpacing: 1.2,
                   ),
                 ),
                 SizedBox(height: 20),
                 // Loading indicator
                 CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                 ),
               ],
             ),

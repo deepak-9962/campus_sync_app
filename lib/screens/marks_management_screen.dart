@@ -120,6 +120,9 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -132,8 +135,8 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         actions: [
           IconButton(icon: Icon(Icons.add), onPressed: _showCreateExamDialog),
         ],
@@ -226,11 +229,11 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.school, size: 64, color: Colors.grey),
+            Icon(Icons.school, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
             SizedBox(height: 16),
             Text(
               'No students found for this department and semester.',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.6)),
             ),
           ],
         ),
@@ -270,7 +273,7 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
                   SizedBox(height: 4),
                   Text(
                     'Section: ${student['section']}',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
                   ),
                 ],
               ),
@@ -315,8 +318,8 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
       child: ElevatedButton(
         onPressed: selectedExamId != null ? _saveMarks : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           padding: EdgeInsets.symmetric(vertical: 16),
         ),
         child: Text('Save Marks', style: TextStyle(fontSize: 16)),
@@ -421,7 +424,7 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
                         child: Container(
                           padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
+                            border: Border.all(color: Theme.of(context).colorScheme.outline),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
@@ -434,8 +437,8 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
                                 style: TextStyle(
                                   color:
                                       selectedDate != null
-                                          ? Colors.black
-                                          : Colors.grey,
+                                          ? null
+                                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                             ],

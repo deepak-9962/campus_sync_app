@@ -50,15 +50,15 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Weekly Attendance',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 2,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -77,8 +77,8 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).primaryColor.withValues(alpha: 0.1),
-              Colors.white,
+              colorScheme.primaryContainer,
+              colorScheme.surface,
             ],
           ),
         ),
@@ -111,7 +111,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                       Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Colors.red[300],
+                        color: colorScheme.error.withOpacity(0.6),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -119,14 +119,14 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red[700],
+                          color: colorScheme.error,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         snapshot.error.toString(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -156,7 +156,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: colorScheme.onSurface.withOpacity(0.4),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -164,14 +164,14 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          color: colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Your weekly schedule or attendance records are not available yet.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withOpacity(0.5)),
                       ),
                     ],
                   ),
@@ -228,11 +228,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.grey[50]!],
-          ),
+          color: Theme.of(context).colorScheme.surface,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,15 +282,15 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
 
             // Periods list
             if (dayAttendance.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Center(
                   child: Text(
                     'No classes scheduled for this day',
                     style: TextStyle(
                       fontSize: 14,
                       fontStyle: FontStyle.italic,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 ),
@@ -348,7 +344,7 @@ class _WeeklyAttendanceScreenState extends State<WeeklyAttendanceScreen> {
             period['subject_code'] != null
                 ? Text(
                   'Code: ${period['subject_code']}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
                 )
                 : null,
         trailing: Row(

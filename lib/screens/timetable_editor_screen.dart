@@ -662,7 +662,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
                   child: Text(
                     'LIVE',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1090,7 +1090,7 @@ class _TimetableEditorScreenState extends State<TimetableEditorScreen>
         SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white, size: 20),
+              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.onPrimary, size: 20),
               SizedBox(width: 8),
               Text('Switched to Section $newSection'),
             ],

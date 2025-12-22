@@ -481,11 +481,12 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Daily Attendance'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
         actions: [
           if (_hasChanges)
             TextButton.icon(
@@ -509,7 +510,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
           // Filters Section
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.blue[50],
+            color: colorScheme.surfaceContainerHighest,
             child: Column(
               children: [
                 // Date Picker
@@ -518,9 +519,9 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue),
+                      border: Border.all(color: colorScheme.primary),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -529,7 +530,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                           DateFormat('EEEE, dd MMM yyyy').format(_selectedDate),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const Icon(Icons.calendar_today, color: Colors.blue),
+                        Icon(Icons.calendar_today, color: colorScheme.primary),
                       ],
                     ),
                   ),
@@ -631,8 +632,8 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                         : const Icon(Icons.search),
                     label: const Text('Check Attendance'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -696,7 +697,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue[700],
+                                color: colorScheme.primary,
                               ),
                             ),
                             const Text('Marked'),
@@ -705,7 +706,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                         Container(
                           width: 1,
                           height: 40,
-                          color: Colors.grey[300],
+                          color: theme.dividerColor,
                         ),
                         Column(
                           children: [
@@ -714,7 +715,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[700],
+                                color: colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                             const Text('Total'),
@@ -731,8 +732,8 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                       icon: const Icon(Icons.edit),
                       label: const Text('Edit Attendance'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
@@ -745,7 +746,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
           if (_showRecords)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey[100],
+            color: colorScheme.surfaceContainerHighest,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -759,15 +760,15 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
           if (_showRecords && _attendanceRecords.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(8),
-              color: Colors.blue[50],
-              child: const Row(
+              color: colorScheme.primaryContainer,
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue, size: 18),
-                  SizedBox(width: 8),
+                  Icon(Icons.info_outline, color: colorScheme.primary, size: 18),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Tap on a student to toggle status: Present <-> Absent',
-                      style: TextStyle(color: Colors.blue, fontSize: 12),
+                      style: TextStyle(color: colorScheme.primary, fontSize: 12),
                     ),
                   ),
                 ],
@@ -784,16 +785,16 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                            Icon(Icons.search_off, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
                             const SizedBox(height: 16),
                             Text(
                               'No daily attendance records found',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Select filters and tap "Check Attendance"',
-                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.4), fontSize: 12),
                             ),
                           ],
                         ),
@@ -879,7 +880,7 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
           if (_showRecords && _attendanceRecords.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
-              color: Colors.grey[200],
+              color: colorScheme.surfaceContainerHighest,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -914,16 +915,16 @@ class _EditDailyAttendanceScreenState extends State<EditDailyAttendanceScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.fact_check_outlined, size: 64, color: Colors.grey[400]),
+                    Icon(Icons.fact_check_outlined, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
                     const SizedBox(height: 16),
                     Text(
                       'Select filters and check attendance',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Tap "Check Attendance" to see if attendance is taken',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      style: TextStyle(color: colorScheme.onSurface.withOpacity(0.4), fontSize: 12),
                     ),
                   ],
                 ),

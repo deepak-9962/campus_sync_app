@@ -47,6 +47,9 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -59,8 +62,8 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body:
           isLoading
@@ -77,20 +80,21 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
   }
 
   Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment, size: 64, color: Colors.grey),
+          Icon(Icons.assignment, size: 64, color: colorScheme.onSurface.withOpacity(0.4)),
           SizedBox(height: 16),
           Text(
             'No marks found for this student.',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withOpacity(0.6)),
           ),
           SizedBox(height: 8),
           Text(
             'Marks will appear here once they are entered.',
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withOpacity(0.5)),
           ),
         ],
       ),
@@ -99,14 +103,15 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
 
   Widget _buildPerformanceSummary() {
     if (performanceSummary.isEmpty) return SizedBox.shrink();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: colorScheme.primaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,14 +175,15 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
     IconData icon,
     Color color,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade200,
+            color: colorScheme.onSurface.withOpacity(0.05),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),
@@ -193,7 +199,7 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
           ),
           Text(
             title,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -244,7 +250,7 @@ class _StudentMarksScreenState extends State<StudentMarksScreen> {
                   SizedBox(height: 4),
                   Text(
                     'Date: ${mark['exams']['date'] ?? 'Not specified'}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                   ),
                 ],
               ),

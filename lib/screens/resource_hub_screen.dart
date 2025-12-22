@@ -240,6 +240,8 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -280,9 +282,9 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
           child: Container(
             height: 28,
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: colorScheme.primary.withOpacity(0.1),
               border: Border(
-                bottom: BorderSide(color: Colors.grey.shade300, width: 1)
+                bottom: BorderSide(color: theme.dividerColor, width: 1)
               ),
             ),
             child: Row(
@@ -301,10 +303,10 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: colorScheme.shadow.withOpacity(0.05),
                   blurRadius: 5,
                   spreadRadius: 1,
                   offset: Offset(0, 2)
@@ -334,7 +336,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         'Semester ${widget.semester}',
                         style: TextStyle(
                           fontSize: 8,
-                          color: Colors.grey[700],
+                          color: colorScheme.onSurface.withOpacity(0.6),
                           
                         ),
                       ),
@@ -344,13 +346,13 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     _getCurrentCategory(),
                     style: TextStyle(
-                      color: Theme.of(context).primaryColor,
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 7,
                     ),
@@ -379,6 +381,8 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
   }
 
   Widget _buildTabButton(String label, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = _currentIndex == index;
     return Expanded(
       child: InkWell(
@@ -388,7 +392,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+                color: isSelected ? colorScheme.primary : Colors.transparent,
                 width: 1,
               ),
             ),
@@ -400,7 +404,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
               
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 8,
-              color: isSelected ? Theme.of(context).primaryColor : Colors.grey[600],
+              color: isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
         ),
@@ -422,6 +426,8 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
   }
 
   Widget _buildResourceList(List<ResourceItemModel> items, String categoryType) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     if (items.isEmpty) {
       return Center(
         child: Column(
@@ -430,7 +436,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
             Icon(
               Icons.folder_open,
               size: 70,
-              color: Colors.grey[400],
+              color: colorScheme.onSurface.withOpacity(0.4),
             ),
             SizedBox(height: 16),
             Text(
@@ -438,7 +444,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
               style: TextStyle(
                 fontSize: 16,
                 
-                color: Colors.grey[700],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             SizedBox(height: 8),
@@ -447,7 +453,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
               style: TextStyle(
                 fontSize: 14,
                 
-                color: Colors.grey[500],
+                color: colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
           ],
@@ -468,16 +474,16 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
         return Dismissible(
           key: Key(items[index].id),
           background: Container(
-            color: Colors.green,
+            color: colorScheme.primary,
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Icon(Icons.file_download, color: Colors.white),
+            child: Icon(Icons.file_download, color: colorScheme.onPrimary),
           ),
           secondaryBackground: Container(
-            color: Colors.red,
+            color: colorScheme.error,
             alignment: Alignment.centerRight,
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Icon(Icons.delete, color: Colors.white),
+            child: Icon(Icons.delete, color: colorScheme.onError),
           ),
           confirmDismiss: (direction) async {
             if (direction == DismissDirection.startToEnd) {
@@ -498,7 +504,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: Text('DELETE', style: TextStyle(color: Colors.red)),
+                      child: Text('DELETE', style: TextStyle(color: colorScheme.error)),
                     ),
                   ],
                 ),
@@ -534,7 +540,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                   child: Text(
                     items[index].fileType,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 9,
                     ),
@@ -559,7 +565,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                     items[index].subject,
                     style: TextStyle(
                       
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurface.withOpacity(0.6),
                       fontSize: 10,
                     ),
                     maxLines: 1,
@@ -572,7 +578,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                       Icon(
                         Icons.calendar_today,
                         size: 8,
-                        color: Colors.grey[500],
+                        color: colorScheme.onSurface.withOpacity(0.5),
                       ),
                       SizedBox(width: 2),
                       Flexible(
@@ -580,7 +586,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                           items[index].date,
                           style: TextStyle(
                             fontSize: 8,
-                            color: Colors.grey[500],
+                            color: colorScheme.onSurface.withOpacity(0.5),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -591,7 +597,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                           items[index].fileSize,
                           style: TextStyle(
                             fontSize: 8,
-                            color: Colors.grey[500],
+                            color: colorScheme.onSurface.withOpacity(0.5),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -645,9 +651,10 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
   }
 
   Widget _buildDownloadButton(ResourceItemModel resource) {
+    final colorScheme = Theme.of(context).colorScheme;
     if (resource.isDownloaded) {
       return IconButton(
-        icon: Icon(Icons.check_circle, color: Colors.green),
+        icon: Icon(Icons.check_circle, color: colorScheme.primary),
         onPressed: () {
           _showSnackBar('${resource.title} already downloaded');
         },
@@ -902,7 +909,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                           'Selected: $_selectedFileName',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.blue,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -1519,7 +1526,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                     child: Text(
                       resource.fileType,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -1573,8 +1580,8 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline, color: Colors.red),
-                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                title: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 onTap: () async {
                   Navigator.pop(context);
                   final confirm = await showDialog<bool>(
@@ -1589,7 +1596,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text('DELETE', style: TextStyle(color: Colors.red)),
+                          child: Text('DELETE', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                         ),
                       ],
                     ),
@@ -1649,7 +1656,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                       'Select an older version to replace the current PDF. This action cannot be undone.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     SizedBox(height: 16),
@@ -1681,7 +1688,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Icon(Icons.description, size: 16, color: Colors.blue),
+                            Icon(Icons.description, size: 16, color: Theme.of(context).colorScheme.primary),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -1714,7 +1721,7 @@ class _ResourceHubScreenState extends State<ResourceHubScreen> {
                         },
                   child: Text('REPLACE'),
                   style: TextButton.styleFrom(
-                    foregroundColor: newFile == null ? Colors.grey : Colors.blue,
+                    foregroundColor: newFile == null ? Theme.of(context).disabledColor : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],

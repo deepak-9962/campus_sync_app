@@ -57,6 +57,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Attendance')),
@@ -67,13 +70,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Attendance'),
-        backgroundColor: _canTakeAttendance ? Colors.blue[700] : Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
         actions: [
           if (_canTakeAttendance)
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
+              icon: Icon(Icons.admin_panel_settings, color: colorScheme.onPrimary),
               tooltip: 'Admin Tools',
               onPressed: () {
                 Navigator.push(
@@ -85,7 +88,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: colorScheme.onPrimary),
             onPressed: () {
               _checkUserRole();
             },
@@ -98,10 +101,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors:
-                _canTakeAttendance
-                    ? [Colors.blue[50]!, Colors.white]
-                    : [Colors.blue[100]!, Colors.white],
+            colors: [
+              colorScheme.primaryContainer.withOpacity(0.3),
+              colorScheme.surface,
+            ],
           ),
         ),
         child: Center(
@@ -114,14 +117,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color:
-                        _canTakeAttendance ? Colors.blue[100] : Colors.blue[50],
+                    color: colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _canTakeAttendance ? Icons.people_alt : Icons.person,
                     size: 80,
-                    color: _canTakeAttendance ? Colors.blue[700] : Colors.blue,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -134,10 +136,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color:
-                        _canTakeAttendance
-                            ? Colors.blue[800]
-                            : Colors.blue[700],
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -146,7 +145,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   '${widget.department} - Semester ${widget.semester}',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.grey[700],
+                    color: colorScheme.onSurface.withOpacity(0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -160,7 +159,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurface.withOpacity(0.6),
                     height: 1.4,
                   ),
                 ),
@@ -168,18 +167,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
                 // Help text for staff/admin
                 if (_canTakeAttendance) ...[
+                  // Info container uses theme colors
                   Container(
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber[50],
+                      color: colorScheme.tertiaryContainer.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber[200]!),
+                      border: Border.all(color: colorScheme.tertiary.withOpacity(0.5)),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.info_outline,
-                          color: Colors.amber[700],
+                          color: colorScheme.tertiary,
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -189,7 +189,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             'Period Attendance: Mark attendance for specific subjects and periods',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.amber[700],
+                              color: colorScheme.onSurface.withOpacity(0.8),
                             ),
                           ),
                         ),
@@ -216,7 +216,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[700],
+                            backgroundColor: colorScheme.primary,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
@@ -253,7 +253,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[700],
+                            backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
@@ -288,7 +288,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         horizontal: 32,
                         vertical: 16,
                       ),
-                      side: BorderSide(color: Colors.blue[700]!),
+                      side: BorderSide(color: colorScheme.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -318,7 +318,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[600],
+                      backgroundColor: colorScheme.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
                         vertical: 16,
@@ -351,7 +351,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
+                      backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
                         vertical: 16,
@@ -378,7 +378,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                         horizontal: 32,
                         vertical: 16,
                       ),
-                      side: BorderSide(color: Colors.blue[600]!),
+                      side: BorderSide(color: colorScheme.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

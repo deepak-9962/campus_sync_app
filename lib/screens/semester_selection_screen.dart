@@ -82,6 +82,9 @@ class _SemesterSelectionScreenState extends State<SemesterSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Select Semester')),
       body:
@@ -92,10 +95,13 @@ class _SemesterSelectionScreenState extends State<SemesterSelectionScreen> {
                 itemBuilder: (context, index) {
                   final semester = _semesters[index];
                   return ListTile(
-                    title: Text(semester),
+                    title: Text(
+                      semester,
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
                     trailing:
                         _selectedSemester == semester
-                            ? const Icon(Icons.check, color: Colors.green)
+                            ? Icon(Icons.check, color: colorScheme.primary)
                             : null,
                     onTap: () {
                       _updateCurrentSemester(semester);

@@ -473,7 +473,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -488,7 +488,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             const SizedBox(height: 8),
             Text(
               'Modify attendance for students who arrived late',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
             ),
             const SizedBox(height: 24),
             
@@ -576,7 +576,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontSize: 13,
                     ),
                   ),
@@ -592,23 +592,25 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           '${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance - ${widget.department}',
         ),
-        backgroundColor:
-            _attendanceMode == 'day' ? Colors.blue[700] : Colors.green[700],
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         actions: [
           // Edit Attendance Button in AppBar
           IconButton(
-            icon: const Icon(Icons.edit_note, color: Colors.white),
+            icon: Icon(Icons.edit_note, color: colorScheme.onPrimary),
             tooltip: 'Edit Attendance',
             onPressed: () => _showEditAttendanceOptions(context),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort, color: Colors.white),
+            icon: Icon(Icons.sort, color: colorScheme.onPrimary),
             onSelected: _changeSortOrder,
             itemBuilder:
                 (context) => [
@@ -623,7 +625,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   : Icons.arrow_downward)
                               : Icons.sort,
                           size: 16,
-                          color: Colors.grey[700],
+                          color: colorScheme.onSurface.withOpacity(0.7),
                         ),
                         const SizedBox(width: 8),
                         const Text('Sort by Registration No'),
@@ -641,7 +643,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   : Icons.arrow_downward)
                               : Icons.sort,
                           size: 16,
-                          color: Colors.grey[700],
+                          color: colorScheme.onSurface.withOpacity(0.7),
                         ),
                         const SizedBox(width: 8),
                         const Text('Sort by Student Name'),
@@ -666,9 +668,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                   Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color:
-                          _attendanceMode == 'day' ? Colors.blue[50] : Colors.green[50],
-                      border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+                      color: colorScheme.primaryContainer.withOpacity(0.3),
+                      border: Border(bottom: BorderSide(color: theme.dividerColor)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,10 +679,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color:
-                        _attendanceMode == 'day'
-                            ? Colors.blue[800]
-                            : Colors.green[800],
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(height: 12),
@@ -704,7 +702,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           _loadStudents();
                         }
                       },
-                      selectedColor: Colors.blue[200],
+                      selectedColor: colorScheme.primaryContainer,
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
@@ -721,7 +719,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                           _loadStudents();
                         }
                       },
-                      selectedColor: Colors.green[200],
+                      selectedColor: colorScheme.secondaryContainer,
                     ),
                   ],
                 ),
@@ -745,7 +743,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             onSelected: (selected) {
                               if (selected) _selectSection(section);
                             },
-                            selectedColor: Colors.blue[200],
+                            selectedColor: colorScheme.primaryContainer,
                           ),
                         );
                       }).toList(),
@@ -779,7 +777,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     _loadStudents();
                                   }
                                 },
-                                selectedColor: Colors.orange[200],
+                                selectedColor: colorScheme.tertiaryContainer,
                               ),
                             );
                           }).toList(),
@@ -795,15 +793,15 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green[50],
+                        color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green[200]!),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Colors.green[700],
+                            color: Colors.green,
                             size: 16,
                           ),
                           SizedBox(width: 8),
@@ -811,7 +809,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             child: Text(
                               'Subject for Period $selectedPeriod: $selectedSubject',
                               style: TextStyle(
-                                color: Colors.green[700],
+                                color: Colors.green,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -829,15 +827,15 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange[50],
+                        color: Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange[200]!),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.warning_amber_outlined,
-                            color: Colors.orange[700],
+                            color: Colors.orange,
                             size: 16,
                           ),
                           SizedBox(width: 8),
@@ -845,7 +843,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             child: Text(
                               'No subject scheduled for Period $selectedPeriod on ${DateFormat('EEEE').format(selectedDate)}',
                               style: TextStyle(
-                                color: Colors.orange[700],
+                                color: Colors.orange,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -871,10 +869,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                       icon: Icon(
                         Icons.calendar_today,
                         size: 20,
-                        color:
-                            _attendanceMode == 'day'
-                                ? Colors.blue[700]
-                                : Colors.green[700],
+                        color: colorScheme.primary,
                       ),
                       onPressed: _selectDate,
                       tooltip: 'Select date',
@@ -932,6 +927,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
 
   /// Build the student list section based on current state
   Widget _buildStudentListSection() {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     // Show placeholder if selections not complete
     if (_attendanceMode == 'period'
         ? (selectedSection == null || selectedPeriod == null)
@@ -944,7 +941,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             Icon(
               Icons.people_outline,
               size: 64,
-              color: Colors.grey[400],
+              color: colorScheme.onSurface.withOpacity(0.4),
             ),
             SizedBox(height: 16),
             Text(
@@ -954,7 +951,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ],
@@ -980,14 +977,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             Icon(
               Icons.people_outline,
               size: 64,
-              color: Colors.grey[400],
+              color: colorScheme.onSurface.withOpacity(0.4),
             ),
             SizedBox(height: 16),
             Text(
               'No students found for Section $selectedSection',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ],
@@ -1086,7 +1083,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         // Attendance summary
         Container(
           padding: EdgeInsets.all(12),
-          color: Colors.grey[100],
+          color: colorScheme.surfaceContainerHighest,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -1115,7 +1112,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             horizontal: 16,
             vertical: 8,
           ),
-          color: Colors.grey[50],
+          color: colorScheme.surface,
           child: Row(
             children: [
               Icon(
@@ -1123,14 +1120,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     ? Icons.arrow_upward
                     : Icons.arrow_downward,
                 size: 16,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
               SizedBox(width: 4),
               Text(
                 'Sorted by ${_sortBy == 'registration_no' ? 'Registration No' : 'Student Name'} (${_sortAscending ? 'A-Z' : 'Z-A'})',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
             ],
@@ -1174,7 +1171,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 'Registration: $reg',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
               trailing: Container(
@@ -1205,10 +1202,12 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       return SizedBox.shrink();
     }
     
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
@@ -1226,11 +1225,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             'Submit ${_attendanceMode == 'day' ? 'Day' : 'Period'} Attendance',
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                _attendanceMode == 'day'
-                    ? Colors.blue[700]
-                    : Colors.green[700],
-            foregroundColor: Colors.white,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             minimumSize: Size(double.infinity, 50),
           ),
         ),
@@ -1239,6 +1235,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   }
 
   Widget _buildSummaryItem(String label, int count, Color color) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         Text(
@@ -1249,7 +1246,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             color: color,
           ),
         ),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.6))),
       ],
     );
   }

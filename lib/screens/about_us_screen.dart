@@ -14,12 +14,6 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
   // Update service
   final AppUpdateService _updateService = AppUpdateService();
 
-  // Consistent theme colors from HomeScreen
-  static const Color primaryLightBackground = Color(0xFFF5F5F5);
-  static const Color cardLightBackground = Colors.white;
-  static const Color primaryTextLight = Color(0xFF212121);
-  static const Color accentColorLight = Color(0xFF1976D2);
-
   bool _showDeveloperName = false;
 
   // Update related state
@@ -184,18 +178,12 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: primaryLightBackground,
       appBar: AppBar(
-        title: const Text(
-          'About Us',
-          style: TextStyle(
-            color: primaryTextLight,
-            
-          ),
-        ),
-        backgroundColor: cardLightBackground,
-        iconTheme: const IconThemeData(color: primaryTextLight),
+        title: const Text('About Us'),
         elevation: 0.5,
       ),
       body: SingleChildScrollView(
@@ -208,7 +196,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
               width: double.infinity, // Make container fill horizontal space
               padding: const EdgeInsets.all(16.0), // Inner padding for content
               decoration: BoxDecoration(
-                color: cardLightBackground,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 // We can add a subtle shadow if needed, similar to elevation:
                 // boxShadow: [
@@ -228,8 +216,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: accentColorLight,
-                      
+                      color: colorScheme.primary,
                     ),
                   ),
                   // const SizedBox(height: 16), // Space for video removed
@@ -291,9 +278,8 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                         fontSize: 15,
                         color:
                             _showDeveloperName
-                                ? primaryTextLight.withOpacity(0.9)
-                                : accentColorLight,
-                        
+                                ? colorScheme.onSurface.withOpacity(0.9)
+                                : colorScheme.primary,
                         fontStyle:
                             _showDeveloperName
                                 ? FontStyle.normal
@@ -302,7 +288,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             _showDeveloperName
                                 ? TextDecoration.none
                                 : TextDecoration.underline,
-                        decorationColor: accentColorLight,
+                        decorationColor: colorScheme.primary,
                       ),
                     ),
                   ),
@@ -318,7 +304,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: cardLightBackground,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -328,7 +314,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                     children: [
                       Icon(
                         Icons.system_update,
-                        color: accentColorLight,
+                        color: colorScheme.primary,
                         size: 24,
                       ),
                       const SizedBox(width: 8),
@@ -337,7 +323,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: primaryTextLight,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -350,7 +336,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                         'Current Version: ',
                         style: TextStyle(
                           fontSize: 15,
-                          color: primaryTextLight.withOpacity(0.7),
+                          color: colorScheme.onSurface.withOpacity(0.7),
                         ),
                       ),
                       Text(
@@ -358,7 +344,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: primaryTextLight,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -467,7 +453,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                               'Downloading update...',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: primaryTextLight.withOpacity(0.7),
+                                color: colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                             Text(
@@ -475,7 +461,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: accentColorLight,
+                                color: colorScheme.primary,
                               ),
                             ),
                           ],
@@ -487,7 +473,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             value: _downloadProgress,
                             minHeight: 8,
                             backgroundColor: Colors.grey[200],
-                            valueColor: AlwaysStoppedAnimation<Color>(accentColorLight),
+                            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -526,8 +512,8 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                               _isCheckingUpdate ? 'Checking...' : 'Check for Updates',
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: accentColorLight,
-                              foregroundColor: Colors.white,
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
