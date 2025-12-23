@@ -55,6 +55,7 @@ class AuthService {
     required String name,
     required String gender,
   }) async {
+    // Create profile record
     await _supabase.from('profiles').insert({
       'id': userId,
       'email': email,
@@ -62,6 +63,28 @@ class AuthService {
       'gender': gender,
       'created_at': DateTime.now().toIso8601String(),
     });
+    
+    // Also create users table record for role-based access
+    // Default role is 'student' with is_admin = false
+    try {
+      await _supabase.from('users').insert({
+        'id': userId,
+        'email': email,
+        'name': name,
+        'role': 'student',
+        'is_admin': false,
+      });
+    } catch (e) {
+      // User record might already exist, try to update it
+      print('Users table insert failed, trying upsert: $e');
+      await _supabase.from('users').upsert({
+        'id': userId,
+        'email': email,
+        'name': name,
+        'role': 'student',
+        'is_admin': false,
+      }, onConflict: 'id');
+    }
   }
 
   // Sign out

@@ -6,18 +6,19 @@ class SupabaseSetup {
   final SupabaseClient _supabase = Supabase.instance.client;
   
   /// Initialize all required resources for the app
+  /// NOTE: Does NOT set up admin - admin status must be set manually in the database
   Future<bool> initialize() async {
     try {
-      // Try to execute basic setup
+      // Try to execute basic setup (buckets and tables only)
+      // DO NOT call _setupAdmin() - this was incorrectly making all users admin!
       final results = await Future.wait([
         _setupBuckets(),
         _setupTables(),
-        _setupAdmin(),
       ], eagerError: false);
       
       // Check how many succeeded
       final successCount = results.where((result) => result).length;
-      debugPrint('Supabase setup completed: $successCount/3 steps succeeded');
+      debugPrint('Supabase setup completed: $successCount/2 steps succeeded');
       
       // Return true if at least one step succeeded
       return successCount > 0;
@@ -91,12 +92,13 @@ class SupabaseSetup {
         final userData = await _supabase.from('users').select('id, is_admin, role').eq('id', user.id).maybeSingle();
         
         if (userData == null) {
-          // User doesn't exist, create it
+          // User doesn't exist, create it with default non-admin role
           await _supabase.from('users').insert({
             'id': user.id,
-            'is_admin': true
+            'is_admin': false,
+            'role': 'student'
           });
-          debugPrint('Created user record');
+          debugPrint('Created user record with default student role');
         } else {
           debugPrint('User record already exists');
         }

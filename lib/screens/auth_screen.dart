@@ -14,6 +14,7 @@ class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _registrationController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isLogin = true;
@@ -22,6 +23,7 @@ class _AuthScreenState extends State<AuthScreen>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
   String? _userRole;
+  String? _registrationError;
 
   @override
   void initState() {
@@ -76,12 +78,14 @@ class _AuthScreenState extends State<AuthScreen>
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _registrationController.dispose();
     super.dispose();
   }
 
   void _toggleAuthMode() {
     setState(() {
       _isLogin = !_isLogin;
+      _registrationError = null;
     });
     _animationController.reset();
     _animationController.forward();
@@ -114,11 +118,73 @@ class _AuthScreenState extends State<AuthScreen>
           );
         }
       } else {
+        // SIGNUP FLOW
+        final registrationNo = _registrationController.text.trim().toUpperCase();
+        
+        // Validate registration number is provided
+        if (registrationNo.isEmpty) {
+          setState(() {
+            _registrationError = 'Registration number is required';
+            _isLoading = false;
+          });
+          return;
+        }
+        
+        // Verify registration number exists in students table
+        final studentCheck = await supabase
+            .from('students')
+            .select('registration_no, student_name, department, current_semester, section, user_id')
+            .eq('registration_no', registrationNo)
+            .maybeSingle();
+        
+        if (studentCheck == null) {
+          setState(() {
+            _registrationError = 'Registration number not found. Contact admin.';
+            _isLoading = false;
+          });
+          return;
+        }
+        
+        // Check if already linked to another account
+        if (studentCheck['user_id'] != null) {
+          setState(() {
+            _registrationError = 'This registration number is already linked to an account';
+            _isLoading = false;
+          });
+          return;
+        }
+        
+        // Clear any previous error
+        setState(() => _registrationError = null);
+        
+        // Proceed with signup
         final AuthResponse response = await supabase.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
         if (response.user != null && mounted) {
+          // Create users table record with proper defaults
+          try {
+            final studentName = studentCheck['student_name'] ?? '';
+            await supabase.from('users').upsert({
+              'id': response.user!.id,
+              'email': _emailController.text.trim(),
+              'name': studentName,
+              'role': 'student',
+              'is_admin': false,
+            }, onConflict: 'id');
+            
+            // Link user_id to students table record
+            await supabase
+                .from('students')
+                .update({'user_id': response.user!.id})
+                .eq('registration_no', registrationNo);
+                
+            print('Successfully linked user to student record');
+          } catch (e) {
+            print('Error creating/linking user record: $e');
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
@@ -126,7 +192,10 @@ class _AuthScreenState extends State<AuthScreen>
               ),
             ),
           );
-          setState(() => _isLogin = true);
+          setState(() {
+            _isLogin = true;
+            _registrationController.clear();
+          });
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -269,7 +338,11 @@ class _AuthScreenState extends State<AuthScreen>
                               ),
                             ),
                             child: Center(
-                              child: Text("🏫", style: TextStyle(fontSize: 45)),
+                              child: Icon(
+                                Icons.school_rounded,
+                                size: 48,
+                                color: theme.colorScheme.onPrimary,
+                              ),
                             ),
                           ),
                         ),
@@ -293,42 +366,55 @@ class _AuthScreenState extends State<AuthScreen>
                       SizedBox(height: 40),
                       TextField(
                         controller: _emailController,
-                        // style: TextStyle(color: theme.colorScheme.onSurface), // Will use InputDecorationTheme
                         cursorColor: theme.colorScheme.primary,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          // labelStyle will be from theme
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Text("✉️", style: TextStyle(fontSize: 20)),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
                       SizedBox(height: 20),
+                      // Registration Number field - only shown during signup
+                      if (!_isLogin) ...[  
+                        TextField(
+                          controller: _registrationController,
+                          cursorColor: theme.colorScheme.primary,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            labelText: 'Registration Number',
+                            hintText: 'e.g., 921322205001',
+                            prefixIcon: Icon(
+                              Icons.badge_outlined,
+                              color: theme.colorScheme.primary,
+                            ),
+                            errorText: _registrationError,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                      ],
                       TextField(
                         controller: _passwordController,
                         // style: TextStyle(color: theme.colorScheme.onSurface), // Will use InputDecorationTheme
                         cursorColor: theme.colorScheme.primary,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          // labelStyle will be from theme
-                          prefixIcon: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Text("🔒", style: TextStyle(fontSize: 20)),
+                          prefixIcon: Icon(
+                            Icons.lock_outline_rounded,
+                            color: theme.colorScheme.primary,
                           ),
                           suffixIcon: IconButton(
                             onPressed:
                                 () => setState(
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
-                            icon: Text(
-                              _obscurePassword ? "👁️" : "🙈",
-                              style: TextStyle(fontSize: 20),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -411,7 +497,6 @@ class _AuthScreenState extends State<AuthScreen>
                       SizedBox(height: 30),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _login,
-                        // Style from ElevatedButtonThemeData
                         child:
                             _isLoading
                                 ? SizedBox(
@@ -426,49 +511,7 @@ class _AuthScreenState extends State<AuthScreen>
                                 )
                                 : Text(_isLogin ? 'LOGIN' : 'SIGN UP'),
                       ),
-                      TextButton(
-                        onPressed: _isLoading ? null : _demoLogin,
-                        child: Text(
-                          'Use Demo Account',
-                          style: TextStyle(color: theme.colorScheme.primary),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: theme.dividerColor)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'OR',
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ),
-                          Expanded(child: Divider(color: theme.dividerColor)),
-                        ],
-                      ),
-                      SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildSocialButton(
-                            icon: Icons.login,
-                            onTap: () => _socialLogin('Google'),
-                            theme: theme,
-                          ),
-                          _buildSocialButton(
-                            icon: Icons.people,
-                            onTap: () => _socialLogin('Facebook'),
-                            theme: theme,
-                          ),
-                          _buildSocialButton(
-                            icon: Icons.phone_iphone,
-                            onTap: () => _socialLogin('Apple'),
-                            theme: theme,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 30),
+                      SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

@@ -130,29 +130,16 @@ class ResourceService {
         print('Standard admin check failed: $e');
       }
       
-      // If all checks failed, try to set user as admin
-      print('Admin check failed, attempting to set user as admin');
-      await _setUserAsAdmin();
-      
-      // Try one more admin check
-      try {
-        final checkAgain = await _supabase.from('users')
-            .select('is_admin')
-            .eq('id', user.id)
-            .maybeSingle();
-        print('Admin status after update: ${checkAgain?['is_admin']}');
-        return checkAgain?['is_admin'] ?? true;
-      } catch (e) {
-        print('Final admin check failed: $e');
-        // Return true anyway to allow functionality
-        return true;
-      }
+      // If all checks failed, user is not admin
+      print('Admin check failed, user is not an admin');
+      return false;
     } catch (e) {
       debugPrint('Error checking admin status: $e');
-      return true; // Fallback to allow basic functionality
+      return false; // Non-admin by default for security
     }
   }
   
+  // Keep this method for explicit admin setting by actual admins
   Future<void> _setUserAsAdmin() async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
