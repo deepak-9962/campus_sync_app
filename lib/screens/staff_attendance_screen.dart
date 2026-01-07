@@ -688,7 +688,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 Row(
                   children: [
                     ChoiceChip(
-                      label: const Text('Day Attendance'),
+                      label: Text(
+                        'Day Attendance',
+                        style: TextStyle(
+                          color: _attendanceMode == 'day'
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurface,
+                        ),
+                      ),
                       selected: _attendanceMode == 'day',
                       onSelected: (selected) {
                         if (selected) {
@@ -706,7 +713,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: const Text('Period Attendance'),
+                      label: Text(
+                        'Period Attendance',
+                        style: TextStyle(
+                          color: _attendanceMode == 'period'
+                              ? colorScheme.onSecondaryContainer
+                              : colorScheme.onSurface,
+                        ),
+                      ),
                       selected: _attendanceMode == 'period',
                       onSelected: (selected) {
                         if (selected) {
@@ -735,11 +749,19 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 Row(
                   children:
                       sections.map((section) {
+                        final isSelected = selectedSection == section;
                         return Padding(
                           padding: EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text('Section $section'),
-                            selected: selectedSection == section,
+                            label: Text(
+                              'Section $section',
+                              style: TextStyle(
+                                color: isSelected
+                                    ? colorScheme.onPrimaryContainer
+                                    : colorScheme.onSurface,
+                              ),
+                            ),
+                            selected: isSelected,
                             onSelected: (selected) {
                               if (selected) _selectSection(section);
                             },
@@ -763,11 +785,19 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     child: Row(
                       children:
                           periods.map((period) {
+                            final isSelected = selectedPeriod == period;
                             return Padding(
                               padding: EdgeInsets.only(right: 8),
                               child: ChoiceChip(
-                                label: Text('Period $period'),
-                                selected: selectedPeriod == period,
+                                label: Text(
+                                  'Period $period',
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? colorScheme.onTertiaryContainer
+                                        : colorScheme.onSurface,
+                                  ),
+                                ),
+                                selected: isSelected,
                                 onSelected: (selected) {
                                   if (selected) {
                                     _safeSetState(() {

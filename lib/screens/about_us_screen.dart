@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../services/app_update_service.dart';
 
@@ -73,9 +73,9 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
       return;
     }
 
-    // Check if it's Android
-    if (!Platform.isAndroid) {
-      _showSnackBar('Updates are only available on Android', isError: true);
+    // Check if it's Web - updates not supported
+    if (kIsWeb) {
+      _showSnackBar('Updates are only available on Android app', isError: true);
       return;
     }
 
@@ -553,8 +553,8 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                       ],
                     ),
                   ],
-                  // Platform notice for non-Android
-                  if (!Platform.isAndroid) ...[
+                  // Platform notice for Web
+                  if (kIsWeb) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(8),

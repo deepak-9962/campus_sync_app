@@ -229,13 +229,14 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
               (_selectedSemester ?? widget.selectedSemester) != null
                   ? 'HOD Dashboard - ${_effectiveDepartment ?? widget.department} - Semester ${_selectedSemester ?? widget.selectedSemester}'
                   : 'HOD Dashboard - ${_effectiveDepartment ?? widget.department}',
-              style: const TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: 18, color: colorScheme.onPrimary),
             ),
             Text(
               'Date: ${currentDate.day}/${currentDate.month}/${currentDate.year}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
+                color: colorScheme.onPrimary,
               ),
             ),
           ],
@@ -335,11 +336,13 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                 onRefresh: () async {
                   await _loadDepartmentData();
                 },
-                child: Column(
-                  children: [
-                    // Header with HOD info
-                    Container(
-                      width: double.infinity,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Header with HOD info
+                      Container(
+                        width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -612,10 +615,11 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
                     ),
 
                     // Content based on selected view
-                    Expanded(child: _buildSelectedView()),
+                    _buildSelectedView(),
                   ],
                 ),
               ),
+            ),
     );
   }
 
@@ -1146,7 +1150,7 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
   }
 
   Widget _buildSummaryView() {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
@@ -1326,6 +1330,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
 
   Widget _buildSemesterWiseView() {
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: semesterWiseData.length,
       itemBuilder: (context, index) {
@@ -1530,6 +1536,8 @@ class _HODDashboardScreenState extends State<HODDashboardScreen> {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: lowAttendanceStudents.length,
       itemBuilder: (context, index) {

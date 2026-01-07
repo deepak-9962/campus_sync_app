@@ -116,12 +116,43 @@ class AppTheme {
   static const Color darkOnSurface = Color(0xFFE0E0E0);
   static const Color darkSecondaryText = Color(0xFF9E9E9E);
   
+  /// Helper to apply font weight delta to entire TextTheme safely
+  static TextTheme _applyWeightDelta(TextTheme theme, int delta) {
+    TextStyle? applyDelta(TextStyle? style) {
+      if (style == null) return null;
+      // If fontWeight is null, default to w400 (Normal)
+      final FontWeight currentWeight = style.fontWeight ?? FontWeight.w400;
+      // Calculate new index, clamping between 0 and 8 (w100 to w900)
+      final int newIndex = (currentWeight.index + delta).clamp(0, 8);
+      return style.copyWith(fontWeight: FontWeight.values[newIndex]);
+    }
+
+    return theme.copyWith(
+      displayLarge: applyDelta(theme.displayLarge),
+      displayMedium: applyDelta(theme.displayMedium),
+      displaySmall: applyDelta(theme.displaySmall),
+      headlineLarge: applyDelta(theme.headlineLarge),
+      headlineMedium: applyDelta(theme.headlineMedium),
+      headlineSmall: applyDelta(theme.headlineSmall),
+      titleLarge: applyDelta(theme.titleLarge),
+      titleMedium: applyDelta(theme.titleMedium),
+      titleSmall: applyDelta(theme.titleSmall),
+      bodyLarge: applyDelta(theme.bodyLarge),
+      bodyMedium: applyDelta(theme.bodyMedium),
+      bodySmall: applyDelta(theme.bodySmall),
+      labelLarge: applyDelta(theme.labelLarge),
+      labelMedium: applyDelta(theme.labelMedium),
+      labelSmall: applyDelta(theme.labelSmall),
+    );
+  }
+
   /// Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       fontFamily: 'Roboto',
+      textTheme: _applyWeightDelta(ThemeData.light().textTheme, 1),
       
       colorScheme: const ColorScheme.light(
         primary: lightPrimary,
@@ -310,6 +341,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       fontFamily: 'Roboto',
+      textTheme: _applyWeightDelta(ThemeData.dark().textTheme, 1),
       
       colorScheme: const ColorScheme.dark(
         primary: darkPrimary,
