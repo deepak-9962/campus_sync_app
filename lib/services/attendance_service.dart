@@ -864,6 +864,12 @@ class AttendanceService {
     String? section,
   }) async {
     try {
+      // Validate required parameters
+      if (department == null || semester == null) {
+        print('Error: department and semester are required for bulk period attendance');
+        return false;
+      }
+      
       final today = date ?? DateTime.now();
       final dateStr = today.toIso8601String().split('T')[0];
       final currentUserId = _supabase.auth.currentUser?.id;
@@ -1285,6 +1291,10 @@ class AttendanceService {
 
       if (response.isNotEmpty) {
         print('Day attendance marked successfully');
+        
+        // Update overall_attendance_summary to reflect the change
+        await _updateOverallAttendanceSummary(registrationNo);
+        
         return true;
       } else {
         print('Failed to mark day attendance');
@@ -1293,6 +1303,95 @@ class AttendanceService {
     } catch (e) {
       print('Error marking day attendance: $e');
       return false;
+    }
+  }
+
+  /// Updates the overall_attendance_summary for a student by combining period and daily attendance
+  Future<void> _updateOverallAttendanceSummary(String registrationNo) async {
+    try {
+      // Get student details
+      final studentData = await _supabase
+          .from('students')
+          .select('department, semester, current_semester, section')
+          .eq('registration_no', registrationNo)
+          .maybeSingle();
+
+      if (studentData == null) {
+        print('Student not found for summary update: $registrationNo');
+        return;
+      }
+
+      // Get existing period attendance from attendance table
+      final periodAttendance = await _supabase
+          .from('attendance')
+          .select('is_present')
+          .eq('registration_no', registrationNo);
+
+      final totalPeriods = periodAttendance.length;
+      final presentPeriods = periodAttendance.where((r) => r['is_present'] == true).length;
+
+      // Get daily attendance records
+      final dailyAttendance = await _supabase
+          .from('daily_attendance')
+          .select('is_present')
+          .eq('registration_no', registrationNo);
+
+      final totalDays = dailyAttendance.length;
+      final presentDays = dailyAttendance.where((r) => r['is_present'] == true).length;
+
+      // Combine both period and daily attendance
+      final totalClasses = totalPeriods + totalDays;
+      final attendedClasses = presentPeriods + presentDays;
+      final percentage = totalClasses > 0 
+          ? ((attendedClasses / totalClasses) * 100).toStringAsFixed(2)
+          : '0.00';
+
+      print('Updating overall summary: $registrationNo');
+      print('  Period: $presentPeriods/$totalPeriods');
+      print('  Daily: $presentDays/$totalDays');
+      print('  Combined: $attendedClasses/$totalClasses = $percentage%');
+
+      final semester = studentData['current_semester'] ?? studentData['semester'];
+      final department = studentData['department'] ?? '';
+      final section = studentData['section'] ?? '';
+
+      // First check if record exists
+      final existingRecord = await _supabase
+          .from('overall_attendance_summary')
+          .select('id')
+          .eq('registration_no', registrationNo)
+          .maybeSingle();
+
+      if (existingRecord != null) {
+        // Update existing record
+        await _supabase
+            .from('overall_attendance_summary')
+            .update({
+              'total_periods': totalClasses,
+              'attended_periods': attendedClasses,
+              'overall_percentage': double.parse(percentage),
+              'last_updated': DateTime.now().toIso8601String(),
+            })
+            .eq('registration_no', registrationNo);
+        print('Updated existing summary record for $registrationNo');
+      } else {
+        // Insert new record
+        await _supabase.from('overall_attendance_summary').insert({
+          'registration_no': registrationNo,
+          'department': department,
+          'semester': semester,
+          'section': section,
+          'total_periods': totalClasses,
+          'attended_periods': attendedClasses,
+          'overall_percentage': double.parse(percentage),
+          'last_updated': DateTime.now().toIso8601String(),
+        });
+        print('Inserted new summary record for $registrationNo');
+      }
+
+      print('Overall attendance summary updated successfully');
+    } catch (e) {
+      print('Error updating overall attendance summary: $e');
     }
   }
 
@@ -1322,6 +1421,10 @@ class AttendanceService {
         'marked_at': DateTime.now().toIso8601String(),
         'marked_by': currentUserId,
       }, onConflict: 'registration_no,date');
+      
+      // Update overall_attendance_summary to reflect the change
+      await _updateOverallAttendanceSummary(registrationNo);
+      
       return true;
     } catch (e) {
       if (kDebugMode) {

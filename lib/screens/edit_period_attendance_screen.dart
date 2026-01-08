@@ -65,36 +65,47 @@ class _EditPeriodAttendanceScreenState
       int? savedSemester = prefs.getInt('selected_semester') ?? 
                           prefs.getInt('admin_selected_semester');
       
-      setState(() {
-        // Map full department name to code
-        if (savedDepartment != null) {
-          final deptLower = savedDepartment.toLowerCase();
-          if (deptLower.contains('computer science')) {
-            _selectedDepartment = 'CSE';
-          } else if (deptLower.contains('information technology')) {
-            _selectedDepartment = 'IT';
-          } else if (deptLower.contains('electronics')) {
-            _selectedDepartment = 'ECE';
-          } else if (deptLower.contains('mechanical')) {
-            _selectedDepartment = 'MECH';
-          } else if (deptLower.contains('biomedical')) {
-            _selectedDepartment = 'BME';
-          } else if (deptLower.contains('robotics')) {
-            _selectedDepartment = 'RAE';
-          } else if (deptLower.contains('machine learning')) {
-            _selectedDepartment = 'AIML';
-          } else if (deptLower.contains('data science') || deptLower.contains('artificial intelligence')) {
-            _selectedDepartment = 'AIDS';
-          } else {
-            // Try to find matching code or name
-            for (var dept in _departments) {
-              if (dept['name'].toString().toLowerCase() == deptLower ||
-                  dept['code'].toString().toLowerCase() == deptLower) {
-                _selectedDepartment = dept['code'];
-                break;
-              }
+      String? mappedDepartment;
+      
+      // Map full department name to code
+      if (savedDepartment != null) {
+        final deptLower = savedDepartment.toLowerCase();
+        if (deptLower.contains('computer science') || deptLower == 'cse') {
+          mappedDepartment = 'CSE';
+        } else if (deptLower.contains('information technology') || deptLower == 'it') {
+          mappedDepartment = 'IT';
+        } else if (deptLower.contains('electronics') || deptLower == 'ece') {
+          mappedDepartment = 'ECE';
+        } else if (deptLower.contains('mechanical') || deptLower == 'mech') {
+          mappedDepartment = 'MECH';
+        } else if (deptLower.contains('biomedical') || deptLower == 'bme') {
+          mappedDepartment = 'BME';
+        } else if (deptLower.contains('robotics') || deptLower == 'rae') {
+          mappedDepartment = 'RAE';
+        } else if (deptLower.contains('machine learning') || deptLower == 'aiml') {
+          mappedDepartment = 'AIML';
+        } else if (deptLower.contains('data science') || deptLower.contains('artificial intelligence') || deptLower == 'aids') {
+          mappedDepartment = 'AIDS';
+        } else {
+          // Try to find matching code or name
+          for (var dept in _departments) {
+            if (dept['name'].toString().toLowerCase() == deptLower ||
+                dept['code'].toString().toLowerCase() == deptLower) {
+              mappedDepartment = dept['code'];
+              break;
             }
           }
+        }
+      }
+      
+      // Validate that the mapped department exists in the dropdown list
+      final validDeptCodes = _departments.map((d) => d['code'].toString()).toList();
+      
+      setState(() {
+        if (mappedDepartment != null && validDeptCodes.contains(mappedDepartment)) {
+          _selectedDepartment = mappedDepartment;
+        } else {
+          _selectedDepartment = null;
         }
         
         // Set semester
@@ -409,16 +420,29 @@ class _EditPeriodAttendanceScreenState
           debugPrint('Skipping new record for $regNo - no subject code available');
           continue;
         } else {
-          // Update existing record
-          final numericId = int.tryParse(recordId);
-          if (numericId != null) {
-            await _supabase
-                .from('attendance')
-                .update({
-                  'is_present': isPresent,
-                })
-                .eq('id', numericId);
+          // Update existing record - id could be UUID or integer
+          try {
+            // Try to parse as int first, otherwise use as string (UUID)
+            final numericId = int.tryParse(recordId);
+            if (numericId != null) {
+              await _supabase
+                  .from('attendance')
+                  .update({
+                    'is_present': isPresent,
+                  })
+                  .eq('id', numericId);
+            } else {
+              // Use as UUID string
+              await _supabase
+                  .from('attendance')
+                  .update({
+                    'is_present': isPresent,
+                  })
+                  .eq('id', recordId);
+            }
             successCount++;
+          } catch (e) {
+            debugPrint('Error updating record $recordId: $e');
           }
         }
       }
@@ -549,7 +573,9 @@ class _EditPeriodAttendanceScreenState
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedDepartment,
+                        value: _departments.any((d) => d['code'] == _selectedDepartment) 
+                            ? _selectedDepartment 
+                            : null,
                         decoration: const InputDecoration(
                           labelText: 'Department',
                           filled: true,

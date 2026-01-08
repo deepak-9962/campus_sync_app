@@ -352,11 +352,13 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Future<void> _submitAttendance() async {
     // Validation based on attendance mode
     if (_attendanceMode == 'period') {
-      if (students.isEmpty || selectedPeriod == null) {
+      if (students.isEmpty || selectedPeriod == null || selectedSubject == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Please select a period and ensure students are loaded',
+              selectedSubject == null
+                  ? 'No subject found for Period $selectedPeriod. Please check the timetable.'
+                  : 'Please select a period and ensure students are loaded',
             ),
           ),
         );
@@ -396,12 +398,26 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         // OPTIMIZED: Use bulk attendance for period mode
         final List<Map<String, dynamic>> studentAttendanceList = [];
         for (final student in students) {
-          final reg = student['registration_no'] as String;
+          final reg = student['registration_no']?.toString();
+          if (reg == null || reg.isEmpty) {
+            print('Skipping student with null/empty registration_no: $student');
+            continue;
+          }
           final present = attendance[reg] ?? true;
           studentAttendanceList.add({
             'registration_no': reg,
             'is_present': present,
           });
+        }
+        
+        if (studentAttendanceList.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No valid students to submit attendance for')),
+          );
+          _safeSetState(() {
+            isLoading = false;
+          });
+          return;
         }
         
         success = await _attendanceService.markBulkPeriodAttendance(
@@ -416,7 +432,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       } else {
         // Keep individual loop for day mode
         for (final student in students) {
-          final reg = student['registration_no'] as String;
+          final reg = student['registration_no']?.toString();
+          if (reg == null || reg.isEmpty) {
+            print('Skipping student with null/empty registration_no: $student');
+            continue;
+          }
           final present = attendance[reg] ?? true;
           final result = await _attendanceService.markDayAttendance(
             registrationNo: reg,
