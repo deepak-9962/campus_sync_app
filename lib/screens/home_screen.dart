@@ -21,6 +21,7 @@ import '../services/auth_service.dart';
 import '../services/hod_service.dart';
 import '../services/user_session_service.dart';
 import '../services/update_service.dart';
+import '../utils/demo_mode.dart';
 import 'role_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -89,6 +90,21 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _checkUserRole() async {
+    // ── Demo mode: skip Supabase, use persona data ─────────────────────────
+    if (DemoMode().isActive) {
+      final persona = DemoMode().currentPersona;
+      if (!mounted) return;
+      setState(() {
+        _userRole = persona['role'] as String;
+        _isStaff = persona['isStaff'] as bool;
+        _isAdmin = persona['isAdmin'] as bool;
+        _assignedDepartment = persona['assignedDepartment'] as String?;
+        _displayName = persona['name'] as String;
+        _isLoadingRole = false;
+      });
+      return;
+    }
+
     try {
       // Use UserSessionService for cached role checks - SINGLE API call
       final userSession = UserSessionService();
@@ -210,6 +226,35 @@ class _HomeScreenState extends State<HomeScreen>
                 letterSpacing: 0.5,
               ),
             ),
+            // ── Demo badge ────────────────────────────────────────────────
+            if (DemoMode().isActive) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber[700]!, width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.play_circle_filled,
+                        size: 11, color: Colors.amber[800]),
+                    const SizedBox(width: 4),
+                    Text(
+                      'DEMO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber[800],
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -894,7 +939,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 SizedBox(height: 12),
                 Text(
-                  widget.userName,
+                  _displayName ?? widget.userName,
                   style: textTheme.titleMedium?.copyWith(
                     color: colorScheme.onSurface,
                     fontSize: 17,
@@ -912,6 +957,13 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
+
+          // ── Demo role switcher ───────────────────────────────────────────
+          if (DemoMode().isActive) ...[
+            _buildDemoRoleSwitcher(),
+            Divider(color: colorScheme.outlineVariant),
+          ],
+
           _buildDrawerItem(
             icon: Icons.home_outlined,
             title: 'Home',
@@ -977,7 +1029,7 @@ class _HomeScreenState extends State<HomeScreen>
                     builder:
                         (context) => HODDashboardScreen(
                           department: selectedDepartment ?? widget.department,
-                          hodName: widget.userName,
+                          hodName: _displayName ?? widget.userName,
                         ),
                   ),
                 );
@@ -1025,17 +1077,18 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
           Divider(color: colorScheme.outlineVariant),
-          _buildDrawerItem(
-            icon: Icons.bug_report_outlined,
-            title: 'Role Setup Test',
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RoleTestScreen()),
-              );
-            },
-          ),
+          if (!DemoMode().isActive)
+            _buildDrawerItem(
+              icon: Icons.bug_report_outlined,
+              title: 'Role Setup Test',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RoleTestScreen()),
+                );
+              },
+            ),
           _buildDrawerItem(
             icon: Icons.swap_horiz,
             title: 'Switch Dept & Semester',
@@ -1060,9 +1113,20 @@ class _HomeScreenState extends State<HomeScreen>
           Divider(color: colorScheme.outlineVariant),
           _buildDrawerItem(
             icon: Icons.logout,
-            title: 'Logout',
+            title: DemoMode().isActive ? 'Exit Demo' : 'Logout',
             onTap: () async {
               Navigator.pop(context);
+              if (DemoMode().isActive) {
+                // Demo mode exit — no Supabase signout needed
+                DemoMode().exitDemoMode();
+                if (mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => AuthScreen()),
+                    (route) => false,
+                  );
+                }
+                return;
+              }
               try {
                 await Supabase.instance.client.auth.signOut();
                 UserSessionService().clearSession();
@@ -1080,6 +1144,92 @@ class _HomeScreenState extends State<HomeScreen>
                 }
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Demo-only role switcher shown in the drawer
+  Widget _buildDemoRoleSwitcher() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final roles = [
+      {'key': 'student', 'label': 'Student', 'icon': Icons.person_outline_rounded, 'color': const Color(0xFF2E7D32)},
+      {'key': 'faculty', 'label': 'Faculty', 'icon': Icons.school_outlined, 'color': const Color(0xFF1565C0)},
+      {'key': 'hod', 'label': 'HOD', 'icon': Icons.account_balance_outlined, 'color': const Color(0xFF6A1B9A)},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.swap_horiz_rounded, size: 14, color: Colors.amber[800]),
+                const SizedBox(width: 6),
+                Text(
+                  'SWITCH DEMO ROLE',
+                  style: textTheme.labelSmall?.copyWith(
+                    letterSpacing: 1.1,
+                    color: Colors.amber[800],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: roles.map((role) {
+              final isActive = DemoMode().role == role['key'];
+              final roleColor = role['color'] as Color;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    DemoMode().switchRole(role['key'] as String);
+                    Navigator.pop(context);
+                    _checkUserRole(); // Reload persona
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? roleColor.withOpacity(0.12)
+                          : colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isActive ? roleColor : colorScheme.outlineVariant,
+                        width: isActive ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          role['icon'] as IconData,
+                          size: 18,
+                          color: isActive ? roleColor : colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          role['label'] as String,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isActive ? roleColor : colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),

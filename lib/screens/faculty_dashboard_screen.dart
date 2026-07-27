@@ -563,27 +563,29 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     CircleAvatar(
-                      radius: 35,
+                      radius: 28,
                       backgroundColor: Theme.of(
                         context,
                       ).colorScheme.primary.withOpacity(0.2),
                       child: Icon(
                         Icons.person_2,
-                        size: 50,
+                        size: 32,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 8),
                     Text(
                       "Prof. ${widget.userName}",
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${selectedDepartment ?? widget.department} - Sem ${selectedSemester ?? widget.semester.toString()}',
@@ -591,11 +593,14 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                         color: Theme.of(
                           context,
                         ).colorScheme.onSurface.withOpacity(0.7),
-                        
+                        fontSize: 12,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
+
               ),
               _buildDrawerTile('Dashboard', Icons.dashboard_outlined, () {
                 Navigator.pop(context);

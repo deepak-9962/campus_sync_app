@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
+import '../utils/demo_mode.dart';
+import '../widgets/demo_info_sheet.dart';
 // import 'dart:math' as math; // BubblesPainter removed
 
 class AuthScreen extends StatefulWidget {
@@ -230,47 +232,36 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   void _demoLogin() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(seconds: 1), () async {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        await Future.microtask(() {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder:
-                    (context, animation, secondaryAnimation) =>
-                        const HomeScreen(
-                          userName: 'demo.user@example.com',
-                          department: 'Computer Science and Engineering',
-                          semester: 5,
-                        ),
-                transitionsBuilder: (
-                  context,
-                  animation,
-                  secondaryAnimation,
-                  child,
-                ) {
-                  var begin = const Offset(1.0, 0.0);
-                  var end = Offset.zero;
-                  var curve = Curves.easeOutQuint;
-                  var tween = Tween(
-                    begin: begin,
-                    end: end,
-                  ).chain(CurveTween(curve: curve));
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 400),
-              ),
-            );
-          }
-        });
-      }
-    });
+    final persona = DemoMode().currentPersona;
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            HomeScreen(
+              userName: persona['email'] as String,
+              department: DemoMode.department,
+              semester: DemoMode.semester,
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final tween = Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
+              .chain(CurveTween(curve: Curves.easeOutQuint));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
+  }
+
+  void _showDemoSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DemoInfoSheet(onEnterDemo: _demoLogin),
+    );
   }
 
   @override
@@ -532,6 +523,86 @@ class _AuthScreenState extends State<AuthScreen>
                             ),
                           ),
                         ],
+                      ),
+
+                      // ── OR divider ─────────────────────────────────────────
+                      SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: theme.dividerColor,
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              'OR',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: theme.dividerColor,
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // ── Explore App button ─────────────────────────────────
+                      SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _showDemoSheet,
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary,
+                                theme.colorScheme.tertiary,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.explore_outlined,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                        label: const Text(
+                          'Explore the App',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                          side: BorderSide(
+                            color: theme.colorScheme.primary.withOpacity(0.5),
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 20,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'No account required · View all features',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                       SizedBox(height: 40),
                     ],
